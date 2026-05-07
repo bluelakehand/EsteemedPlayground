@@ -5,6 +5,7 @@ A playground for esteemed comrades: a growing arcade of small daily browser game
 ## Games
 
 - [Perfect Pocket](games/perfect-pocket/) - a daily billiards puzzle with bonus pockets, powerups, and shareable practice seeds.
+- [Portdle](games/portdle/) - a seeded wizard maze puzzle where portals let you bend routes to the exit.
 
 ## Run
 
