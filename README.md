@@ -1,6 +1,10 @@
-# Perfect Pocket
+# Esteemed Playground
 
-A dependency-free daily billiards puzzle for the EsteemedPlayground repo. Everyone gets one table per local calendar day and tries to clear the object balls in the fewest shots.
+A playground for esteemed comrades: a growing arcade of small daily browser games.
+
+## Games
+
+- [Perfect Pocket](games/perfect-pocket/) - a daily billiards puzzle with bonus pockets, powerups, and shareable practice seeds.
 
 ## Run
 
@@ -33,7 +37,24 @@ Run headless:
 npm run play:headless
 ```
 
-## MVP Features
+## Deploy To S3
+
+This repo deploys to `s3://esteemed-playground-bucket` from GitHub Actions on every push to `main`.
+
+Required GitHub secret:
+
+```text
+AWS_ROLE_ARN=arn:aws:iam::YOUR_ACCOUNT_ID:role/github-push
+```
+
+The workflow uses GitHub OIDC, so no long-lived AWS access keys are stored in GitHub.
+
+The AWS role `github-push` needs:
+
+- Trust relationship allowing `repo:bluelakehand/EsteemedPlayground:ref:refs/heads/main`
+- S3 permissions for `esteemed-playground-bucket` and `esteemed-playground-bucket/*`
+
+## Perfect Pocket Features
 
 - Deterministic daily layout seeded by date
 - Random practice games with shareable seeds

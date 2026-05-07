@@ -6,7 +6,8 @@ import { chromium } from "playwright";
 const args = new Set(process.argv.slice(2));
 const headless = args.has("--headless");
 const port = Number(process.env.PORT || 8080);
-const url = `http://127.0.0.1:${port}/`;
+const rootUrl = `http://127.0.0.1:${port}/`;
+const url = `${rootUrl}games/perfect-pocket/`;
 
 async function waitForServer(targetUrl, timeoutMs = 8000) {
   const deadline = Date.now() + timeoutMs;
@@ -25,7 +26,7 @@ async function waitForServer(targetUrl, timeoutMs = 8000) {
 async function startServer() {
   try {
     await waitForServer(url, 500);
-    console.log(`Reusing existing server at ${url}`);
+    console.log(`Reusing existing server at ${rootUrl}`);
     return null;
   } catch {
     // No server is running yet; start one below.
@@ -44,7 +45,7 @@ async function startServer() {
     throw new Error(`Server exited early with code ${code}`);
   });
 
-  await Promise.race([waitForServer(url), exitPromise]);
+  await Promise.race([waitForServer(rootUrl), exitPromise]);
   return server;
 }
 

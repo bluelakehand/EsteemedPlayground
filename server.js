@@ -16,7 +16,7 @@ http
   .createServer((req, res) => {
     const url = new URL(req.url, `http://${host}:${port}`);
     const requested = url.pathname === "/" ? "/index.html" : url.pathname;
-    const filePath = path.normalize(path.join(root, requested));
+    let filePath = path.normalize(path.join(root, requested));
 
     if (!filePath.startsWith(root)) {
       res.writeHead(403);
@@ -24,7 +24,12 @@ http
       return;
     }
 
-    fs.readFile(filePath, (err, data) => {
+    fs.stat(filePath, (statErr, stat) => {
+      if (!statErr && stat.isDirectory()) {
+        filePath = path.join(filePath, "index.html");
+      }
+
+      fs.readFile(filePath, (err, data) => {
       if (err) {
         res.writeHead(404);
         res.end("Not found");
@@ -36,6 +41,7 @@ http
         "Cache-Control": "no-store",
       });
       res.end(data);
+    });
     });
   })
   .listen(port, host, () => {
