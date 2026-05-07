@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Perfect Pocket</title>
+    <meta
+      name="description"
+      content="A daily billiards puzzle. Same table for everyone. Clear every ball in the fewest shots."
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily billiards puzzle</p>
+          <h1 id="game-title" class="logo-title">
+            <img src="Logo.png" alt="Perfect Pocket">
+          </h1>
+          <p class="lede">
+            Sink every object ball. Same table for everyone today. Fewest shots wins.
+          </p>
+        </div>
+        <div class="stat-card" aria-label="Player stats">
+          <span>Streak</span>
+          <strong id="streak">0</strong>
+          <small id="best-score">Best: -</small>
+        </div>
+      </section>
+
+      <section class="game-card">
+        <div class="topbar">
+          <div>
+            <span class="label">Puzzle</span>
+            <strong id="puzzle-id">Loading</strong>
+          </div>
+          <div>
+            <span class="label">Shots</span>
+            <strong id="shot-count">0</strong>
+          </div>
+          <div>
+            <span class="label">Remaining</span>
+            <strong id="remaining-count">0</strong>
+          </div>
+          <div>
+            <span class="label">Powerup</span>
+            <strong id="powerup-status">None</strong>
+          </div>
+        </div>
+
+        <canvas id="table" width="960" height="560" aria-label="Pool table game"></canvas>
+
+        <div class="controls">
+          <button id="reset-btn" type="button">Reset Table</button>
+          <button id="undo-btn" type="button">Undo Shot</button>
+          <button id="random-btn" type="button">New Random Game</button>
+          <button id="share-btn" type="button">Share Result</button>
+        </div>
+        <form class="seed-controls" id="seed-form">
+          <label for="seed-input">Seed</label>
+          <input id="seed-input" name="seed" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend seed">
+          <button type="submit">Load Seed</button>
+          <button id="daily-btn" type="button">Daily Game</button>
+        </form>
+
+        <p id="status" class="status" role="status">
+          Drag from the cue ball, pull back to set power, release to shoot.
+        </p>
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How To Play</h2>
+        <div class="rules">
+          <p><strong>Aim:</strong> drag from the white cue ball. Longer pull means more power.</p>
+          <p><strong>Power:</strong> green is light, yellow is medium, red is max. Controlled shots get a tiny pocketing assist.</p>
+          <p><strong>Score:</strong> pocket all colored balls. Scratches add +1 shot.</p>
+          <p><strong>Bonus:</strong> glowing pockets match a ball color. Sink that color there for -1 shot.</p>
+          <p><strong>Orbs:</strong> collect Accuracy for blue rail-bounce aim or Bumper to place a one-shot pinball wall.</p>
+          <p><strong>Daily:</strong> the layout changes each day using the date as the seed.</p>
+          <p><strong>Practice:</strong> start a random seed or paste a friend's seed to play the same table.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>

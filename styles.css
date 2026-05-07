@@ -1,0 +1,261 @@
+:root {
+  --ink: #f7f1df;
+  --muted: #c9b88e;
+  --felt: #136f55;
+  --felt-dark: #0b4638;
+  --rail: #4a2415;
+  --rail-light: #7a3f22;
+  --gold: #f5b84b;
+  --red: #c74732;
+  --blue: #246ecf;
+  --panel: rgba(20, 16, 11, 0.82);
+  --shadow: rgba(0, 0, 0, 0.38);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(245, 184, 75, 0.2), transparent 28rem),
+    radial-gradient(circle at 84% 18%, rgba(19, 111, 85, 0.5), transparent 24rem),
+    linear-gradient(145deg, #120d09 0%, #21150d 45%, #071a16 100%);
+}
+
+button,
+input {
+  font: 700 0.9rem/1.1 Georgia, "Times New Roman", serif;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.82rem 1rem;
+  color: #201309;
+  background: var(--gold);
+  cursor: pointer;
+  box-shadow: 0 0.45rem 1.2rem var(--shadow);
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+input {
+  width: min(100%, 18rem);
+  border: 1px solid rgba(245, 184, 75, 0.32);
+  border-radius: 999px;
+  padding: 0.78rem 1rem;
+  color: var(--ink);
+  background: rgba(9, 7, 4, 0.55);
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245, 184, 75, 0.16);
+}
+
+button:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.8) brightness(0.7);
+  transform: none;
+}
+
+.shell {
+  width: min(1120px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem;
+  align-items: end;
+  margin-bottom: 1.25rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.4rem;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(3.2rem, 8vw, 7.2rem);
+  line-height: 0.86;
+  letter-spacing: -0.07em;
+  text-shadow: 0 0.25rem 1rem var(--shadow);
+}
+
+.logo-title {
+  max-width: min(44rem, 100%);
+}
+
+.logo-title img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0.45rem 1rem var(--shadow));
+}
+
+.lede {
+  max-width: 42rem;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 2.4vw, 1.35rem);
+}
+
+.stat-card,
+.game-card,
+.how-to {
+  border: 1px solid rgba(245, 184, 75, 0.22);
+  background: var(--panel);
+  box-shadow: 0 1rem 3rem var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.stat-card {
+  min-width: 8.5rem;
+  border-radius: 1.4rem;
+  padding: 1rem 1.1rem;
+  text-align: right;
+}
+
+.stat-card span,
+.stat-card small,
+.label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.game-card {
+  border-radius: 1.8rem;
+  padding: 1rem;
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  padding: 0.25rem 0.35rem 1rem;
+}
+
+.topbar strong {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 1.35rem;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 1.1rem;
+  touch-action: none;
+  background: var(--felt);
+  box-shadow: inset 0 0 0 1rem var(--rail), inset 0 0 0 1.35rem var(--rail-light);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.seed-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.seed-controls label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status {
+  min-height: 1.4em;
+  margin: 0.85rem 0 0.1rem;
+  color: var(--muted);
+}
+
+.how-to {
+  margin-top: 1.25rem;
+  border-radius: 1.4rem;
+  padding: 1rem 1.2rem;
+}
+
+.how-to h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.1rem;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.rules p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.rules strong {
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100vw - 1rem, 1120px);
+    padding-top: 1rem;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    text-align: left;
+  }
+
+  .topbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rules {
+    grid-template-columns: 1fr;
+  }
+}
