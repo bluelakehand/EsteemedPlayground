@@ -123,6 +123,35 @@ h1 {
   padding: 0.35rem 0.35rem 1rem;
 }
 
+.portal-toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0 0.35rem 0.9rem;
+}
+
+.portal-btn {
+  width: 100%;
+  border: 2px solid transparent;
+  color: #041023;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.portal-btn-blue {
+  background: linear-gradient(120deg, #1f73f3, #5a97ff);
+  color: #f2f7ff;
+}
+
+.portal-btn-yellow {
+  background: linear-gradient(120deg, #ffd248, #ffe58f);
+}
+
+.portal-btn.is-active {
+  border-color: #f5fbff;
+  box-shadow: 0 0 0 3px rgba(245, 251, 255, 0.2);
+}
+
 canvas {
   display: block;
   width: 100%;
@@ -239,5 +268,9 @@ button:hover {
   .controls input {
     min-width: 0;
     flex: 1;
+  }
+
+  .portal-toolbar {
+    grid-template-columns: 1fr;
   }
 }

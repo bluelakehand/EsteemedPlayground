@@ -5,6 +5,8 @@ const els = {
   puzzleId: document.querySelector("#puzzle-id"),
   seedInput: document.querySelector("#seed-input"),
   setSeed: document.querySelector("#set-seed-btn"),
+  aimBlue: document.querySelector("#aim-blue-btn"),
+  aimYellow: document.querySelector("#aim-yellow-btn"),
   moveCount: document.querySelector("#move-count"),
   portalCount: document.querySelector("#portal-count"),
   scoreCount: document.querySelector("#score-count"),
@@ -38,6 +40,7 @@ const state = {
     cursorY: null,
     hitCol: null,
     hitRow: null,
+    hitDir: null,
     lineEndX: null,
     lineEndY: null,
   },
@@ -47,11 +50,15 @@ const state = {
     phase: "out",
     from: null,
     to: null,
+    slideFrom: null,
+    slideTo: null,
     startTime: 0,
     durationOut: 170,
     durationIn: 190,
+    durationSlide: 180,
   },
   portalPlacements: 0,
+  portalUses: 0,
   moves: 0,
   won: false,
 };
@@ -274,7 +281,7 @@ function init() {
   els.seedInput.value = state.seed;
   bindEvents();
   updateUi();
-  els.status.textContent = "Move with WASD/arrow keys. Left-click a white wall tile to start portal placement.";
+  els.status.textContent = "Move with arrow keys. Press Blue or Yellow aim, then left-click a wall tile.";
   requestAnimationFrame(draw);
 }
 
@@ -283,6 +290,8 @@ function bindEvents() {
   canvas.addEventListener("click", onCanvasLeftClick);
   canvas.addEventListener("mousemove", onCanvasMouseMove);
   canvas.addEventListener("contextmenu", onCanvasRightClick);
+  els.aimBlue.addEventListener("click", () => activatePortalAim("blue"));
+  els.aimYellow.addEventListener("click", () => activatePortalAim("yellow"));
   els.reset.addEventListener("click", resetGame);
   els.setSeed.addEventListener("click", applySeedFromInput);
   els.seedInput.addEventListener("keydown", (event) => {
@@ -316,6 +325,7 @@ function resetGame() {
   state.placement.cursorY = null;
   state.placement.hitCol = null;
   state.placement.hitRow = null;
+  state.placement.hitDir = null;
   state.placement.lineEndX = null;
   state.placement.lineEndY = null;
   state.nextPortalColor = "blue";
@@ -323,12 +333,15 @@ function resetGame() {
   state.teleportFx.phase = "out";
   state.teleportFx.from = null;
   state.teleportFx.to = null;
+  state.teleportFx.slideFrom = null;
+  state.teleportFx.slideTo = null;
   state.teleportFx.startTime = 0;
   state.portalPlacements = 0;
+  state.portalUses = 0;
   state.moves = 0;
   state.won = false;
   buildMap();
-  els.status.textContent = "Move with WASD/arrow keys. Left-click to start portal placement.";
+  els.status.textContent = "Move with arrow keys. Press Blue or Yellow aim, then left-click a wall tile.";
   updateUi();
 }
 
@@ -339,14 +352,20 @@ function onMoveKey(event) {
   let dCol = 0;
   let dRow = 0;
 
-  if (key === "arrowup" || key === "w") dRow = -1;
-  if (key === "arrowdown" || key === "s") dRow = 1;
-  if (key === "arrowleft" || key === "a") dCol = -1;
-  if (key === "arrowright" || key === "d") dCol = 1;
+  if (key === "arrowup") dRow = -1;
+  if (key === "arrowdown") dRow = 1;
+  if (key === "arrowleft") dCol = -1;
+  if (key === "arrowright") dCol = 1;
 
   if (dCol === 0 && dRow === 0) return;
 
   event.preventDefault();
+
+  const currentPortal = getPortalAt(state.wizard.col, state.wizard.row);
+  if (currentPortal && !directionMatches(currentPortal.exitDir, dCol, dRow)) {
+    els.status.textContent = `Portal exit is locked ${currentPortal.exitDir}.`;
+    return;
+  }
 
   const nextCol = state.wizard.col + dCol;
   const nextRow = state.wizard.row + dRow;
@@ -367,12 +386,17 @@ function onMoveKey(event) {
 function onCanvasLeftClick(event) {
   if (state.teleportFx.active) return;
 
-  if (state.placement.active) {
-    placePortalFromAim();
+  if (!state.placement.active) {
+    els.status.textContent = "Choose Blue or Yellow aim first.";
     return;
   }
 
-  startPortalPlacement(event);
+  const pointer = pointerFromEvent(event);
+  if (pointer) {
+    updatePlacementAim(pointer.x, pointer.y);
+  }
+
+  placePortalFromAim();
 }
 
 function onCanvasMouseMove(event) {
@@ -389,41 +413,26 @@ function onCanvasRightClick(event) {
 
   if (!state.placement.active) return;
 
-  state.placement.active = false;
-  state.placement.cursorX = null;
-  state.placement.cursorY = null;
-  state.placement.hitCol = null;
-  state.placement.hitRow = null;
-  state.placement.lineEndX = null;
-  state.placement.lineEndY = null;
+  clearPlacementAim();
   els.status.textContent = "Portal placement canceled.";
+  updateUi();
 }
 
-function startPortalPlacement(event) {
-  const color = determinePlacementColor();
+function activatePortalAim(color) {
   state.placement.active = true;
   state.placement.color = color;
 
-  const pointer = pointerFromEvent(event);
-  if (pointer) {
-    updatePlacementAim(pointer.x, pointer.y);
-  }
-
   els.status.textContent = `Aiming ${color} portal. The dotted line stops at the first wall hit. Left-click to confirm, right-click to cancel.`;
-}
-
-function determinePlacementColor() {
-  if (!state.portals.blue) return "blue";
-  if (!state.portals.yellow) return "yellow";
-  return state.nextPortalColor;
+  updateUi();
 }
 
 function placePortalFromAim() {
   const color = state.placement.color;
   const col = state.placement.hitCol;
   const row = state.placement.hitRow;
+  const exitDir = state.placement.hitDir;
 
-  if (col === null || row === null) {
+  if (col === null || row === null || !exitDir) {
     els.status.textContent = "No wall in line of sight. Aim at a white wall tile.";
     return;
   }
@@ -433,15 +442,9 @@ function placePortalFromAim() {
     return;
   }
 
-  state.portals[color] = { col, row };
+  state.portals[color] = { col, row, exitDir };
   state.portalPlacements += 1;
-  state.placement.active = false;
-  state.placement.cursorX = null;
-  state.placement.cursorY = null;
-  state.placement.hitCol = null;
-  state.placement.hitRow = null;
-  state.placement.lineEndX = null;
-  state.placement.lineEndY = null;
+  clearPlacementAim();
   state.nextPortalColor = color === "blue" ? "yellow" : "blue";
   updateUi();
 
@@ -451,6 +454,17 @@ function placePortalFromAim() {
   } else {
     els.status.textContent = `${capitalize(color)} portal placed. Step onto either portal to teleport.`;
   }
+}
+
+function clearPlacementAim() {
+  state.placement.active = false;
+  state.placement.cursorX = null;
+  state.placement.cursorY = null;
+  state.placement.hitCol = null;
+  state.placement.hitRow = null;
+  state.placement.hitDir = null;
+  state.placement.lineEndX = null;
+  state.placement.lineEndY = null;
 }
 
 function canPlacePortalAt(col, row, color) {
@@ -475,6 +489,7 @@ function updatePlacementAim(targetX, targetY) {
   if (length < 0.001) {
     state.placement.hitCol = null;
     state.placement.hitRow = null;
+    state.placement.hitDir = null;
     state.placement.lineEndX = origin.x;
     state.placement.lineEndY = origin.y;
     return;
@@ -502,6 +517,7 @@ function updatePlacementAim(targetX, targetY) {
     if (isWallTile(col, row)) {
       state.placement.hitCol = col;
       state.placement.hitRow = row;
+      state.placement.hitDir = portalExitDirectionFromRay(ux, uy);
       const center = tileCenter(col, row);
       state.placement.lineEndX = center.x;
       state.placement.lineEndY = center.y;
@@ -511,8 +527,35 @@ function updatePlacementAim(targetX, targetY) {
 
   state.placement.hitCol = null;
   state.placement.hitRow = null;
+  state.placement.hitDir = null;
   state.placement.lineEndX = lastX;
   state.placement.lineEndY = lastY;
+}
+
+function portalExitDirectionFromRay(ux, uy) {
+  // Portal marker points to where the shot came from (opposite of aim ray).
+  if (Math.abs(ux) >= Math.abs(uy)) {
+    return ux > 0 ? "left" : "right";
+  }
+  return uy > 0 ? "up" : "down";
+}
+
+function directionMatches(direction, dCol, dRow) {
+  if (direction === "left") return dCol === -1 && dRow === 0;
+  if (direction === "right") return dCol === 1 && dRow === 0;
+  if (direction === "up") return dCol === 0 && dRow === -1;
+  if (direction === "down") return dCol === 0 && dRow === 1;
+  return true;
+}
+
+function getPortalAt(col, row) {
+  if (state.portals.blue && state.portals.blue.col === col && state.portals.blue.row === row) {
+    return state.portals.blue;
+  }
+  if (state.portals.yellow && state.portals.yellow.col === col && state.portals.yellow.row === row) {
+    return state.portals.yellow;
+  }
+  return null;
 }
 
 function handlePortalTeleport() {
@@ -524,17 +567,20 @@ function handlePortalTeleport() {
   if (!blue || !yellow) return;
 
   if (tileColor === "blue") {
-    beginTeleport({ col: blue.col, row: blue.row }, { col: yellow.col, row: yellow.row }, "Blue");
+    beginTeleport(blue, yellow, "Blue");
   } else {
-    beginTeleport({ col: yellow.col, row: yellow.row }, { col: blue.col, row: blue.row }, "Yellow");
+    beginTeleport(yellow, blue, "Yellow");
   }
 }
 
 function beginTeleport(fromTile, toTile, fromColorName) {
+  state.portalUses += 1;
   state.teleportFx.active = true;
   state.teleportFx.phase = "out";
   state.teleportFx.from = fromTile;
   state.teleportFx.to = toTile;
+  state.teleportFx.slideFrom = null;
+  state.teleportFx.slideTo = null;
   state.teleportFx.startTime = 0;
   els.status.textContent = `${fromColorName} portal engaged...`;
 }
@@ -559,13 +605,61 @@ function updateTeleportEffect(time) {
     return;
   }
 
-  if (elapsed >= state.teleportFx.durationIn) {
-    state.teleportFx.active = false;
-    state.teleportFx.from = null;
-    state.teleportFx.to = null;
-    els.status.textContent = "Teleport complete.";
-    checkGoal();
+  if (state.teleportFx.phase === "in") {
+    if (elapsed >= state.teleportFx.durationIn) {
+      const slideTarget = slideTargetFromPortal(state.teleportFx.to);
+      if (slideTarget) {
+        state.teleportFx.phase = "slide";
+        state.teleportFx.slideFrom = { col: state.wizard.col, row: state.wizard.row };
+        state.teleportFx.slideTo = slideTarget;
+        state.teleportFx.startTime = time;
+        els.status.textContent = "Teleport complete. Sliding out...";
+        return;
+      }
+
+      finishTeleport();
+    }
+    return;
   }
+
+  if (state.teleportFx.phase === "slide") {
+    if (elapsed >= state.teleportFx.durationSlide) {
+      state.wizard.col = state.teleportFx.slideTo.col;
+      state.wizard.row = state.teleportFx.slideTo.row;
+      finishTeleport();
+    }
+  }
+}
+
+function finishTeleport() {
+  state.teleportFx.active = false;
+  state.teleportFx.phase = "out";
+  state.teleportFx.from = null;
+  state.teleportFx.to = null;
+  state.teleportFx.slideFrom = null;
+  state.teleportFx.slideTo = null;
+  state.teleportFx.startTime = 0;
+  els.status.textContent = "Teleport complete.";
+  checkGoal();
+}
+
+function slideTargetFromPortal(portal) {
+  if (!portal || !portal.exitDir) return null;
+  const [dCol, dRow] = deltaFromDirection(portal.exitDir);
+  const col = portal.col + dCol;
+  const row = portal.row + dRow;
+
+  if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS) return null;
+  if (isWallTile(col, row)) return null;
+  return { col, row };
+}
+
+function deltaFromDirection(direction) {
+  if (direction === "left") return [-1, 0];
+  if (direction === "right") return [1, 0];
+  if (direction === "up") return [0, -1];
+  if (direction === "down") return [0, 1];
+  return [0, 0];
 }
 
 function getWizardAlpha(time) {
@@ -579,6 +673,26 @@ function getWizardAlpha(time) {
 
   const progress = Math.min(1, elapsed / state.teleportFx.durationIn);
   return progress;
+}
+
+function wizardCenterForRender(time) {
+  if (state.teleportFx.active && state.teleportFx.phase === "slide") {
+    const from = state.teleportFx.slideFrom;
+    const to = state.teleportFx.slideTo;
+    if (from && to) {
+      const elapsed = time - state.teleportFx.startTime;
+      const t = Math.min(1, elapsed / state.teleportFx.durationSlide);
+      const eased = 1 - (1 - t) * (1 - t);
+      const fromCenter = tileCenter(from.col, from.row);
+      const toCenter = tileCenter(to.col, to.row);
+      return {
+        x: fromCenter.x + (toCenter.x - fromCenter.x) * eased,
+        y: fromCenter.y + (toCenter.y - fromCenter.y) * eased,
+      };
+    }
+  }
+
+  return tileCenter(state.wizard.col, state.wizard.row);
 }
 
 function isWallTile(col, row) {
@@ -606,22 +720,29 @@ function portalColorAt(col, row) {
 function checkGoal() {
   if (state.wizard.col === state.goal.col && state.wizard.row === state.goal.row) {
     state.won = true;
-    els.status.textContent = `Level Cleared! SCORE: ${scoreValue()} = ${portalCount()} Portals x (${state.moves} Moves x 5)`;
+    els.status.textContent = `Level Cleared! SCORE: ${scoreValue()} = (${portalCount()} Portal Uses x 5) + (${state.moves} Moves x 10)`;
   }
 }
 
 function scoreValue() {
-  return portalCount() * (state.moves * 5);
+  return portalCount() * 5 + state.moves * 10;
 }
 
 function portalCount() {
-  return state.portalPlacements;
+  return state.portalUses;
 }
 
 function updateUi() {
   els.moveCount.textContent = state.moves;
   els.portalCount.textContent = portalCount();
   els.scoreCount.textContent = scoreValue();
+
+  const aimingBlue = state.placement.active && state.placement.color === "blue";
+  const aimingYellow = state.placement.active && state.placement.color === "yellow";
+  els.aimBlue.classList.toggle("is-active", aimingBlue);
+  els.aimYellow.classList.toggle("is-active", aimingYellow);
+  els.aimBlue.setAttribute("aria-pressed", aimingBlue ? "true" : "false");
+  els.aimYellow.setAttribute("aria-pressed", aimingYellow ? "true" : "false");
 }
 
 function tileFromEvent(event) {
@@ -779,7 +900,7 @@ function drawLevelClearedBanner() {
   ctx.fillStyle = "#eaf2ff";
   ctx.font = "16px Trebuchet MS, sans-serif";
   ctx.fillText(
-    `SCORE: ${scoreValue()} = ${portalCount()} Portals x (${state.moves} Moves x 5)`,
+    `SCORE: ${scoreValue()} = (${portalCount()} Portal Uses x 5) + (${state.moves} Moves x 10)`,
     x + width * 0.5,
     y + 70
   );
@@ -803,6 +924,23 @@ function drawPortal(portal, color) {
   ctx.beginPath();
   ctx.arc(centerX, centerY, TILE * 0.3, 0, Math.PI * 2);
   ctx.stroke();
+
+  const marker = portalMarkerEnd(centerX, centerY, portal.exitDir);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(marker.x, marker.y);
+  ctx.stroke();
+}
+
+function portalMarkerEnd(centerX, centerY, direction) {
+  const edge = TILE * 0.5 - 3;
+  if (direction === "left") return { x: centerX - edge, y: centerY };
+  if (direction === "right") return { x: centerX + edge, y: centerY };
+  if (direction === "up") return { x: centerX, y: centerY - edge };
+  if (direction === "down") return { x: centerX, y: centerY + edge };
+  return { x: centerX, y: centerY };
 }
 
 function drawPortalPreview() {
@@ -844,9 +982,10 @@ function drawWizard(time) {
   ctx.save();
   ctx.globalAlpha = alpha;
 
+  const center = wizardCenterForRender(time);
   const bob = Math.sin(time * 0.01) * 2;
-  const centerX = state.wizard.col * TILE + TILE * 0.5;
-  const centerY = state.wizard.row * TILE + TILE * 0.5 + bob;
+  const centerX = center.x;
+  const centerY = center.y + bob;
 
   ctx.fillStyle = "#ffd248";
   ctx.beginPath();
@@ -879,7 +1018,7 @@ function drawWizard(time) {
 function drawPortalHints() {
   ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
   ctx.font = "12px Trebuchet MS, sans-serif";
-  ctx.fillText("Left click: start aim, then confirm shot", 14, 18);
+  ctx.fillText("Use Blue/Yellow buttons to choose portal", 14, 18);
   ctx.fillText("Right click: cancel placement", 14, 34);
 }
 

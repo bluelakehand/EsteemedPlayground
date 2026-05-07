@@ -36,7 +36,7 @@
             <strong id="move-count">0</strong>
           </div>
           <div>
-            <span class="label">Portals</span>
+            <span class="label">Portal Uses</span>
             <strong id="portal-count">0</strong>
           </div>
           <div>
@@ -49,6 +49,11 @@
           </div>
         </div>
 
+        <div class="portal-toolbar" aria-label="Portal aim controls">
+          <button id="aim-blue-btn" class="portal-btn portal-btn-blue" type="button">Aim Blue Portal</button>
+          <button id="aim-yellow-btn" class="portal-btn portal-btn-yellow" type="button">Aim Yellow Portal</button>
+        </div>
+
         <canvas id="arena" width="960" height="560" aria-label="Portdle game board"></canvas>
 
         <div class="controls">
@@ -59,7 +64,7 @@
         </div>
 
         <p id="status" class="status" role="status">
-          Move with arrow keys or WASD. Portal shooting will come in the next milestone.
+          Move with arrow keys. Tap a portal button, then left-click a wall tile to place.
         </p>
       </section>
 
@@ -67,8 +72,8 @@
         <h2 id="how-title">How to Play</h2>
         <div class="rules">
           <p><strong>GOAL:</strong> Reach the exit using the fewest amount of points.</p>
-          <p><strong>MOVE:</strong> Move your wizard using the arrow keys or WASD. Each move costs points.</p>
-          <p><strong>PORTALS:</strong> Click to place a portal, click again to confirm. You can only move onto walls with portals.</p>
+          <p><strong>MOVE:</strong> Move your wizard using only the arrow keys. Each move costs 10 points.</p>
+          <p><strong>PORTALS:</strong> Press Blue or Yellow aim, then left-click a wall tile to place. You can only move onto walls with portals.</p>
         </div>
       </section>
     </main>
