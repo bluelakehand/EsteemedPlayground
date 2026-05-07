@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crokinole</title>
+  <style>
+    :root {
+      --bg-1: #efe3c9;
+      --bg-2: #c78b48;
+      --wood-light: #d5a15f;
+      --wood-mid: #b86d33;
+      --wood-dark: #7b4321;
+      --panel: rgba(28, 20, 14, 0.78);
+      --panel-border: rgba(255, 245, 226, 0.16);
+      --text: #fff6e9;
+      --muted: #f0d5b1;
+      --ivory: #f5f0e5;
+      --ink: #2c221d;
+      --accent: #c63c1b;
+      --line: rgba(74, 34, 12, 0.45);
+      --success: #2d8f4f;
+      --warning: #b94d33;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(255, 244, 225, 0.95), rgba(236, 209, 162, 0.45) 28%, rgba(155, 92, 42, 0) 58%),
+        linear-gradient(180deg, var(--bg-1), #e8c18b 38%, var(--bg-2));
+    }
+
+    #game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+
+    .hud {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr minmax(260px, 1.35fr) 1fr;
+      gap: 12px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: 0 14px 36px rgba(55, 23, 8, 0.22);
+      backdrop-filter: blur(6px);
+      padding: 12px 16px;
+    }
+
+    .title-panel {
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1;
+      letter-spacing: 0.02em;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: clamp(13px, 1.8vw, 18px);
+      color: var(--muted);
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .score-card {
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .score-card.active {
+      box-shadow: inset 0 0 0 2px rgba(255, 243, 220, 0.35);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .value {
+      margin-top: 4px;
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 700;
+    }
+
+    .small {
+      margin-top: 2px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 6;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .controls .panel,
+    .controls button {
+      pointer-events: auto;
+    }
+
+    .controls-panel {
+      max-width: 640px;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .controls-panel strong {
+      color: #ffffff;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #2b160c;
+      background: linear-gradient(180deg, #fff3dd, #dfb780);
+      box-shadow: 0 8px 20px rgba(69, 31, 10, 0.18);
+    }
+
+    button:hover {
+      filter: brightness(1.03);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .status-banner {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .status-banner.warning {
+      background: rgba(185, 77, 51, 0.23);
+    }
+
+    .status-banner.success {
+      background: rgba(45, 143, 79, 0.25);
+    }
+
+    @media (max-width: 900px) {
+      .hud {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .buttons {
+        justify-content: stretch;
+      }
+
+      button {
+        flex: 1 1 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" aria-label="Crokinole board game"></canvas>
+
+  <div class="hud" id="hud">
+    <div class="panel" id="leftPanel"></div>
+
+    <div class="panel title-panel">
+      <div class="eyebrow">Wood Flicking Duel</div>
+      <h1>Crokinole</h1>
+      <div class="subtitle">Drag from your staged disc, release to shoot, and pocket 20s through the center hole.</div>
+    </div>
+
+    <div class="panel" id="rightPanel"></div>
+  </div>
+
+  <div class="controls" id="controls">
+    <div class="panel controls-panel">
+      <div><strong>Turn:</strong> <span id="turnText"></span></div>
+      <div class="status-banner" id="statusText"></div>
+    </div>
+
+    <div class="buttons">
+      <button id="newRoundBtn" type="button">Start Next Round</button>
+      <button id="resetBtn" type="button">Reset Match</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const leftPanel = document.getElementById("leftPanel");
+      const rightPanel = document.getElementById("rightPanel");
+      const turnText = document.getElementById("turnText");
+      const statusText = document.getElementById("statusText");
+      const newRoundBtn = document.getElementById("newRoundBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const hudEl = document.getElementById("hud");
+      const controlsEl = document.getElementById("controls");
+
+      const players = [
+        { name: "Ivory", color: "#f5f0e5", edge: "#cdbda0", text: "#f5f0e5" },
+        { name: "Ebony", color: "#2c221d", edge: "#59453b", text: "#f5f0e5" },
+      ];
+
+      const state = {
+        width: 0,
+        height: 0,
+        dpr: Math.max(1, window.devicePixelRatio || 1),
+        board: null,
+        discs: [],
+        reserves: [12, 12],
+        pocketed20: [0, 0],
+        matchScore: [0, 0],
+        round: 1,
+        currentPlayer: 0,
+        lastRoundSummary: "Match opened. Ivory shoots first.",
+        roundOver: false,
+        shot: null,
+        aimAngle: 0,
+        pointer: {
+          down: false,
+          id: null,
+          x: 0,
+          y: 0,
+          dragging: false,
+        },
+        accumulator: 0,
+        lastTime: performance.now(),
+        nextDiscId: 1,
+      };
+
+      const physics = {
+        friction: 0.992,
+        gutterFriction: 0.984,
+        holeFriction: 0.963,
+        wallBounce: 0.86,
+        holeRimBounce: 0.82,
+        pegBounce: 0.9,
+        discBounce: 0.97,
+        stopSpeed: 9,
+        maxLaunchSpeed: 1650,
+        minLaunchSpeed: 140,
+        timeStep: 1 / 120,
+      };
+
+      function setupRound() {
+        state.discs = [];
+        state.reserves = [12, 12];
+        state.pocketed20 = [0, 0];
+        state.currentPlayer = (state.round + 1) % 2;
+        state.lastRoundSummary = state.round === 1 ? "Match opened. Ivory shoots first." : players[state.currentPlayer].name + " opens round " + state.round + ".";
+        state.roundOver = false;
+        state.shot = null;
+        state.pointer.down = false;
+        state.pointer.dragging = false;
+        state.aimAngle = defaultAimAngle(state.currentPlayer);
+        updateHud();
+      }
+
+      function defaultAimAngle(player) {
+        return player === 0 ? Math.PI / 2 : -Math.PI / 2;
+      }
+
+      function getPlayerQuadrant(player) {
+        if (player === 0) {
+          return {
+            min: Math.PI / 4,
+            max: (Math.PI * 3) / 4,
+          };
+        }
+        return {
+          min: (-Math.PI * 3) / 4,
+          max: -Math.PI / 4,
+        };
+      }
+
+      function clampAimAngle(player, angle) {
+        const sector = getPlayerQuadrant(player);
+        return clamp(angle, sector.min, sector.max);
+      }
+
+      function resetMatch() {
+        state.matchScore = [0, 0];
+        state.round = 1;
+        setupRound();
+      }
+
+      function resize() {
+        state.width = window.innerWidth;
+        state.height = window.innerHeight;
+        state.dpr = Math.max(1, window.devicePixelRatio || 1);
+        canvas.width = Math.floor(state.width * state.dpr);
+        canvas.height = Math.floor(state.height * state.dpr);
+        ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+
+        const layoutPad = 18;
+        const hudRect = hudEl.getBoundingClientRect();
+        const controlsRect = controlsEl.getBoundingClientRect();
+        const topClear = hudRect.bottom + layoutPad;
+        const bottomClear = (state.height - controlsRect.top) + layoutPad;
+        const availableHeight = Math.max(120, state.height - topClear - bottomClear);
+        const availableWidth = Math.max(120, state.width - 30);
+        const boardSize = Math.min(availableWidth, availableHeight);
+        const radius = Math.max(60, boardSize * 0.5);
+        const cx = state.width / 2;
+        const cy = topClear + availableHeight * 0.5;
+
+        // Scale board geometry from standard dimensions.
+        const totalDiameterIn = 30.6;
+        const playDiameterIn = 26;
+        const holeDiameterIn = 1.375;
+        const discDiameterIn = 1.25;
+
+        const playRadius = radius * (playDiameterIn / totalDiameterIn);
+        const discRadius = playRadius * (discDiameterIn / playDiameterIn);
+        const holeRadius = playRadius * (holeDiameterIn / playDiameterIn);
+        const outerScoringRadius = playRadius * 0.92;
+        const middleScoringRadius = playRadius * 0.62;
+        const innerScoringRadius = playRadius * 0.31;
+        const pegCircleRadius = playRadius * 0.2;
+        const pegRadius = Math.max(4, discRadius * 0.24);
+        const gutterOuterRadius = radius * 0.95;
+
+        const pegs = [];
+        for (let i = 0; i < 8; i += 1) {
+          const angle = (Math.PI * 2 * i) / 8 + Math.PI / 8;
+          pegs.push({
+            x: cx + Math.cos(angle) * pegCircleRadius,
+            y: cy + Math.sin(angle) * pegCircleRadius,
+            r: pegRadius,
+          });
+        }
+
+        state.board = {
+          cx,
+          cy,
+          radius,
+          discRadius,
+          outerScoringRadius,
+          middleScoringRadius,
+          innerScoringRadius,
+          holeRadius,
+          playRadius,
+          gutterOuterRadius,
+          railInnerRadius: gutterOuterRadius,
+          launchRadius: playRadius - discRadius * 1.02,
+          pegs,
+        };
+
+        state.aimAngle = clampAimAngle(state.currentPlayer, state.aimAngle || defaultAimAngle(state.currentPlayer));
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function getPointerPosition(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
+      }
+
+      function getStagingDisc() {
+        const board = state.board;
+        const angle = clampAimAngle(state.currentPlayer, state.aimAngle);
+        return {
+          x: board.cx + Math.cos(angle) * board.launchRadius,
+          y: board.cy + Math.sin(angle) * board.launchRadius,
+          r: board.discRadius,
+        };
+      }
+
+      function updateAimFromPointer(position) {
+        const angle = Math.atan2(position.y - state.board.cy, position.x - state.board.cx);
+        state.aimAngle = clampAimAngle(state.currentPlayer, angle);
+      }
+
+      function discsAreMoving() {
+        return state.discs.some(function (disc) {
+          return Math.hypot(disc.vx, disc.vy) > physics.stopSpeed * 0.25;
+        });
+      }
+
+      function readyForInput() {
+        return !state.roundOver && !state.shot && !discsAreMoving() && state.reserves[state.currentPlayer] > 0;
+      }
+
+      function addDisc(player, x, y, vx, vy) {
+        const disc = {
+          id: state.nextDiscId,
+          owner: player,
+          x,
+          y,
+          vx,
+          vy,
+          r: state.board.discRadius,
+          inGutter: false,
+        };
+        state.nextDiscId += 1;
+        state.discs.push(disc);
+        return disc;
+      }
+
+      function discsOnBoardForPlayer(player) {
+        return state.discs.filter(function (disc) {
+          return disc.owner === player;
+        }).length;
+      }
+
+      function beginShot(pointerX, pointerY) {
+        const staged = getStagingDisc();
+        const dx = pointerX - staged.x;
+        const dy = pointerY - staged.y;
+        const dragLength = Math.hypot(dx, dy);
+        if (dragLength < 16) {
+          state.pointer.dragging = false;
+          return;
+        }
+
+        const speed = clamp(dragLength * 4.6, physics.minLaunchSpeed, physics.maxLaunchSpeed);
+        const vx = (-dx / dragLength) * speed;
+        const vy = (-dy / dragLength) * speed;
+        const shooter = addDisc(state.currentPlayer, staged.x, staged.y, vx, vy);
+        const opponent = 1 - state.currentPlayer;
+        state.reserves[state.currentPlayer] -= 1;
+        state.shot = {
+          discId: shooter.id,
+          player: state.currentPlayer,
+          requiresOpponentHit: discsOnBoardForPlayer(opponent) > 0,
+          hitOpponent: false,
+          touchedGutter: false,
+          pendingPocketed: [0, 0],
+        };
+        state.pointer.dragging = false;
+        updateHud();
+      }
+
+      function pocketDisc(index) {
+        const disc = state.discs[index];
+        if (!disc) {
+          return;
+        }
+        if (state.shot) {
+          state.shot.pendingPocketed[disc.owner] += 1;
+        } else {
+          state.pocketed20[disc.owner] += 20;
+        }
+        state.discs.splice(index, 1);
+      }
+
+      function checkHole() {
+        for (let i = state.discs.length - 1; i >= 0; i -= 1) {
+          const disc = state.discs[i];
+          if (disc.inGutter) {
+            continue;
+          }
+          const dist = Math.hypot(disc.x - state.board.cx, disc.y - state.board.cy);
+          const speed = Math.hypot(disc.vx, disc.vy);
+          const holeRegion = state.board.holeRadius * 0.75;
+          const overHole = dist < holeRegion;
+          const atRest = speed < physics.stopSpeed * 2;
+
+          if (overHole && atRest) {
+            pocketDisc(i);
+          }
+        }
+      }
+
+      function solveDiscCollision(a, b) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const distance = Math.hypot(dx, dy);
+        const minDistance = a.r + b.r;
+        if (!distance || distance >= minDistance) {
+          return;
+        }
+
+        const nx = dx / distance;
+        const ny = dy / distance;
+        const overlap = minDistance - distance;
+
+        a.x -= nx * overlap * 0.5;
+        a.y -= ny * overlap * 0.5;
+        b.x += nx * overlap * 0.5;
+        b.y += ny * overlap * 0.5;
+
+        const rvx = b.vx - a.vx;
+        const rvy = b.vy - a.vy;
+        const normalSpeed = rvx * nx + rvy * ny;
+        if (normalSpeed > 0) {
+          return;
+        }
+
+        const impulse = (-(1 + physics.discBounce) * normalSpeed) / 2;
+        a.vx -= impulse * nx;
+        a.vy -= impulse * ny;
+        b.vx += impulse * nx;
+        b.vy += impulse * ny;
+
+        if (state.shot && (a.id === state.shot.discId || b.id === state.shot.discId)) {
+          const other = a.id === state.shot.discId ? b : a;
+          if (other.owner === 1 - state.shot.player) {
+            state.shot.hitOpponent = true;
+          }
+        }
+      }
+
+      function solvePegCollision(disc, peg) {
+        const dx = disc.x - peg.x;
+        const dy = disc.y - peg.y;
+        const distance = Math.hypot(dx, dy);
+        const minDistance = disc.r + peg.r;
+        if (!distance || distance >= minDistance) {
+          return;
+        }
+
+        const nx = dx / distance;
+        const ny = dy / distance;
+        const overlap = minDistance - distance;
+        disc.x += nx * overlap;
+        disc.y += ny * overlap;
+
+        const normalSpeed = disc.vx * nx + disc.vy * ny;
+        if (normalSpeed < 0) {
+          disc.vx -= (1 + physics.pegBounce) * normalSpeed * nx;
+          disc.vy -= (1 + physics.pegBounce) * normalSpeed * ny;
+        }
+      }
+
+      function solveBoundaryCollision(disc) {
+        const dx = disc.x - state.board.cx;
+        const dy = disc.y - state.board.cy;
+        const distance = Math.hypot(dx, dy);
+        const maxDistance = state.board.railInnerRadius - disc.r;
+        if (distance <= maxDistance) {
+          return;
+        }
+
+        const nx = dx / distance;
+        const ny = dy / distance;
+        disc.x = state.board.cx + nx * maxDistance;
+        disc.y = state.board.cy + ny * maxDistance;
+
+        const normalSpeed = disc.vx * nx + disc.vy * ny;
+        if (normalSpeed > 0) {
+          disc.vx -= (1 + physics.wallBounce) * normalSpeed * nx;
+          disc.vy -= (1 + physics.wallBounce) * normalSpeed * ny;
+        }
+      }
+
+      function physicsStep(dt) {
+        for (let i = 0; i < state.discs.length; i += 1) {
+          const disc = state.discs[i];
+          disc.x += disc.vx * dt;
+          disc.y += disc.vy * dt;
+
+          const fromCenter = Math.hypot(disc.x - state.board.cx, disc.y - state.board.cy);
+          if (!disc.inGutter && fromCenter > state.board.playRadius - disc.r * 0.2) {
+            disc.inGutter = true;
+            if (state.shot && disc.id === state.shot.discId) {
+              state.shot.touchedGutter = true;
+            }
+            state.discs.splice(i, 1);
+            i -= 1;
+            continue;
+          }
+
+          let friction = physics.friction;
+          if (fromCenter < state.board.holeRadius) {
+            friction = physics.holeFriction;
+          }
+          disc.vx *= friction;
+          disc.vy *= friction;
+          if (Math.hypot(disc.vx, disc.vy) < physics.stopSpeed) {
+            disc.vx = 0;
+            disc.vy = 0;
+          }
+
+          solveBoundaryCollision(disc);
+        }
+
+        for (let i = 0; i < state.discs.length; i += 1) {
+          for (let j = i + 1; j < state.discs.length; j += 1) {
+            solveDiscCollision(state.discs[i], state.discs[j]);
+          }
+        }
+
+        for (let i = 0; i < state.discs.length; i += 1) {
+          if (state.discs[i].inGutter) {
+            continue;
+          }
+          for (let j = 0; j < state.board.pegs.length; j += 1) {
+            solvePegCollision(state.discs[i], state.board.pegs[j]);
+          }
+        }
+
+        checkHole();
+      }
+
+      function resolveTurn() {
+        if (!state.shot) {
+          return;
+        }
+
+        const shooter = state.shot.player;
+        const opponent = 1 - shooter;
+        const foul = (state.shot.requiresOpponentHit && !state.shot.hitOpponent) || state.shot.touchedGutter;
+
+        if (foul) {
+          const shooterIndex = state.discs.findIndex(function (disc) {
+            return disc.id === state.shot.discId;
+          });
+          if (shooterIndex >= 0) {
+            state.discs.splice(shooterIndex, 1);
+          }
+          state.pocketed20[opponent] += state.shot.pendingPocketed[opponent] * 20;
+          let foulReason = state.shot.touchedGutter ? "touched the gutter" : "committed a foul";
+          state.lastRoundSummary = players[shooter].name + " " + foulReason + " and the shooting disc was removed.";
+        } else {
+          state.pocketed20[0] += state.shot.pendingPocketed[0] * 20;
+          state.pocketed20[1] += state.shot.pendingPocketed[1] * 20;
+
+          const shot20 = state.shot.pendingPocketed[shooter];
+          if (shot20 > 0) {
+            state.lastRoundSummary = players[shooter].name + " pocketed " + shot20 + (shot20 === 1 ? " twenty." : " twenties.");
+          } else {
+            state.lastRoundSummary = players[shooter].name + " finished the shot cleanly.";
+          }
+        }
+
+        state.currentPlayer = opponent;
+        state.shot = null;
+
+        if (state.reserves[0] === 0 && state.reserves[1] === 0 && !discsAreMoving()) {
+          finishRound();
+        }
+
+        updateHud();
+      }
+
+      function scoreDisc(disc) {
+        if (disc.inGutter) {
+          return 0;
+        }
+        const distance = Math.hypot(disc.x - state.board.cx, disc.y - state.board.cy);
+        if (distance <= state.board.innerScoringRadius) {
+          return 15;
+        }
+        if (distance <= state.board.middleScoringRadius) {
+          return 10;
+        }
+        if (distance <= state.board.outerScoringRadius) {
+          return 5;
+        }
+        return 0;
+      }
+
+      function finishRound() {
+        const roundTotals = [state.pocketed20[0], state.pocketed20[1]];
+        for (let i = 0; i < state.discs.length; i += 1) {
+          roundTotals[state.discs[i].owner] += scoreDisc(state.discs[i]);
+        }
+
+        if (roundTotals[0] > roundTotals[1]) {
+          state.matchScore[0] += roundTotals[0] - roundTotals[1];
+        } else if (roundTotals[1] > roundTotals[0]) {
+          state.matchScore[1] += roundTotals[1] - roundTotals[0];
+        }
+
+        const summary = players[0].name + " " + roundTotals[0] + " - " + roundTotals[1] + " " + players[1].name + ". ";
+        if (roundTotals[0] === roundTotals[1]) {
+          state.lastRoundSummary = summary + "Round drawn.";
+        } else {
+          const winner = roundTotals[0] > roundTotals[1] ? 0 : 1;
+          state.lastRoundSummary = summary + players[winner].name + " banks " + Math.abs(roundTotals[0] - roundTotals[1]) + " match points.";
+        }
+
+        state.roundOver = true;
+        updateHud();
+      }
+
+      function updateHud() {
+        const activeName = players[state.currentPlayer].name;
+        turnText.textContent = state.roundOver ? "Round complete" : activeName + " to shoot";
+        statusText.textContent = state.lastRoundSummary;
+        statusText.className = "status-banner" + (state.roundOver ? " success" : state.shot && state.shot.requiresOpponentHit ? " warning" : "");
+
+        leftPanel.innerHTML = [
+          '<div class="eyebrow">Match Score</div>',
+          '<div class="score-grid">',
+          '<div class="score-card ' + (state.currentPlayer === 0 && !state.roundOver ? 'active' : '') + '">',
+          '<div class="label">Ivory</div>',
+          '<div class="value">' + state.matchScore[0] + '</div>',
+          '<div class="small">Pocketed 20s: ' + state.pocketed20[0] / 20 + '</div>',
+          '</div>',
+          '<div class="score-card ' + (state.currentPlayer === 1 && !state.roundOver ? 'active' : '') + '">',
+          '<div class="label">Ebony</div>',
+          '<div class="value">' + state.matchScore[1] + '</div>',
+          '<div class="small">Pocketed 20s: ' + state.pocketed20[1] / 20 + '</div>',
+          '</div>',
+          '</div>'
+        ].join("");
+
+        rightPanel.innerHTML = [
+          '<div class="eyebrow">Round ' + state.round + '</div>',
+          '<div class="score-grid">',
+          '<div class="score-card">',
+          '<div class="label">Ivory Reserves</div>',
+          '<div class="value">' + state.reserves[0] + '</div>',
+          '<div class="small">Board discs: ' + discsOnBoardForPlayer(0) + '</div>',
+          '</div>',
+          '<div class="score-card">',
+          '<div class="label">Ebony Reserves</div>',
+          '<div class="value">' + state.reserves[1] + '</div>',
+          '<div class="small">Board discs: ' + discsOnBoardForPlayer(1) + '</div>',
+          '</div>',
+          '</div>',
+          '<div class="small" style="margin-top:10px;">Rule: if the opponent has discs on the board, your shot must touch one or it is a foul.</div>'
+        ].join("");
+
+        newRoundBtn.textContent = state.roundOver ? "Start Round " + (state.round + 1) : "Restart Current Round";
+      }
+
+      function drawBackground() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, state.height);
+        gradient.addColorStop(0, "#f4e6c8");
+        gradient.addColorStop(0.55, "#dfb57d");
+        gradient.addColorStop(1, "#b56830");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, state.width, state.height);
+
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        for (let i = 0; i < 22; i += 1) {
+          const y = (i / 22) * state.height;
+          ctx.fillStyle = i % 2 === 0 ? "#ffffff" : "#6d381b";
+          ctx.fillRect(0, y, state.width, 10);
+        }
+        ctx.restore();
+      }
+
+      function drawBoard() {
+        const board = state.board;
+        ctx.save();
+        ctx.translate(board.cx, board.cy);
+
+        const boardGradient = ctx.createRadialGradient(-board.radius * 0.25, -board.radius * 0.28, board.radius * 0.18, 0, 0, board.radius * 1.1);
+        boardGradient.addColorStop(0, "#efc98f");
+        boardGradient.addColorStop(0.58, "#cb8846");
+        boardGradient.addColorStop(1, "#8f4d24");
+
+        ctx.fillStyle = "rgba(77, 35, 12, 0.2)";
+        ctx.beginPath();
+        ctx.arc(0, 14, board.radius * 1.09, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = boardGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, board.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#7e471f";
+        ctx.beginPath();
+        ctx.arc(0, 0, board.gutterOuterRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ddbb86";
+        ctx.beginPath();
+        ctx.arc(0, 0, board.playRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(106, 50, 18, 0.58)";
+        ctx.lineWidth = board.radius * 0.06;
+        ctx.stroke();
+
+        for (let i = 0; i < 8; i += 1) {
+          const alpha = 0.06 + i * 0.013;
+          ctx.strokeStyle = "rgba(122, 61, 24, " + alpha.toFixed(3) + ")";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, board.radius * (0.12 + i * 0.11), 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(98, 40, 12, 0.48)";
+        [board.outerScoringRadius, board.middleScoringRadius, board.innerScoringRadius].forEach(function (radius) {
+          ctx.beginPath();
+          ctx.arc(0, 0, radius, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+
+        ctx.beginPath();
+        ctx.moveTo(-board.outerScoringRadius, 0);
+        ctx.lineTo(board.outerScoringRadius, 0);
+        ctx.moveTo(0, -board.outerScoringRadius);
+        ctx.lineTo(0, board.outerScoringRadius);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(88, 34, 10, 0.38)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+
+        // Quadrant boundaries for two-player play.
+        const bounds = [-Math.PI * 3 / 4, -Math.PI / 4, Math.PI / 4, Math.PI * 3 / 4];
+        for (let i = 0; i < bounds.length; i += 1) {
+          const ang = bounds[i];
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(ang) * board.playRadius, Math.sin(ang) * board.playRadius);
+        }
+        ctx.stroke();
+
+        // Short placement arcs near the border where players set their shooting disc.
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.arc(0, 0, board.launchRadius, -Math.PI * 3 / 4, -Math.PI / 4);
+        ctx.arc(0, 0, board.launchRadius, Math.PI / 4, Math.PI * 3 / 4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#482414";
+        ctx.beginPath();
+        ctx.arc(0, 0, board.holeRadius * 1.14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#482414";
+        ctx.beginPath();
+        ctx.arc(0, 0, board.holeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        const holeGlow = ctx.createRadialGradient(0, 0, board.holeRadius * 0.1, 0, 0, board.holeRadius * 1.4);
+        holeGlow.addColorStop(0, "rgba(0, 0, 0, 0.02)");
+        holeGlow.addColorStop(1, "rgba(87, 24, 4, 0.18)");
+        ctx.fillStyle = holeGlow;
+        ctx.beginPath();
+        ctx.arc(0, 0, board.holeRadius * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        state.board.pegs.forEach(function (peg) {
+          const localX = peg.x - board.cx;
+          const localY = peg.y - board.cy;
+          ctx.fillStyle = "#ae3321";
+          ctx.beginPath();
+          ctx.arc(localX, localY, peg.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(92, 19, 11, 0.7)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+
+        ctx.restore();
+      }
+
+      function drawDisc(disc) {
+        ctx.save();
+        ctx.translate(disc.x, disc.y);
+
+        ctx.fillStyle = "rgba(61, 30, 14, 0.18)";
+        ctx.beginPath();
+        ctx.ellipse(2, 4, disc.r * 0.9, disc.r * 0.72, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const player = players[disc.owner];
+        const gradient = ctx.createRadialGradient(-disc.r * 0.3, -disc.r * 0.35, disc.r * 0.18, 0, 0, disc.r * 1.1);
+        if (disc.owner === 0) {
+          gradient.addColorStop(0, "#ffffff");
+          gradient.addColorStop(0.72, player.color);
+          gradient.addColorStop(1, "#cab89e");
+        } else {
+          gradient.addColorStop(0, "#5a4740");
+          gradient.addColorStop(0.72, player.color);
+          gradient.addColorStop(1, "#18100d");
+        }
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, disc.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.lineWidth = Math.max(1.5, disc.r * 0.1);
+        ctx.strokeStyle = player.edge;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function drawAimGuide() {
+        if (!readyForInput()) {
+          return;
+        }
+
+        const staged = getStagingDisc();
+        const player = players[state.currentPlayer];
+
+        ctx.save();
+        ctx.restore();
+
+        drawDisc({ x: staged.x, y: staged.y, r: staged.r, owner: state.currentPlayer });
+
+        if (state.pointer.dragging) {
+          const dx = state.pointer.x - staged.x;
+          const dy = state.pointer.y - staged.y;
+          const distance = Math.hypot(dx, dy);
+          const limited = clamp(distance, 0, physics.maxLaunchSpeed / 4.6);
+          const ux = distance ? dx / distance : 0;
+          const uy = distance ? dy / distance : 0;
+          const tipX = staged.x + ux * limited;
+          const tipY = staged.y + uy * limited;
+
+          ctx.save();
+          ctx.strokeStyle = player.text;
+          ctx.fillStyle = player.text;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(staged.x, staged.y);
+          ctx.lineTo(tipX, tipY);
+          ctx.stroke();
+
+          const headSize = Math.max(10, staged.r * 0.7);
+          const angle = Math.atan2(uy, ux);
+          ctx.translate(tipX, tipY);
+          ctx.rotate(angle);
+          ctx.beginPath();
+          ctx.moveTo(headSize, 0);
+          ctx.lineTo(-headSize * 0.6, headSize * 0.55);
+          ctx.lineTo(-headSize * 0.6, -headSize * 0.55);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function drawLabels() {
+        const board = state.board;
+        ctx.save();
+        ctx.fillStyle = "rgba(88, 36, 14, 0.58)";
+        ctx.font = "700 18px Georgia";
+        ctx.textAlign = "center";
+        ctx.fillText("15", board.cx, board.cy - board.innerScoringRadius + 24);
+        ctx.fillText("10", board.cx, board.cy - board.middleScoringRadius + 24);
+        ctx.fillText("5", board.cx, board.cy - board.outerScoringRadius + 24);
+        ctx.fillStyle = "rgba(255, 247, 236, 0.82)";
+        ctx.font = "700 16px Georgia";
+        ctx.fillText(players[1].name + " quadrant", board.cx, board.cy - board.playRadius - 14);
+        ctx.fillText(players[0].name + " quadrant", board.cx, board.cy + board.playRadius + 24);
+        ctx.restore();
+      }
+
+      function draw() {
+        drawBackground();
+        drawBoard();
+        drawLabels();
+        state.discs.forEach(drawDisc);
+        drawAimGuide();
+      }
+
+      function update(now) {
+        const frameSeconds = Math.min(0.05, (now - state.lastTime) / 1000);
+        state.lastTime = now;
+        state.accumulator += frameSeconds;
+
+        while (state.accumulator >= physics.timeStep) {
+          physicsStep(physics.timeStep);
+          state.accumulator -= physics.timeStep;
+        }
+
+        if (state.shot && !discsAreMoving()) {
+          resolveTurn();
+        }
+      }
+
+      function loop(now) {
+        update(now);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      function onPointerDown(event) {
+        if (!readyForInput()) {
+          return;
+        }
+        const position = getPointerPosition(event);
+        updateAimFromPointer(position);
+        state.pointer.down = true;
+        state.pointer.id = event.pointerId;
+        state.pointer.dragging = true;
+        state.pointer.x = position.x;
+        state.pointer.y = position.y;
+        canvas.setPointerCapture(event.pointerId);
+      }
+
+      function onPointerMove(event) {
+        const position = getPointerPosition(event);
+        if (readyForInput() && !state.pointer.dragging) {
+          updateAimFromPointer(position);
+        }
+
+        if (state.pointer.dragging && state.pointer.id === event.pointerId) {
+          state.pointer.x = position.x;
+          state.pointer.y = position.y;
+        }
+      }
+
+      function onPointerUp(event) {
+        if (state.pointer.dragging && state.pointer.id === event.pointerId) {
+          const position = getPointerPosition(event);
+          beginShot(position.x, position.y);
+          state.pointer.down = false;
+          state.pointer.id = null;
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      function onPointerCancel(event) {
+        if (state.pointer.id === event.pointerId) {
+          state.pointer.down = false;
+          state.pointer.id = null;
+          state.pointer.dragging = false;
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      newRoundBtn.addEventListener("click", function () {
+        if (state.roundOver) {
+          state.round += 1;
+        }
+        setupRound();
+      });
+
+      resetBtn.addEventListener("click", resetMatch);
+      canvas.addEventListener("pointerdown", onPointerDown);
+      canvas.addEventListener("pointermove", onPointerMove);
+      canvas.addEventListener("pointerup", onPointerUp);
+      canvas.addEventListener("pointercancel", onPointerCancel);
+      window.addEventListener("resize", resize);
+
+      resize();
+      setupRound();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
