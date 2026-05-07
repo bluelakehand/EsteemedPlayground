@@ -1,6 +1,6 @@
 # Perfect Pocket
 
-A dependency-free daily billiards puzzle. Everyone gets one table per local calendar day and tries to clear the object balls in the fewest shots.
+A dependency-free daily billiards puzzle for the EsteemedPlayground repo. Everyone gets one table per local calendar day and tries to clear the object balls in the fewest shots.
 
 ## Run
 
