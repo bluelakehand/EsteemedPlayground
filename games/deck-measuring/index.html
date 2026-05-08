@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Deck Measuring Contest</title>
+    <meta name="description" content="A daily wood sizing challenge. Five decks. No rulers. How well do you measure up?">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily wood sizing challenge</p>
+          <h1 id="game-title">Deck Measuring<br><span class="contest">Contest</span></h1>
+          <p class="lede">Five decks. No rulers. Whoever's closest wins the contest.</p>
+        </div>
+        <div class="stat-card" aria-label="Player stats">
+          <span>Best Score</span>
+          <strong id="best-score">—</strong>
+          <small id="streak">Streak: 0</small>
+        </div>
+      </section>
+
+      <section class="game-card" id="game-area">
+
+        <!-- Reference screen -->
+        <div id="screen-reference" class="screen active">
+          <div class="screen-header">
+            <span class="badge">Know Your Wood</span>
+            <p class="screen-label">This is exactly <strong>10 m²</strong> of deck. Burn it into your brain.</p>
+          </div>
+          <canvas id="canvas-reference" width="880" height="480" aria-label="10 square metre reference deck"></canvas>
+          <div class="screen-footer">
+            <p class="hint">Take as long as you need — once it's gone, it's gone.</p>
+            <button id="btn-start" type="button" class="btn-primary">
+              I know my lumber — Let's get measuring
+            </button>
+            <form class="seed-form" id="seed-form" aria-label="Custom seed">
+              <label for="seed-input">Seed</label>
+              <input id="seed-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend's seed or type anything">
+              <button type="submit" class="btn-secondary">Load Seed</button>
+              <button id="btn-daily" type="button" class="btn-secondary">Daily Game</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Guess screen -->
+        <div id="screen-guess" class="screen">
+          <div class="screen-header">
+            <div class="round-info">
+              <span class="badge" id="round-badge">Deck 1 of 5</span>
+              <span class="score-running">Score: <strong id="running-score">0</strong></span>
+              <span class="seed-indicator" id="seed-indicator">Seed: <span id="seed-label"></span></span>
+            </div>
+            <p class="screen-label">How many square metres is this deck?</p>
+          </div>
+          <canvas id="canvas-deck" width="880" height="480" aria-label="Deck to measure"></canvas>
+          <div class="screen-footer">
+            <div class="slider-group" role="group" aria-label="Guess input">
+              <div class="guess-row">
+                <label for="guess-input">Your guess:</label>
+                <input id="guess-input" type="number" min="5" max="200" value="50" step="1" aria-label="Guess in square metres">
+                <span class="unit">m²</span>
+              </div>
+              <input id="guess-slider" type="range" min="5" max="200" value="50" step="1" aria-label="Guess slider">
+              <div class="slider-ticks" aria-hidden="true">
+                <span>5</span><span>55</span><span>100</span><span>150</span><span>200</span>
+              </div>
+            </div>
+            <button id="btn-submit" type="button" class="btn-primary">That's My Final Measurement</button>
+          </div>
+        </div>
+
+        <!-- Round result screen -->
+        <div id="screen-result" class="screen">
+          <div class="screen-header">
+            <span class="badge" id="result-badge">Result</span>
+          </div>
+          <canvas id="canvas-result" width="880" height="480" aria-label="Deck with actual size shown"></canvas>
+          <div class="result-stats" id="result-stats" aria-live="polite"></div>
+          <div class="screen-footer">
+            <button id="btn-next" type="button" class="btn-primary">Next Deck</button>
+          </div>
+        </div>
+
+        <!-- Final score screen -->
+        <div id="screen-final" class="screen">
+          <div class="final-content">
+            <h2 class="final-title">Contest Over</h2>
+            <p class="final-tagline" id="final-tagline">Here's how your lumber stacks up.</p>
+            <table class="scorecard" id="scorecard" aria-label="Round-by-round results"></table>
+            <div class="final-total">
+              Total Score: <strong id="final-score">—</strong>
+              <small>(lower is better)</small>
+            </div>
+            <div class="final-actions">
+              <button id="btn-share" type="button" class="btn-secondary">Share Result</button>
+              <button id="btn-restart" type="button" class="btn-primary">Measure Again</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How To Play</h2>
+        <div class="rules">
+          <p><strong>Reference:</strong> you get one good look at a 10 m² deck. Study every inch — that's the only tool you've got.</p>
+          <p><strong>Guess:</strong> use the slider to estimate each deck's area in square metres. Items on deck can help you gauge the size.</p>
+          <p><strong>Score:</strong> total percentage off across all 5 decks — golf rules, lower is better. A perfect 0 means you measure like a professional.</p>
+          <p><strong>Daily:</strong> everyone gets the same 5 decks each day. New wood drops at midnight.</p>
+          <p><strong>Sharing:</strong> spoiler-free emoji grid so you can settle the contest with your friends.</p>
+        </div>
+      </section>
+
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>

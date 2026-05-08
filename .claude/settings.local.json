@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\git\\\\EP\\\\EsteemedPlayground\\\\games\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Sort-Object Name)"
+    ]
+  }
+}
