@@ -26,6 +26,10 @@ const ADJECTIVES = [
   'shiny','colorful','scared','rainbow',
 ];
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function rainbowHue(t) { return ((t * 360) % 360 + 360) % 360; }
+
 // ─── Seeded PRNG ──────────────────────────────────────────────────────────────
 
 function strHash(s) {
@@ -71,7 +75,9 @@ const $diffDesc  = document.getElementById('diff-desc');
 let gameState   = 'loading';
 let seed        = '';
 let diff        = 'hard';
-let seizureSafe = false;
+let seizureSafe    = false;
+let seizureExtreme = false;
+let lastBeatFlash  = -Infinity;
 let manifest  = null;
 let chipPlayer = null;
 let songBuffer = null;
@@ -313,6 +319,7 @@ function doStart() {
   score = 0; combo = 0; maxCombo = 0; totalHits = 0; goodHits = 0;
   hitFx = []; judgeFx = null; lastFrameMs = 0;
   countdownText = ''; countdownPhaseSt = 0;
+  lastBeatFlash = -Infinity;
 
   computeTiming();
   buildNotes();
@@ -477,8 +484,24 @@ function gameLoop(timestamp) {
     }
   }
 
-  if (needFlash) flash('miss');
+  if (needFlash) {
+    flash('miss');
+    if (seizureExtreme) shakeCanvas();
+  }
   if (needWordUpdate) { updateWordContext(); renderStats(); }
+
+  // Extreme mode: beat-synced strobe
+  if (seizureExtreme) {
+    const beatNum = Math.floor(elapsedMs / beatMs);
+    if (beatNum !== lastBeatFlash) {
+      lastBeatFlash = beatNum;
+      const hue = (beatNum * 137) % 360 | 0;
+      $flash.style.background = `hsla(${hue},100%,60%,0.55)`;
+      $flash.className = '';
+      void $flash.offsetWidth;
+      $flash.className = 'beat-strobe';
+    }
+  }
   if (elapsedMs >= totalMs) { endGame(); return; }
 
   draw(elapsedMs);
@@ -523,8 +546,15 @@ function draw(elapsedMs) {
 
   // Hit zone line
   ctx.save();
-  if (!seizureSafe) { ctx.shadowColor = 'rgba(255,211,90,0.9)'; ctx.shadowBlur = 10; }
-  ctx.strokeStyle = 'rgba(255,211,90,0.75)';
+  if (seizureExtreme) {
+    const hue = rainbowHue(performance.now() * 0.0011);
+    ctx.strokeStyle = `hsl(${hue | 0},100%,65%)`;
+    ctx.shadowColor = `hsl(${hue | 0},100%,65%)`;
+    ctx.shadowBlur  = 35;
+  } else {
+    if (!seizureSafe) { ctx.shadowColor = 'rgba(255,211,90,0.9)'; ctx.shadowBlur = 10; }
+    ctx.strokeStyle = 'rgba(255,211,90,0.75)';
+  }
   ctx.lineWidth   = 2.5;
   ctx.beginPath();
   ctx.moveTo(LANE_X - LANE_W / 2, HZ_Y);
@@ -600,15 +630,26 @@ function draw(elapsedMs) {
       color = 'rgba(255,77,125,0.3)';
       alpha = Math.max(0, 1 - (progress - 1) * 4);
     } else {
-      color = inZone ? '#ffd35a' : '#fff7db';
+      if (seizureExtreme) {
+        const hue = rainbowHue(n.beatNum * 0.131 + performance.now() * 0.000417);
+        color = `hsl(${hue | 0},100%,70%)`;
+      } else {
+        color = inZone ? '#ffd35a' : '#fff7db';
+      }
       alpha = Math.min(1, progress * 8);
     }
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    if (n.status === 'pending' && inZone && !seizureSafe) {
-      ctx.shadowColor = '#ffd35a';
-      ctx.shadowBlur  = 18;
+    if (n.status === 'pending' && inZone) {
+      if (seizureExtreme) {
+        const hue = rainbowHue(n.beatNum * 0.131 + performance.now() * 0.000417);
+        ctx.shadowColor = `hsl(${hue | 0},100%,65%)`;
+        ctx.shadowBlur  = 40;
+      } else if (!seizureSafe) {
+        ctx.shadowColor = '#ffd35a';
+        ctx.shadowBlur  = 18;
+      }
     }
     ctx.font         = 'bold 52px Impact, "Arial Narrow Bold", sans-serif';
     ctx.fillStyle    = color;
@@ -625,9 +666,10 @@ function draw(elapsedMs) {
     ctx.globalAlpha = (1 - t) * 0.85;
     ctx.strokeStyle = fx.color;
     ctx.lineWidth   = 3 - t * 2;
-    if (!seizureSafe) { ctx.shadowColor = fx.color; ctx.shadowBlur = 8; }
+    if (seizureExtreme) { ctx.shadowColor = fx.color; ctx.shadowBlur = 32; }
+    else if (!seizureSafe) { ctx.shadowColor = fx.color; ctx.shadowBlur = 8; }
     ctx.beginPath();
-    ctx.arc(LANE_X, HZ_Y, 18 + t * 65, 0, Math.PI * 2);
+    ctx.arc(LANE_X, HZ_Y, seizureExtreme ? 26 + t * 120 : 18 + t * 65, 0, Math.PI * 2);
     ctx.stroke();
     ctx.globalAlpha  = (1 - t) * 0.95;
     ctx.fillStyle    = fx.color;
@@ -689,7 +731,14 @@ document.addEventListener('keydown', function (e) {
     const color = bestOff < 50 ? '#35e7ff' : bestOff < 110 ? '#ffd35a' : '#f3b87a';
     const label = bestOff < 50 ? 'PERFECT' : bestOff < 110 ? 'GOOD' : 'OK';
 
-    hitFx.push({ age: 0, color, char: best.char });
+    if (seizureExtreme) {
+      for (let r = 0; r < 3; r++) {
+        const h = rainbowHue(performance.now() * 0.00139 + r * 0.333) | 0;
+        hitFx.push({ age: r * 90, color: `hsl(${h},100%,65%)`, char: best.char });
+      }
+    } else {
+      hitFx.push({ age: 0, color, char: best.char });
+    }
     judgeFx = { text: label, color, age: 0 };
     wordList[best.wordIdx].chars[best.charIdx].status = 'hit';
     flash('hit');
@@ -698,6 +747,7 @@ document.addEventListener('keydown', function (e) {
     combo = 0;
     wordList[best.wordIdx].chars[best.charIdx].status = 'wrong';
     flash('miss');
+    if (seizureExtreme) shakeCanvas();
   }
 
   updateWordContext();
@@ -743,9 +793,26 @@ function renderStats() {
 
 function flash(type) {
   if (seizureSafe) return;
+  if (seizureExtreme) {
+    const hue = (performance.now() * 1.37) % 360 | 0;
+    const opacity = type === 'hit' ? 0.55 : 0.8;
+    $flash.style.background = `hsla(${hue},100%,60%,${opacity})`;
+    $flash.className = '';
+    void $flash.offsetWidth;
+    $flash.className = type === 'hit' ? 'extreme-hit' : 'extreme-miss';
+    return;
+  }
   $flash.className = '';
   void $flash.offsetWidth;
   $flash.className = type;
+}
+
+function shakeCanvas() {
+  if (!canvas) return;
+  canvas.classList.remove('shake');
+  void canvas.offsetWidth;
+  canvas.classList.add('shake');
+  setTimeout(() => canvas?.classList.remove('shake'), 280);
 }
 
 // ─── End game ─────────────────────────────────────────────────────────────────
@@ -911,9 +978,28 @@ document.getElementById('start-btn').addEventListener('click', function () { sta
 
 document.getElementById('seizure-safe-btn').addEventListener('click', () => {
   seizureSafe = !seizureSafe;
+  if (seizureSafe && seizureExtreme) {
+    seizureExtreme = false;
+    const eb = document.getElementById('extreme-btn');
+    eb.textContent = 'Extreme Mode: OFF';
+    eb.classList.remove('active');
+  }
   const btn = document.getElementById('seizure-safe-btn');
   btn.textContent = `Seizure Safe Mode: ${seizureSafe ? 'ON' : 'OFF'}`;
   btn.classList.toggle('active', seizureSafe);
+});
+
+document.getElementById('extreme-btn').addEventListener('click', () => {
+  seizureExtreme = !seizureExtreme;
+  if (seizureExtreme && seizureSafe) {
+    seizureSafe = false;
+    const sb = document.getElementById('seizure-safe-btn');
+    sb.textContent = 'Seizure Safe Mode: OFF';
+    sb.classList.remove('active');
+  }
+  const btn = document.getElementById('extreme-btn');
+  btn.textContent = `Extreme Mode: ${seizureExtreme ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', seizureExtreme);
 });
 
 document.querySelectorAll('.diff-btn').forEach(btn => {

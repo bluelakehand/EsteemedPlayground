@@ -394,3 +394,46 @@ body {
   border-color: var(--green);
   color: var(--green);
 }
+
+#extreme-btn {
+  font-size: 0.7rem;
+  padding: 0.35rem 1rem;
+  opacity: 0.5;
+  border-color: rgba(255,77,125,0.35);
+  color: var(--hot);
+  transition: opacity 0.15s;
+}
+#extreme-btn:hover { opacity: 0.85; }
+#extreme-btn.active {
+  opacity: 1;
+  border-color: var(--hot);
+  color: var(--hot);
+  animation: extreme-btn-pulse 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes extreme-btn-pulse {
+  from { box-shadow: 0 0 0.4rem rgba(255,77,125,0.3); }
+  to   { box-shadow: 0 0 1.6rem rgba(255,77,125,0.75); }
+}
+
+/* ── Extreme flash animations ── */
+@keyframes extreme-hit-anim  { 0% { opacity:1; } 100% { opacity:0; } }
+@keyframes extreme-miss-anim { 0% { opacity:1; } 40% { opacity:0.7; } 100% { opacity:0; } }
+@keyframes beat-strobe-anim  { 0% { opacity:0.9; } 100% { opacity:0; } }
+
+#flash.extreme-hit  { animation: extreme-hit-anim  0.14s ease-out forwards; }
+#flash.extreme-miss { animation: extreme-miss-anim 0.38s ease-out forwards; }
+#flash.beat-strobe  { animation: beat-strobe-anim  0.17s ease-out forwards; }
+
+/* ── Canvas screen-shake ── */
+@keyframes screen-shake {
+  0%   { transform: translate(0, 0); }
+  15%  { transform: translate(-7px, 4px); }
+  30%  { transform: translate(7px, -5px); }
+  50%  { transform: translate(-5px, 6px); }
+  70%  { transform: translate(6px, -3px); }
+  85%  { transform: translate(-4px, 3px); }
+  100% { transform: translate(0, 0); }
+}
+
+#lane-canvas.shake { animation: screen-shake 0.26s ease-out forwards; }
