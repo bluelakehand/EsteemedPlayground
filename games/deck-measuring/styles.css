@@ -435,6 +435,33 @@ input[type="range"]::-moz-range-thumb {
   flex-wrap: wrap;
 }
 
+/* ── Zoom row ── */
+.zoom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.zoom-label {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.zoom-row input[type="range"] {
+  flex: 1;
+  max-width: 220px;
+  height: 5px;
+}
+
+#zoom-display {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  min-width: 2.8rem;
+}
+
 /* ── Seed form ── */
 .seed-form {
   display: flex;
@@ -480,19 +507,37 @@ input[type="range"]::-moz-range-thumb {
   white-space: nowrap;
 }
 
-/* ── Seed badge (shown on guess screen when using custom seed) ── */
-.seed-indicator {
-  display: none;
+/* ── Header row (badge + seed chip side by side) ── */
+.header-row {
+  display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.78rem;
-  color: var(--muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
-.seed-indicator.visible { display: flex; }
-.seed-indicator span { color: var(--orange-light); font-weight: 700; }
+/* ── Seed chip ── */
+.seed-chip {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.28rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.seed-chip.daily {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255, 204, 128, 0.7);
+  border: 1px solid rgba(255, 204, 128, 0.2);
+}
+
+.seed-chip.custom {
+  background: rgba(245, 124, 0, 0.18);
+  color: var(--orange-light);
+  border: 1px solid rgba(245, 124, 0, 0.45);
+}
 
 /* ── How To ── */
 .how-to {
