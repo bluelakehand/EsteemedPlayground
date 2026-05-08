@@ -68,9 +68,10 @@ const $diffDesc  = document.getElementById('diff-desc');
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-let gameState = 'loading';
-let seed      = '';
-let diff      = 'hard';
+let gameState   = 'loading';
+let seed        = '';
+let diff        = 'hard';
+let seizureSafe = false;
 let manifest  = null;
 let chipPlayer = null;
 let songBuffer = null;
@@ -382,8 +383,7 @@ function countdownFrame(timestamp) {
   ctx.globalAlpha  = Math.max(0, alpha);
   ctx.font         = `bold ${numSize}px Impact, "Arial Narrow Bold", sans-serif`;
   ctx.fillStyle    = isGo ? '#3fff8a' : '#ffd35a';
-  ctx.shadowColor  = isGo ? '#3fff8a' : '#ffd35a';
-  ctx.shadowBlur   = 28 * (1 - t);
+  if (!seizureSafe) { ctx.shadowColor = isGo ? '#3fff8a' : '#ffd35a'; ctx.shadowBlur = 28 * (1 - t); }
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.translate(LANE_X, H * 0.42);
@@ -523,8 +523,7 @@ function draw(elapsedMs) {
 
   // Hit zone line
   ctx.save();
-  ctx.shadowColor = 'rgba(255,211,90,0.9)';
-  ctx.shadowBlur  = 10;
+  if (!seizureSafe) { ctx.shadowColor = 'rgba(255,211,90,0.9)'; ctx.shadowBlur = 10; }
   ctx.strokeStyle = 'rgba(255,211,90,0.75)';
   ctx.lineWidth   = 2.5;
   ctx.beginPath();
@@ -565,7 +564,7 @@ function draw(elapsedMs) {
       }
       ctx.save();
       ctx.fillStyle = color;
-      if (ch.status === 'hit') { ctx.shadowColor = '#35e7ff'; ctx.shadowBlur = 14; }
+      if (ch.status === 'hit' && !seizureSafe) { ctx.shadowColor = '#35e7ff'; ctx.shadowBlur = 14; }
       ctx.fillText(ch.c.toUpperCase(), positions[i] ?? LANE_X, WORD_Y);
       ctx.restore();
     });
@@ -607,7 +606,7 @@ function draw(elapsedMs) {
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    if (n.status === 'pending' && inZone) {
+    if (n.status === 'pending' && inZone && !seizureSafe) {
       ctx.shadowColor = '#ffd35a';
       ctx.shadowBlur  = 18;
     }
@@ -626,8 +625,7 @@ function draw(elapsedMs) {
     ctx.globalAlpha = (1 - t) * 0.85;
     ctx.strokeStyle = fx.color;
     ctx.lineWidth   = 3 - t * 2;
-    ctx.shadowColor = fx.color;
-    ctx.shadowBlur  = 8;
+    if (!seizureSafe) { ctx.shadowColor = fx.color; ctx.shadowBlur = 8; }
     ctx.beginPath();
     ctx.arc(LANE_X, HZ_Y, 18 + t * 65, 0, Math.PI * 2);
     ctx.stroke();
@@ -744,6 +742,7 @@ function renderStats() {
 // ─── Flash ────────────────────────────────────────────────────────────────────
 
 function flash(type) {
+  if (seizureSafe) return;
   $flash.className = '';
   void $flash.offsetWidth;
   $flash.className = type;
@@ -909,6 +908,13 @@ function buildEndPara() {
 // ─── UI wiring ────────────────────────────────────────────────────────────────
 
 document.getElementById('start-btn').addEventListener('click', function () { startGame(); });
+
+document.getElementById('seizure-safe-btn').addEventListener('click', () => {
+  seizureSafe = !seizureSafe;
+  const btn = document.getElementById('seizure-safe-btn');
+  btn.textContent = `Seizure Safe Mode: ${seizureSafe ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', seizureSafe);
+});
 
 document.querySelectorAll('.diff-btn').forEach(btn => {
   btn.addEventListener('click', () => applyDiff(btn.dataset.diff));
