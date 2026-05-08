@@ -104,6 +104,68 @@ let hitFx    = [];  // { age, color, char, x }
 let judgeFx  = null; // { text, color, age }
 let lastFrameMs = 0;
 
+// Countdown state
+let countdownText    = '';  // '3' | '2' | '1' | 'GO!' | ''
+let countdownPhaseSt = 0;   // performance.now() when current text was set
+
+// ─── Menu music ───────────────────────────────────────────────────────────────
+
+const MENU_SEEDS = ['menu-1', 'menu-2', 'menu-3'];
+let menuBuffer = null;
+let menuPlayer = null;
+let menuGain   = null;
+
+// Pre-fetch a random menu song then start playing immediately.
+// If the AudioContext is suspended (browser autoplay policy), it will resume
+// on the user's first interaction automatically.
+(async function prefetchMenuSong() {
+  const s = MENU_SEEDS[Math.floor(Math.random() * MENU_SEEDS.length)];
+  try {
+    const staticRes = await fetch(`/games/dancing-and-dancing/songs/${encodeURIComponent(s)}.json`);
+    let songFile;
+    if (staticRes.ok) {
+      songFile = (await staticRes.json()).songFile;
+    } else {
+      const apiRes = await fetch(`/api/song?seed=${encodeURIComponent(s)}`);
+      if (!apiRes.ok) return;
+      songFile = (await apiRes.json()).songFile;
+    }
+    const itRes = await fetch(songFile);
+    if (!itRes.ok) return;
+    menuBuffer = new Uint8Array(await itRes.arrayBuffer());
+  } catch (_) { return; }
+  startMenuMusic();
+})();
+
+function startMenuMusic() {
+  if (!menuBuffer || menuPlayer) return;
+  try {
+    menuPlayer = new ChiptuneJsPlayer(new ChiptuneJsConfig(0, 100, 8, null));
+    menuPlayer.play(menuBuffer);
+    menuPlayer.module_ctl_set('play.loopcount', '-1');
+    menuGain = menuPlayer.context.createGain();
+    menuGain.gain.value = parseFloat(document.getElementById('vol-slider').value);
+    menuPlayer.currentPlayingNode.disconnect();
+    menuPlayer.currentPlayingNode.connect(menuGain);
+    menuGain.connect(menuPlayer.context.destination);
+
+    // Browser autoplay policy: AudioContext may start suspended if there has
+    // been no user gesture yet. Resume it silently on the next interaction.
+    if (menuPlayer.context.state === 'suspended') {
+      const resume = () => { menuPlayer?.context.resume(); };
+      document.addEventListener('click',   resume, { once: true });
+      document.addEventListener('keydown', resume, { once: true });
+    }
+  } catch (_) { menuPlayer = null; menuGain = null; }
+}
+
+function stopMenuMusic() {
+  if (!menuPlayer) return;
+  try { menuPlayer.stop(); } catch (_) {}
+  menuPlayer = null;
+  menuGain   = null;
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 (async function init() {
@@ -246,15 +308,16 @@ function startGame() {
 }
 
 function doStart() {
+  stopMenuMusic();
   score = 0; combo = 0; maxCombo = 0; totalHits = 0; goodHits = 0;
   hitFx = []; judgeFx = null; lastFrameMs = 0;
+  countdownText = ''; countdownPhaseSt = 0;
 
   computeTiming();
   buildNotes();
 
   showScreen('play');
 
-  // Size canvas after it becomes visible
   canvas = document.getElementById('lane-canvas');
   ctx    = canvas.getContext('2d');
   setTimeout(resizeCanvas, 0);
@@ -262,18 +325,86 @@ function doStart() {
   updateWordContext();
   renderStats();
 
-  chipPlayer.handlers = [];
-  chipPlayer.onEnded(function () { if (gameState === 'playing') endGame(); });
-  chipPlayer.play(songBuffer);
+  gameState = 'countdown';
+  requestAnimationFrame(countdownFrame);
+  startCountdown(() => {
+    if (gameState !== 'countdown') return; // aborted (e.g. user hit Menu)
+    chipPlayer.handlers = [];
+    chipPlayer.onEnded(function () { if (gameState === 'playing') endGame(); });
+    chipPlayer.play(songBuffer);
 
-  gainNode = chipPlayer.context.createGain();
-  gainNode.gain.value = parseFloat(document.getElementById('vol-slider').value);
-  chipPlayer.currentPlayingNode.disconnect();
-  chipPlayer.currentPlayingNode.connect(gainNode);
-  gainNode.connect(chipPlayer.context.destination);
+    gainNode = chipPlayer.context.createGain();
+    gainNode.gain.value = parseFloat(document.getElementById('vol-slider').value);
+    chipPlayer.currentPlayingNode.disconnect();
+    chipPlayer.currentPlayingNode.connect(gainNode);
+    gainNode.connect(chipPlayer.context.destination);
 
-  gameState = 'playing';
-  requestAnimationFrame(gameLoop);
+    gameState = 'playing';
+    requestAnimationFrame(gameLoop);
+  });
+}
+
+function startCountdown(onComplete) {
+  const steps = ['3', '2', '1', 'GO!'];
+  let i = 0;
+
+  function advance() {
+    countdownText    = steps[i];
+    countdownPhaseSt = performance.now();
+    i++;
+    if (i < steps.length) {
+      setTimeout(advance, 750);
+    } else {
+      setTimeout(onComplete, 550); // linger on GO! then start
+    }
+  }
+  advance();
+}
+
+function countdownFrame(timestamp) {
+  if (gameState !== 'countdown') return;
+  draw(-99999); // renders the empty lane + hit zone; no notes at t=-∞
+
+  if (!ctx || !countdownText) { requestAnimationFrame(countdownFrame); return; }
+
+  const age  = timestamp - countdownPhaseSt;
+  const dur  = countdownText === 'GO!' ? 550 : 750;
+  const t    = Math.min(age / dur, 1);
+
+  const isGo    = countdownText === 'GO!';
+  const numSize = Math.min(Math.round(H * 0.24), 150);
+
+  // Number / GO! text
+  const scale = isGo ? (1 + (1 - t) * 0.15) : (1.35 - 0.35 * t);
+  const alpha = isGo ? Math.min(1, (1 - t) * 1.8) : (t < 0.65 ? 1 : 1 - (t - 0.65) / 0.35);
+
+  ctx.save();
+  ctx.globalAlpha  = Math.max(0, alpha);
+  ctx.font         = `bold ${numSize}px Impact, "Arial Narrow Bold", sans-serif`;
+  ctx.fillStyle    = isGo ? '#3fff8a' : '#ffd35a';
+  ctx.shadowColor  = isGo ? '#3fff8a' : '#ffd35a';
+  ctx.shadowBlur   = 28 * (1 - t);
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.translate(LANE_X, H * 0.42);
+  ctx.scale(scale, scale);
+  ctx.fillText(countdownText, 0, 0);
+  ctx.restore();
+
+  // Prompt text — only during 3/2/1, fades out with the number
+  if (!isGo) {
+    ctx.save();
+    ctx.globalAlpha  = Math.max(0, alpha * 0.65);
+    ctx.font         = '13px "Courier New", monospace';
+    ctx.fillStyle    = '#f3b87a';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    try { ctx.letterSpacing = '3px'; } catch (_) {}
+    ctx.fillText('GET YOUR HANDS ON THE KEYBOARD', LANE_X, H * 0.42 + numSize * 0.72);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(countdownFrame);
 }
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
@@ -673,10 +804,23 @@ $seedInput.addEventListener('keydown', e => {
 document.getElementById('play-again-btn').addEventListener('click', () => {
   gameState = 'ready';
   showScreen('start');
+  startMenuMusic();
+});
+
+document.getElementById('return-btn').addEventListener('click', () => {
+  if (gameState !== 'playing' && gameState !== 'countdown') return;
+  const wasPlaying = gameState === 'playing';
+  gameState = 'ready';
+  countdownText = '';
+  if (wasPlaying && chipPlayer) { try { chipPlayer.stop(); } catch (_) {} }
+  showScreen('start');
+  startMenuMusic();
 });
 
 document.getElementById('vol-slider').addEventListener('input', function () {
-  if (gainNode) gainNode.gain.value = parseFloat(this.value);
+  const v = parseFloat(this.value);
+  if (gainNode)   gainNode.gain.value   = v;
+  if (menuGain)   menuGain.gain.value   = v;
 });
 
 document.getElementById('share-btn').addEventListener('click', () => {

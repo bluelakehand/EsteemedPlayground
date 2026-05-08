@@ -47,6 +47,10 @@ jobs:
             echo "Generating seed: $SEED"
             python3 tools/autotracker3.py "$SEED" "games/dancing-and-dancing/songs/${SEED}.it" || true
           done
+          for SEED in menu-1 menu-2 menu-3; do
+            echo "Generating menu song: $SEED"
+            python3 tools/autotracker3.py "$SEED" "games/dancing-and-dancing/songs/${SEED}.it" || true
+          done
 
       - name: Deploy files to S3
         run: |

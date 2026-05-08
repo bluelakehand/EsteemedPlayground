@@ -232,11 +232,22 @@ body {
 #bottom-bar {
   flex-shrink: 0;
   display: flex;
-  justify-content: center;
-  gap: 3rem;
+  align-items: center;
+  justify-content: space-between;
   padding: 0.4rem 1rem;
   border-top: 1px solid rgba(255,211,90,0.15);
 }
+
+.bottom-stats { display: flex; gap: 3rem; }
+.bottom-spacer { width: 5.5rem; } /* mirrors return-btn width for visual centering */
+
+#return-btn {
+  font-size: 0.7rem;
+  padding: 0.3rem 0.85rem;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+#return-btn:hover { opacity: 1; }
 
 .bstat-label { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 .bstat-value { font-size: 1rem; color: var(--coin); }

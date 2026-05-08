@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dancing and Dancing</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../arcade-home-link.css">
 </head>
 <body>
 
+<a class="arcade-home-link" href="../../">Esteemed Arcade</a>
 <div id="flash"></div>
 
 <div id="vol-control">
@@ -68,18 +70,22 @@
   <canvas id="lane-canvas"></canvas>
 
   <div id="bottom-bar">
-    <div class="bstat">
-      <div class="bstat-label">Score</div>
-      <div class="bstat-value" id="b-score">0</div>
+    <button class="btn" id="return-btn">← Menu</button>
+    <div class="bottom-stats">
+      <div class="bstat">
+        <div class="bstat-label">Score</div>
+        <div class="bstat-value" id="b-score">0</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-label">Combo</div>
+        <div class="bstat-value" id="b-combo">x0</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-label">Accuracy</div>
+        <div class="bstat-value" id="b-acc">—</div>
+      </div>
     </div>
-    <div class="bstat">
-      <div class="bstat-label">Combo</div>
-      <div class="bstat-value" id="b-combo">x0</div>
-    </div>
-    <div class="bstat">
-      <div class="bstat-label">Accuracy</div>
-      <div class="bstat-value" id="b-acc">—</div>
-    </div>
+    <div class="bottom-spacer"></div>
   </div>
 </div>
 
