@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Portdle</title>
+    <meta
+      name="description"
+      content="Portdle is a daily wizard puzzle about crossing a room in the fewest moves and portals."
+    >
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+    <main class="shell">
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily portal puzzle</p>
+          <h1 id="game-title">
+            <img src="portdle_logo.png" alt="Portdle" class="site-logo">
+          </h1>
+          <p class="lede">
+            You are a wizard solving one room per day. Reach the goal in the fewest moves and portals.
+          </p>
+        </div>
+        <div class="stat-card" aria-label="Daily challenge stats">
+          <span>Puzzle</span>
+          <strong id="puzzle-id">Loading...</strong>
+          <small>Blue + Yellow Portals</small>
+        </div>
+      </section>
+
+      <section class="game-card">
+        <div class="topbar">
+          <div>
+            <span class="label">Moves</span>
+            <strong id="move-count">0</strong>
+          </div>
+          <div>
+            <span class="label">Portal Uses</span>
+            <strong id="portal-count">0</strong>
+          </div>
+          <div>
+            <span class="label">Score</span>
+            <strong id="score-count">0</strong>
+          </div>
+          <div>
+            <span class="label">Reach Exit</span>
+            <strong>Door Tile</strong>
+          </div>
+        </div>
+
+        <div class="portal-toolbar" aria-label="Portal aim controls">
+          <button id="aim-blue-btn" class="portal-btn portal-btn-blue" type="button">Aim Blue Portal</button>
+          <button id="aim-yellow-btn" class="portal-btn portal-btn-yellow" type="button">Aim Yellow Portal</button>
+        </div>
+
+        <canvas id="arena" width="960" height="560" aria-label="Portdle game board"></canvas>
+
+        <div class="controls">
+          <label for="seed-input">Seed</label>
+          <input id="seed-input" type="text" placeholder="YYYY-MM-DD" autocomplete="off">
+          <button id="set-seed-btn" type="button">Set Seed</button>
+          <button id="reset-btn" type="button">Reset</button>
+        </div>
+
+        <p id="status" class="status" role="status">
+          Move with arrow keys. Tap a portal button, then left-click a wall tile to place.
+        </p>
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How to Play</h2>
+        <div class="rules">
+          <p><strong>GOAL:</strong> Reach the exit using the fewest amount of points.</p>
+          <p><strong>MOVE:</strong> Move your wizard using only the arrow keys. Each move costs 10 points.</p>
+          <p><strong>PORTALS:</strong> Press Blue or Yellow aim, then left-click a wall tile to place. You can only move onto walls with portals.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>

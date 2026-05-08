@@ -11,6 +11,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)",
       "Bash(curl -s \"http://localhost:8080/api/song?seed=test123\" -o /tmp/song_test.json -w \"%{http_code}\")",
       "Read(//tmp/**)"
+      "Bash(Get-ChildItem -Path \"C:\\\\git\\\\EP\\\\EsteemedPlayground\\\\games\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Sort-Object Name)"
     ]
   }
 }

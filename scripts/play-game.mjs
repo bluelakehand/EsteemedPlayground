@@ -32,9 +32,8 @@ async function startServer() {
     // No server is running yet; start one below.
   }
 
-  const server = spawn(process.execPath, ["server.js"], {
+  const server = spawn("python", ["-m", "http.server", String(port), "--bind", "127.0.0.1"], {
     cwd: process.cwd(),
-    env: { ...process.env, PORT: String(port) },
     stdio: ["ignore", "pipe", "pipe"],
   });
 

@@ -5,6 +5,8 @@ A playground for esteemed comrades: a growing arcade of small daily browser game
 ## Games
 
 - [Perfect Pocket](games/perfect-pocket/) - a daily billiards puzzle with bonus pockets, powerups, and shareable practice seeds.
+- [Portdle](games/portdle/) - a seeded wizard maze puzzle where portals let you bend routes to the exit.
+- [Deck Measuring Contest](games/deck-measuring/) - a daily wood sizing challenge. Study a 10 m² reference deck, then estimate the area of 5 seeded decks. Golf scoring, custom seeds, and spoiler-free sharing.
 
 ## Run
 

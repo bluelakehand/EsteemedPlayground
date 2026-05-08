@@ -1,0 +1,55 @@
+.arcade-home-link {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 10000;
+  display: inline-block;
+  border: 3px solid #12110f;
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: #12110f;
+  background: #fff0bd;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow: 0 4px 0 #d69b34, 0 8px 18px rgba(20, 12, 8, 0.28);
+}
+
+.arcade-home-link:hover,
+.arcade-home-link:focus-visible {
+  color: #fff0bd;
+  background: #c5251f;
+  transform: translateY(-1px);
+}
+
+.arcade-home-link-crokinole {
+  top: auto;
+  right: auto;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.arcade-home-link-crokinole:hover,
+.arcade-home-link-crokinole:focus-visible {
+  transform: translateX(-50%) translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .arcade-home-link {
+    top: 8px;
+    right: 8px;
+    padding: 7px 8px;
+    font-size: 13px;
+  }
+
+  .arcade-home-link-crokinole {
+    top: auto;
+    right: auto;
+    bottom: 8px;
+    left: 50%;
+  }
+}
