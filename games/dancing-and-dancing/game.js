@@ -464,16 +464,20 @@ function gameLoop(timestamp) {
   const cfg = DIFF[diff];
   let needWordUpdate = false;
 
-  // Mark missed notes
+  // Mark missed notes — count each miss against accuracy just like a wrong keypress
+  let needFlash = false;
   for (const n of notes) {
     if (n.status === 'pending' && elapsedMs > n.targetMs + cfg.windowMs + 60) {
       n.status = 'miss';
       wordList[n.wordIdx].chars[n.charIdx].status = 'miss';
       combo = 0;
+      totalHits++;  // goodHits not incremented → accuracy drops
       needWordUpdate = true;
+      needFlash = true;
     }
   }
 
+  if (needFlash) flash('miss');
   if (needWordUpdate) { updateWordContext(); renderStats(); }
   if (elapsedMs >= totalMs) { endGame(); return; }
 
