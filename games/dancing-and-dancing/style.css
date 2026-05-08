@@ -275,9 +275,9 @@ body {
 }
 
 .ep-word { display: inline-flex; margin: 0 0.25em; }
-.ep-c.correct { color: var(--cyan); }
+.ep-c.hit     { color: var(--cyan); }
 .ep-c.wrong   { color: var(--hot); text-decoration: line-through; }
-.ep-c.missed  { color: rgba(255,247,219,0.18); text-decoration: line-through; }
+.ep-c.miss    { color: rgba(255,247,219,0.18); text-decoration: line-through; }
 .ep-c.pending { color: rgba(255,247,219,0.18); }
 
 .end-scores {

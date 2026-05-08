@@ -854,10 +854,10 @@ function generateRoast() {
     },
   };
 
-  let roast = pick(lines[diff][tier]);
+  // Build all candidate roasts, then pick exactly one.
+  const candidates = [...lines[diff][tier]];
 
-  // Append a word-specific callout ~65% of the time when there's a shame word
-  if (shameWord && Math.random() < 0.65) {
+  if (shameWord) {
     const len = shameEntry.word.length;
     const wordJabs = [
       `Really? "${shameWord}" was the one that did you in?`,
@@ -874,16 +874,18 @@ function generateRoast() {
         `${len}-letter word. "${shameWord}." Gone.`,
       );
     }
-    roast += ' ' + pick(wordJabs);
-  } else if (maxCombo === 0 && Math.random() < 0.5) {
-    roast += ' ' + pick([
+    candidates.push(...wordJabs);
+  }
+
+  if (maxCombo === 0) {
+    candidates.push(
       'Your best combo was zero. Statistically, you were just pressing keys.',
       'A max combo of zero is a special kind of achievement.',
       'Zero combo. Not a single consecutive pair of correct notes. Remarkable.',
-    ]);
+    );
   }
 
-  return roast;
+  return pick(candidates);
 }
 
 function buildEndPara() {
@@ -949,11 +951,32 @@ document.getElementById('vol-slider').addEventListener('input', function () {
 });
 
 document.getElementById('share-btn').addEventListener('click', () => {
+  const btn     = document.getElementById('share-btn');
+  const accPct  = totalHits > 0 ? Math.round((goodHits / totalHits) * 100) : 100;
+  const isDaily = seed === ((() => { const d = new Date(); return `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`; })());
+  const seedLine = isDaily ? `📅 ${seed}` : `🌱 ${seed}`;
+  const diffLabel = { baby: 'BABY', hard: 'HARD', chad: 'CHAD' }[diff] ?? diff.toUpperCase();
   const url = `${location.origin}${location.pathname}?seed=${encodeURIComponent(seed)}&diff=${diff}`;
-  navigator.clipboard?.writeText(url).then(() => {
-    const btn = document.getElementById('share-btn');
-    const orig = btn.textContent;
-    btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = orig; }, 1500);
-  }).catch(() => { prompt('Share this link:', url); });
+  const roast = document.getElementById('end-roast').textContent;
+
+  const text = [
+    `💃 Dancing & Dancing`,
+    `${seedLine} · ${diffLabel}`,
+    ``,
+    `Score: ${score.toLocaleString()}  ·  Accuracy: ${accPct}%  ·  Best combo: x${maxCombo}`,
+    roast ? `"${roast}"` : '',
+    ``,
+    url,
+  ].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n'); // collapse double blanks
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Share Result'; }, 2000);
+      })
+      .catch(() => { prompt('Copy and share:', text); });
+  } else {
+    prompt('Copy and share:', text);
+  }
 });
