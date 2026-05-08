@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dancing and Dancing</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="flash"></div>
+
+<div id="vol-control">
+  <label for="vol-slider">VOL</label>
+  <input type="range" id="vol-slider" min="0" max="1" step="0.01" value="0.2">
+</div>
+
+<!-- Header (visible during play) -->
+<header id="header" class="hidden">
+  <span id="game-title">Dancing &amp; Dancing</span>
+  <div id="header-stats">
+    <div class="hstat">
+      <div class="hstat-label">Score</div>
+      <div class="hstat-value" id="h-score">0</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-label">Combo</div>
+      <div class="hstat-value" id="h-combo">x0</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-label">Accuracy</div>
+      <div class="hstat-value" id="h-acc">—</div>
+    </div>
+  </div>
+</header>
+
+<!-- Loading screen -->
+<div class="screen" id="loading-screen">
+  <div class="screen-title">Dancing<br>&amp; Dancing</div>
+  <p id="loading-msg">Generating today's track</p>
+</div>
+
+<!-- Start/config screen -->
+<div class="screen hidden" id="start-screen">
+  <div class="screen-title">Dancing<br>&amp; Dancing</div>
+  <div class="seed-row">
+    <label for="seed-input">Seed</label>
+    <input id="seed-input" type="text" maxlength="50" spellcheck="false" autocomplete="off">
+    <button class="btn" id="seed-go-btn">Go</button>
+  </div>
+  <div class="diff-row">
+    <button class="diff-btn" data-diff="baby">Baby</button>
+    <button class="diff-btn active" data-diff="hard">Hard</button>
+    <button class="diff-btn" data-diff="chad">Chad</button>
+  </div>
+  <div id="diff-desc">Words every ~1.5s, fair timing window</div>
+  <button class="btn primary" id="start-btn">▶ Start</button>
+  <p>Type the words as they appear — one letter at a time, to the beat</p>
+</div>
+
+<!-- Play area -->
+<div id="play-area" style="display:none">
+  <div id="word-context-area">
+    <span class="wc-label">Next</span>
+    <div id="queue-display"></div>
+  </div>
+
+  <canvas id="lane-canvas"></canvas>
+
+  <div id="bottom-bar">
+    <div class="bstat">
+      <div class="bstat-label">Score</div>
+      <div class="bstat-value" id="b-score">0</div>
+    </div>
+    <div class="bstat">
+      <div class="bstat-label">Combo</div>
+      <div class="bstat-value" id="b-combo">x0</div>
+    </div>
+    <div class="bstat">
+      <div class="bstat-label">Accuracy</div>
+      <div class="bstat-value" id="b-acc">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- End screen -->
+<div class="screen hidden" id="end-screen">
+  <div class="screen-title" style="font-size:clamp(2rem,7vw,4rem)">Fin</div>
+  <div class="end-scores">
+    <div>
+      <div class="end-score-num" id="e-score">0</div>
+      <div class="end-score-label">Score</div>
+    </div>
+    <div>
+      <div class="end-score-num" id="e-acc">—</div>
+      <div class="end-score-label">Accuracy</div>
+    </div>
+    <div>
+      <div class="end-score-num" id="e-combo">x0</div>
+      <div class="end-score-label">Best Combo</div>
+    </div>
+  </div>
+  <p style="font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Your Passage</p>
+  <div id="end-para"></div>
+  <div class="end-btn-row">
+    <button class="btn primary" id="play-again-btn" style="font-size:1.1rem;padding:0.6rem 2rem">Play Again</button>
+    <button class="btn" id="share-btn">Share Seed</button>
+  </div>
+</div>
+
+<script>var libopenmpt = {};</script>
+<script src="libopenmpt.js"></script>
+<script src="chiptune2.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
