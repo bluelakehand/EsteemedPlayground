@@ -761,8 +761,129 @@ function endGame() {
   document.getElementById('e-acc').textContent   = acc;
   document.getElementById('e-combo').textContent = 'x' + maxCombo;
 
+  document.getElementById('end-roast').textContent = generateRoast();
+
   buildEndPara();
   showScreen('end');
+}
+
+function generateRoast() {
+  const accPct = totalHits > 0 ? Math.round((goodHits / totalHits) * 100) : 100;
+  const tier   = accPct >= 90 ? 'high' : accPct >= 50 ? 'mid' : 'low';
+  const pick   = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // Find the most embarrassing specific failure.
+  // Prefer the shortest fully-missed word (nothing more shameful than "cat").
+  const fullyMissed = wordList
+    .filter(w => w.chars.length > 0 && w.chars.every(c => c.status === 'miss'))
+    .sort((a, b) => a.word.length - b.word.length);
+  const hadError = wordList.filter(w => w.chars.some(c => c.status === 'miss' || c.status === 'wrong'));
+  const shameEntry = fullyMissed[0] ?? hadError[0] ?? null;
+  const shameWord  = shameEntry?.word.toUpperCase() ?? null;
+
+  const lines = {
+    baby: {
+      high: [
+        'Congratulations. You can type. On baby mode.',
+        '100% accuracy on the difficulty named after infants. Progress.',
+        'Great score! The bar was ankle height, but you cleared it.',
+        'Nailed it! Have you considered a difficulty where the notes don\'t wait for you?',
+        'Your fingers work. Gold star. Baby-mode gold star.',
+      ],
+      mid: [
+        'Wow. Great score — for a baby.',
+        'Baby mode and you STILL fumbled some. Incredible.',
+        'The training wheels were apparently insufficient.',
+        'Not bad! For a first attempt. At the easiest setting. Ever made.',
+        'Baby mode called. It says to try harder next time.',
+      ],
+      low: [
+        'You failed baby mode. I\'ll let that sink in.',
+        'Baby mode has formally requested you stop playing.',
+        'The difficulty is literally called Baby. What happened in there?',
+        'Even actual babies mash keys better than this.',
+        'Baby mode was too fast? Have you tried… not playing?',
+      ],
+    },
+    hard: {
+      high: [
+        'Solid score. On a difficulty that isn\'t Chad. But sure.',
+        'Hard difficulty cleared. The game is proud of you. Barely.',
+        'Not bad. Completely unimpressive in the grand scheme, but not bad.',
+        'You did fine. Fine is the most diplomatic word available.',
+        'Hard difficulty, decent run. Just one question: scared of Chad?',
+      ],
+      mid: [
+        'Not great, not terrible. Mostly terrible.',
+        'The "Hard" in Hard mode was working overtime today.',
+        'An accuracy that says "I tried" without saying what at.',
+        'Hard difficulty: partial credit, minimal glory.',
+        'You gave it your best. Your best needs practice.',
+      ],
+      low: [
+        'Hard difficulty: 1. You: 0.',
+        'The only thing hard about that was watching.',
+        'Hard mode found that… appropriately named.',
+        'Hard mode suggested you revisit baby mode. Some shame. All shame.',
+        'You hard-moded yourself right into the floor.',
+      ],
+    },
+    chad: {
+      high: [
+        '…okay fine. You\'re actually a chad.',
+        'We take it back. That was legitimately real.',
+        'Perfect on Chad difficulty. You may now speak of this.',
+        'Fine. You\'re built different. We reluctantly accept it.',
+        'Chad difficulty nods in reluctant respect.',
+      ],
+      mid: [
+        'Chad? More like Trad.',
+        'Chad-adjacent. Chad-curious, even.',
+        'Somewhere between Chad and Dad.',
+        'You picked Chad. Chad picked you apart. It\'s complicated.',
+        'Chad difficulty has noted your effort and remained unimpressed.',
+      ],
+      low: [
+        'Chad? More like Bad.',
+        'Chad difficulty has filed a restraining order.',
+        'The word "Chad" is now suing for defamation.',
+        'You picked Chad and delivered something closer to Sad.',
+        'Chad mode called. It doesn\'t know who you are.',
+        'Buddy. Come on. Chad mode.',
+      ],
+    },
+  };
+
+  let roast = pick(lines[diff][tier]);
+
+  // Append a word-specific callout ~65% of the time when there's a shame word
+  if (shameWord && Math.random() < 0.65) {
+    const len = shameEntry.word.length;
+    const wordJabs = [
+      `Really? "${shameWord}" was the one that did you in?`,
+      `"${shameWord}" said good day to you personally.`,
+      `The word "${shameWord}" sends its regards.`,
+      `You couldn't handle "${shameWord}"? That one specifically?`,
+      `"${shameWord}" is embarrassed on your behalf.`,
+      `The whole song and "${shameWord}" was where it fell apart.`,
+    ];
+    if (len <= 4) {
+      wordJabs.push(
+        `"${shameWord}." ${len} letters. You couldn't do "${shameWord}."`,
+        `It was ${len} letters. "${shameWord}." ${len} letters.`,
+        `${len}-letter word. "${shameWord}." Gone.`,
+      );
+    }
+    roast += ' ' + pick(wordJabs);
+  } else if (maxCombo === 0 && Math.random() < 0.5) {
+    roast += ' ' + pick([
+      'Your best combo was zero. Statistically, you were just pressing keys.',
+      'A max combo of zero is a special kind of achievement.',
+      'Zero combo. Not a single consecutive pair of correct notes. Remarkable.',
+    ]);
+  }
+
+  return roast;
 }
 
 function buildEndPara() {
