@@ -128,13 +128,21 @@ async function loadSong(s) {
   if (chipPlayer) { try { chipPlayer.stop(); } catch (_) {} chipPlayer = null; }
   songBuffer = null;
 
+  // Try pre-generated static manifest first (works on S3 / static hosting),
+  // then fall back to the local dev API which spawns autotracker3.py on demand.
   let mft;
   try {
-    const res = await fetch(`/api/song?seed=${encodeURIComponent(s)}`);
-    if (!res.ok) throw new Error(res.status);
-    mft = await res.json();
+    const staticUrl = `/games/dancing-and-dancing/songs/${encodeURIComponent(s)}.json`;
+    const staticRes = await fetch(staticUrl);
+    if (staticRes.ok) {
+      mft = await staticRes.json();
+    } else {
+      const apiRes = await fetch(`/api/song?seed=${encodeURIComponent(s)}`);
+      if (!apiRes.ok) throw new Error(apiRes.status);
+      mft = await apiRes.json();
+    }
   } catch (_) {
-    document.getElementById('loading-msg').textContent = 'Error generating track. Try refreshing.';
+    document.getElementById('loading-msg').textContent = 'Error loading track. Try refreshing.';
     return;
   }
 

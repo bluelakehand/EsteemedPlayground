@@ -30,6 +30,24 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Pre-generate daily songs
+        run: |
+          mkdir -p games/dancing-and-dancing/songs
+          for i in $(seq 0 13); do
+            SEED=$(python3 -c "
+          from datetime import date, timedelta
+          d = date.today() + timedelta(days=$i)
+          print(f'{d.month}-{d.day}-{d.year}')
+          ")
+            echo "Generating seed: $SEED"
+            python3 tools/autotracker3.py "$SEED" "games/dancing-and-dancing/songs/${SEED}.it" || true
+          done
+
       - name: Deploy files to S3
         run: |
           aws s3 sync . "s3://${S3_BUCKET}" \
