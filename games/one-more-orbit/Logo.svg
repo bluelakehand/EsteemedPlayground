@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 190" role="img" aria-labelledby="title">
+  <title id="title">One More Orbit</title>
+  <defs>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f3d4"/>
+      <stop offset="0.52" stop-color="#ffbd4a"/>
+      <stop offset="1" stop-color="#e85d75"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-35%" width="140%" height="170%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0.98 0 1 0 0 0.55 0 0 1 0 0.18 0 0 0 0.8 0"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="780" height="190" rx="18" fill="#070a10"/>
+  <g transform="translate(86 96)" fill="none" stroke-linecap="round">
+    <ellipse rx="70" ry="31" stroke="#2fd7c4" stroke-width="5" transform="rotate(-19)"/>
+    <ellipse rx="94" ry="42" stroke="#f58f3c" stroke-width="3" opacity="0.7" transform="rotate(18)"/>
+    <circle r="23" fill="#ffbd4a" stroke="#ffe8a4" stroke-width="4"/>
+    <circle cx="79" cy="-26" r="8" fill="#e85d75"/>
+  </g>
+  <text x="185" y="82" fill="url(#word)" filter="url(#glow)"
+    font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+    font-size="56" letter-spacing="1">ONE MORE</text>
+  <text x="184" y="144" fill="#f6fbff"
+    font-family="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+    font-size="72" letter-spacing="2">ORBIT</text>
+</svg>
