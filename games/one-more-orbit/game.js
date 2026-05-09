@@ -20,8 +20,8 @@ const PROBE_RADIUS = 8;
 const DOCK_SPEED = 110;
 const MAX_LAUNCH = 360;
 const MAX_BURN = 160;
-const FUEL_MAX = 100;
-const FUEL_PER_BURN_POWER = 18;
+const MAX_REDIRECTS = 3;
+const GRAVITY_SCALE = 6;
 const TIME_LIMIT = 90;
 
 const state = {
@@ -36,7 +36,7 @@ const state = {
   aiming: false,
   aimStart: null,
   aimNow: null,
-  fuel: FUEL_MAX,
+  redirects: MAX_REDIRECTS,
   burns: 0,
   elapsed: 0,
   lastTime: 0,
@@ -129,7 +129,7 @@ function buildMission(seed) {
   state.aiming = false;
   state.aimStart = null;
   state.aimNow = null;
-  state.fuel = FUEL_MAX;
+  state.redirects = MAX_REDIRECTS;
   state.burns = 0;
   state.elapsed = 0;
   state.lastTime = 0;
@@ -157,21 +157,34 @@ function createStars(rand) {
 
 function createPlanets(rand) {
   const planets = [
-    { x: randRange(rand, 325, 440), y: randRange(rand, 210, 350), r: randRange(rand, 38, 54), mass: randRange(rand, 165000, 230000), color: "#ffbd4a" },
-    { x: randRange(rand, 570, 720), y: randRange(rand, 145, 285), r: randRange(rand, 28, 42), mass: randRange(rand, 105000, 155000), color: "#2fd7c4" },
+    planetSpec(randRange(rand, 325, 440), randRange(rand, 210, 350), randRange(rand, 38, 54), randRange(rand, 165000, 230000), "#ffbd4a"),
+    planetSpec(randRange(rand, 570, 720), randRange(rand, 145, 285), randRange(rand, 28, 42), randRange(rand, 105000, 155000), "#2fd7c4"),
   ];
 
   if (rand() > 0.45) {
-    planets.push({
-      x: randRange(rand, 510, 710),
-      y: randRange(rand, 380, 485),
-      r: randRange(rand, 22, 34),
-      mass: randRange(rand, 65000, 105000),
-      color: "#e85d75",
-    });
+    planets.push(
+      planetSpec(
+        randRange(rand, 510, 710),
+        randRange(rand, 380, 485),
+        randRange(rand, 22, 34),
+        randRange(rand, 65000, 105000),
+        "#e85d75"
+      )
+    );
   }
 
   return planets;
+}
+
+function planetSpec(x, y, r, mass, color) {
+  return {
+    x,
+    y,
+    r,
+    mass,
+    color,
+    orbitRange: (r + 74) * 2,
+  };
 }
 
 function createBeacons(rand) {
@@ -255,9 +268,8 @@ function releaseAim() {
     els.status.textContent = "Probe away. Collect the beacons, then dock slowly.";
   } else {
     const burnPower = Math.min(MAX_BURN, rawPower * 1.35);
-    const fuelCost = (burnPower / MAX_BURN) * FUEL_PER_BURN_POWER;
-    if (fuelCost > state.fuel) {
-      els.status.textContent = "Not enough fuel for that burn.";
+    if (state.redirects <= 0) {
+      els.status.textContent = "No redirects left. Ride the gravity wells to the station.";
       cancelAim();
       return;
     }
@@ -265,9 +277,9 @@ function releaseAim() {
     const scale = burnPower / rawPower;
     state.probe.vx += dx * scale;
     state.probe.vy += dy * scale;
-    state.fuel = Math.max(0, state.fuel - fuelCost);
+    state.redirects -= 1;
     state.burns += 1;
-    els.status.textContent = "Burn committed. Keep the docking speed gentle.";
+    els.status.textContent = "Redirect committed. Keep the docking speed gentle.";
   }
 
   cancelAim();
@@ -310,7 +322,10 @@ function stepPhysics(dt) {
     const dy = planet.y - state.probe.y;
     const d2 = Math.max(900, dx * dx + dy * dy);
     const d = Math.sqrt(d2);
-    const accel = planet.mass / d2;
+    if (d > planet.orbitRange) continue;
+
+    const edgeFade = Math.min(1, (planet.orbitRange - d) / 42);
+    const accel = (planet.mass * GRAVITY_SCALE * edgeFade) / d2;
     ax += (dx / d) * accel;
     ay += (dy / d) * accel;
   }
@@ -360,19 +375,19 @@ function checkCollisions() {
       return;
     }
     state.won = true;
-    els.status.textContent = `Docked. Score ${scoreValue()} from ${state.burns} burns in ${state.elapsed.toFixed(1)}s.`;
+    els.status.textContent = `Docked. Score ${scoreValue()} from ${state.burns} redirects in ${state.elapsed.toFixed(1)}s.`;
   }
 }
 
 function scoreValue() {
-  return Math.round(state.burns * 120 + (FUEL_MAX - state.fuel) * 7 + state.elapsed * 2);
+  return Math.round(state.burns * 180 + state.elapsed * 2);
 }
 
 function updateUi() {
   const collected = state.beacons.filter((beacon) => beacon.collected).length;
   els.beaconCount.textContent = `${collected} / ${state.beacons.length}`;
   els.burnCount.textContent = state.burns;
-  els.fuelCount.textContent = `${Math.round(state.fuel)}%`;
+  els.fuelCount.textContent = state.redirects;
   els.timeCount.textContent = `${state.elapsed.toFixed(1)}s`;
 }
 
@@ -412,7 +427,7 @@ function drawOrbits(time) {
     const pulse = 0.35 + Math.sin(time * 0.0015 + planet.x) * 0.08;
     ctx.strokeStyle = `rgba(47, 215, 196, ${pulse})`;
     ctx.beginPath();
-    ctx.arc(planet.x, planet.y, planet.r + 74, 0, Math.PI * 2);
+    ctx.arc(planet.x, planet.y, planet.orbitRange, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
@@ -555,7 +570,7 @@ function drawBanner() {
   if (!state.won && !state.lost) return;
   const title = state.won ? "Docking Complete" : "Mission Failed";
   const detail = state.won
-    ? `Score ${scoreValue()} | Fuel ${Math.round(state.fuel)}% | Time ${state.elapsed.toFixed(1)}s`
+    ? `Score ${scoreValue()} | Redirects ${state.redirects} | Time ${state.elapsed.toFixed(1)}s`
     : "Reset the mission or roll a practice seed.";
 
   const width = 430;
