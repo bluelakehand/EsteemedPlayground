@@ -1,0 +1,226 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0d0d1a;
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 12px 8px 20px;
+  user-select: none;
+}
+
+#game-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 1100px;
+}
+
+#hud {
+  width: 1100px;
+  height: 36px;
+  background: #111122;
+  border: 1px solid #334;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+}
+
+#hud-left { flex: 1; }
+#hud-center { flex: 0 0 auto; text-align: center; }
+#hud-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+
+#phase-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #7af;
+  font-weight: bold;
+}
+
+#timer-display {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+#suspicion-label { font-size: 14px; color: #fa0; }
+#suspicion-bg {
+  width: 100px;
+  height: 10px;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 5px;
+  overflow: hidden;
+}
+#suspicion-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, #fa0, #f44);
+  border-radius: 5px;
+  transition: width 0.1s;
+}
+
+canvas {
+  display: block;
+  border: 1px solid #334;
+  background: #111;
+  cursor: default;
+}
+
+#bottom-bar {
+  width: 1100px;
+  min-height: 54px;
+  background: #111122;
+  border: 1px solid #334;
+  border-top: none;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  gap: 10px;
+}
+
+.panel-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #888;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+#inventory-panel, #build-panel {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow: hidden;
+}
+
+#inventory-items, #build-hand {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1;
+}
+
+.inv-item, .hand-item {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #445;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  gap: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: #1a1a2e;
+  transition: border-color 0.1s;
+}
+
+.hand-item:hover { border-color: #7af; }
+.hand-item.selected { border-color: #4f4; background: #0a1a0a; }
+.hand-item.placed { opacity: 0.35; cursor: not-allowed; }
+
+.item-icon { font-size: 14px; }
+.item-name { font-size: 7px; color: #aaa; text-align: center; line-height: 1; }
+.item-count { font-size: 8px; color: #7af; font-weight: bold; line-height: 1; }
+
+#seed-panel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+#seed-input {
+  background: #0d0d1a;
+  border: 1px solid #334;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  padding: 4px 8px;
+  width: 130px;
+  border-radius: 3px;
+  outline: none;
+}
+#seed-input:focus { border-color: #7af; }
+
+button {
+  background: #1a2a3a;
+  border: 1px solid #457;
+  color: #7af;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  padding: 5px 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+button:hover { background: #243444; }
+
+#btn-submit {
+  margin-left: 8px;
+  color: #4f4;
+  border-color: #474;
+  flex-shrink: 0;
+}
+
+/* Overlay */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+#overlay.hidden { display: none; }
+
+#overlay-box {
+  background: #111122;
+  border: 1px solid #445;
+  padding: 36px 44px;
+  max-width: 520px;
+  width: 90%;
+  text-align: center;
+}
+
+#overlay-title {
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: #7af;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+#overlay-body {
+  color: #ccc;
+  font-size: 13px;
+  line-height: 1.8;
+  margin-bottom: 24px;
+  white-space: pre-line;
+}
+
+#overlay-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#overlay-actions button {
+  font-size: 13px;
+  padding: 8px 20px;
+}
