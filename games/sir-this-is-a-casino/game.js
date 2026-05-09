@@ -787,14 +787,17 @@ els.btnShare.addEventListener('click', () => {
     pageUrl,
   ].join('\n');
 
-  navigator.clipboard.writeText(text).then(() => {
-    const orig = els.btnShare.textContent;
-    els.btnShare.textContent = '✅ Copied!';
-    setTimeout(() => { els.btnShare.textContent = orig; }, 2000);
-  }).catch(() => {
-    // Fallback for non-HTTPS or denied clipboard
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        const orig = els.btnShare.textContent;
+        els.btnShare.textContent = '✅ Copied!';
+        setTimeout(() => { els.btnShare.textContent = orig; }, 2000);
+      })
+      .catch(() => { prompt('Copy your result:', text); });
+  } else {
     prompt('Copy your result:', text);
-  });
+  }
 });
 
 // ── Restart ───────────────────────────────────────────────────────────────────
