@@ -126,7 +126,6 @@ const PREVIEW_DURATION_MS = 3000; // ms to animate the preview draw
 const STUDY_SECS         = 3;     // countdown seconds after animation
 const TARGET_LINE_WIDTH  = 22;    // thick target line — player must draw within it
 const PLAYER_LINE_WIDTH  = 5;     // player stroke — visible but thinner than target
-const HIT_RADIUS         = 10;    // must be within this many px of target centreline
 
 // ── Canvas helpers ────────────────────────────────────────────────────────────
 function drawPaper(ctx) {
@@ -306,6 +305,8 @@ function redrawDrawingCanvas() {
 // ── Init drawing screen ───────────────────────────────────────────────────────
 function initDrawingScreen() {
   els.drawingBadge.textContent = `Line ${state.round + 1} of ${LINES_PER_DAY}`;
+  document.querySelector('.drawing-hint').textContent =
+    DRAWING_HINTS[Math.floor(Math.random() * DRAWING_HINTS.length)];
   const ctx = els.canvasDrawing.getContext('2d');
   drawPaper(ctx);
   state.playerStrokes = [];
@@ -376,27 +377,18 @@ function scoreRound() {
 
   if (playerPoints.length === 0) return 0;
 
-  // 1. Accuracy: smooth falloff from centre to visible edge
-  //    Full credit (1.0) for dist ≤ HIT_RADIUS, linear taper to 0 at the line edge
-  const EDGE = TARGET_LINE_WIDTH / 2; // visible edge of the thick line
-  let accuracySum = 0;
+  // 1. Accuracy: % of player points that land visually inside the thick target line.
+  //    Hard cutoff at the visible line edge — inside = full credit, outside = none.
+  const EDGE_R2 = (TARGET_LINE_WIDTH / 2) * (TARGET_LINE_WIDTH / 2);
+  let onTarget = 0;
   for (const pp of playerPoints) {
-    let minDist = Infinity;
     for (const tp of target) {
       const dx = pp.x - tp.x;
       const dy = pp.y - tp.y;
-      const d  = dx * dx + dy * dy;
-      if (d < minDist) minDist = d;
+      if (dx * dx + dy * dy <= EDGE_R2) { onTarget++; break; }
     }
-    minDist = Math.sqrt(minDist);
-    if (minDist <= HIT_RADIUS) {
-      accuracySum += 1;
-    } else if (minDist < EDGE) {
-      accuracySum += 1 - (minDist - HIT_RADIUS) / (EDGE - HIT_RADIUS);
-    }
-    // else 0 — visually outside the line
   }
-  const accuracy = accuracySum / playerPoints.length;
+  const accuracy = onTarget / playerPoints.length;
 
   // 2. Length: how close is total drawn length to the target length
   const targetLen   = pathLength(target);
@@ -414,15 +406,55 @@ function scoreRound() {
 
 // ── Result screen ─────────────────────────────────────────────────────────────
 const ROASTS = [
-  { min: 85, text: 'Uncanny. Are you sure you didn\'t trace it?' },
-  { min: 70, text: 'Pretty close. Your memory is better than your taste.' },
-  { min: 55, text: 'Recognisable, in a generous light.' },
-  { min: 35, text: 'That\'s... a line, yes. Among other things.' },
-  { min:  0, text: 'Bold choice to submit that. Brave, even.' },
+  { min: 85, texts: [
+    "Uncanny. Are you sure you didn't trace it?",
+    "Your hand remembered. Your brain just watched.",
+    "Suspiciously accurate. We're keeping an eye on you.",
+    "This is either talent or a cry for help. Impressive either way.",
+  ]},
+  { min: 70, texts: [
+    "Pretty close. Your memory is better than your taste.",
+    "Not bad. Still room for shame, but not much.",
+    "Almost. Almost is fine. Almost won't haunt you.",
+    "Your brain and your hand are on speaking terms. Barely.",
+  ]},
+  { min: 55, texts: [
+    "Recognisable, in a generous light.",
+    "You got the vibe. The line itself, less so.",
+    "It's giving 'inspired by' rather than 'copy of'.",
+    "Some of that was the right line. The rest was yours.",
+  ]},
+  { min: 35, texts: [
+    "That's... a line, yes. Among other things.",
+    "The original line would like a word.",
+    "You remembered a line. Just not this one.",
+    "Somewhere in there is a good copy. Buried. Deep.",
+    "Confidence: high. Accuracy: concerning.",
+  ]},
+  { min: 0, texts: [
+    "Bold choice to submit that. Brave, even.",
+    "We've seen worse. Actually we haven't.",
+    "You watched the line for three seconds and drew... that.",
+    "The line you copied exists only in your imagination.",
+    "Did you close your eyes? You can tell us.",
+    "Not your fault. The line was probably moving.",
+  ]},
+];
+
+const DRAWING_HINTS = [
+  'Draw from memory — no pressure. Lots of pressure.',
+  'Recreate it. Exactly. No pressure.',
+  'Your memory versus the algorithm. Good luck.',
+  'It was right there. You saw it.',
+  'Three seconds was plenty of time. Probably.',
+  'Draw the line. The exact line. The one you definitely remember.',
+  'Confidence is key. Accuracy is also key.',
 ];
 
 function roastForScore(score) {
-  return ROASTS.find(r => score >= r.min).text;
+  const tier  = ROASTS.find(r => score >= r.min);
+  const texts = tier.texts;
+  return texts[Math.floor(Math.random() * texts.length)];
 }
 
 function scorePillClass(score) {
@@ -487,15 +519,37 @@ els.btnNext.addEventListener('click', () => {
 
 // ── Summary / Final grade ─────────────────────────────────────────────────────
 const GRADES = [
-  { min: 85, title: 'Carbon Clone',    bad: false, tagline: 'Photographic memory or you cheated. Either way, unsettling.' },
-  { min: 70, title: 'Decent Tracer',   bad: false, tagline: 'Your hand follows your eyes. Mostly.' },
-  { min: 55, title: 'Smudged Copy',    bad: false, tagline: 'Close enough that your friends won\'t laugh. To your face.' },
-  { min: 35, title: 'Rough Draft',     bad: true,  tagline: 'It\'s giving "abstract interpretation" of the original.' },
-  { min:  0, title: 'Hot Mess',        bad: true,  tagline: 'The line called. It wants nothing to do with you.' },
+  { min: 85, title: 'Carbon Clone',    bad: false, taglines: [
+    'Photographic memory or you cheated. Either way, unsettling.',
+    'The line called. It said it was flattered.',
+    'Suspiciously good. Do you practise this alone?',
+  ]},
+  { min: 70, title: 'Decent Tracer',   bad: false, taglines: [
+    'Your hand follows your eyes. Mostly.',
+    'Not perfect, but you can look people in the eye.',
+    'A respectable showing. We expected worse.',
+  ]},
+  { min: 55, title: 'Smudged Copy',    bad: false, taglines: [
+    'Close enough that your friends won\'t laugh. To your face.',
+    'The spirit was there. The line, less so.',
+    'You gave it your best. Your best is... fine.',
+  ]},
+  { min: 35, title: 'Rough Draft',     bad: true,  taglines: [
+    'It\'s giving "abstract interpretation" of the original.',
+    'In a parallel universe, this is correct.',
+    'You watched the lines. Then did something else entirely.',
+  ]},
+  { min:  0, title: 'Hot Mess',        bad: true,  taglines: [
+    'The line called. It wants nothing to do with you.',
+    'Three lines. Zero copies. Impressive in its own way.',
+    'You have disproven the concept of muscle memory.',
+    'We genuinely don\'t know what happened here.',
+  ]},
 ];
 
 function gradeForAvg(avg) {
-  return GRADES.find(g => avg >= g.min);
+  const grade = GRADES.find(g => avg >= g.min);
+  return { ...grade, tagline: grade.taglines[Math.floor(Math.random() * grade.taglines.length)] };
 }
 
 function avg(arr) {
@@ -573,11 +627,14 @@ els.btnShare.addEventListener('click', () => {
   const bars     = state.scores.map(s => s >= 70 ? '🟦' : s >= 45 ? '🟨' : '🟥').join('');
   const url      = window.location.href.split('?')[0] + '?seed=' + encodeURIComponent(state.seed);
 
+  const lines = state.scores.map((s, i) => `Line ${i + 1}: ${s}`).join('  ·  ');
   const text = [
-    `Carbon Copy — ${state.seed}`,
-    `${bars}  Avg: ${scoreAvg}/100`,
-    `${grade.title}`,
-    `Line 1: ${state.scores[0]}  Line 2: ${state.scores[1]}  Line 3: ${state.scores[2]}`,
+    `✏️ Carbon Copy`,
+    `${bars}`,
+    ``,
+    `${lines}`,
+    `Average: ${scoreAvg}/100 — ${grade.title}`,
+    ``,
     url,
   ].join('\n');
 
