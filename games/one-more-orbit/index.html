@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>One More Orbit</title>
+    <meta
+      name="description"
+      content="One More Orbit is a daily gravity puzzle about plotting a probe through beacons and docking with limited burns."
+    >
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+    <main class="shell">
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily gravity puzzle</p>
+          <h1 id="game-title">
+            <img class="site-logo" src="Logo.svg" alt="One More Orbit">
+          </h1>
+          <p class="lede">
+            Slingshot a probe through signal beacons and dock before your redirects run dry.
+          </p>
+        </div>
+        <div class="mission-card" aria-label="Daily mission stats">
+          <span>Mission</span>
+          <strong id="mission-id">Loading...</strong>
+          <small>Lowest burn score wins</small>
+        </div>
+      </section>
+
+      <section class="game-panel">
+        <div class="topbar">
+          <div>
+            <span class="label">Beacons</span>
+            <strong id="beacon-count">0 / 0</strong>
+          </div>
+          <div>
+            <span class="label">Used</span>
+            <strong id="burn-count">0</strong>
+          </div>
+          <div>
+            <span class="label">Redirects</span>
+            <strong id="fuel-count">3</strong>
+          </div>
+          <div>
+            <span class="label">Elapsed</span>
+            <strong id="time-count">0.0s</strong>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="space" width="960" height="600" aria-label="One More Orbit play field"></canvas>
+        </div>
+
+        <div class="controls" aria-label="Game controls">
+          <label for="seed-input">Seed</label>
+          <input id="seed-input" type="text" placeholder="YYYY-MM-DD" autocomplete="off">
+          <button id="set-seed-btn" type="button">Set Seed</button>
+          <button id="reset-btn" type="button">Reset</button>
+          <button id="practice-btn" type="button">Practice</button>
+        </div>
+
+        <p id="status" class="status" role="status">
+          Drag from the probe to launch. In flight, drag from the probe again for a small burn.
+        </p>
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How to Play</h2>
+        <div class="rules">
+          <p><strong>Launch:</strong> Drag from the probe and release to set the first trajectory.</p>
+          <p><strong>Redirect:</strong> While coasting, drag from the probe for course corrections. Each redirect costs one charge.</p>
+          <p><strong>Win:</strong> Touch every beacon, then enter the docking ring slowly enough to capture.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
