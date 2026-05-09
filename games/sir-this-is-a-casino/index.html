@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sir, This Is A Casino</title>
+    <meta name="description" content="A daily stock market game for degenerates. Pick a stock. Watch it move. Try not to lose everything.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily Degenerate Stock Simulator</p>
+          <h1 id="game-title">Sir, This Is<br><span class="accent">A Casino</span></h1>
+          <p class="lede">Pick a stock. Watch it destroy you. Tell no one.</p>
+        </div>
+        <div class="stat-card" aria-label="Today's bankroll">
+          <span>Today's Bankroll</span>
+          <strong id="starting-money">—</strong>
+          <small id="money-source">Loading...</small>
+        </div>
+      </section>
+
+      <section class="game-card" id="game-area">
+
+        <!-- Landing screen -->
+        <div id="screen-landing" class="screen active">
+          <div class="screen-header">
+            <span class="badge badge--red">Market Open</span>
+            <p class="screen-label" id="backstory">Loading your tragic backstory...</p>
+          </div>
+          <div class="landing-body">
+            <div class="money-display" aria-label="Starting money">
+              <span class="money-label">You have</span>
+              <span class="money-amount" id="money-hero">$—</span>
+              <span class="money-label">and absolutely nothing to lose.</span>
+            </div>
+            <div class="disclaimer">
+              <p>⚠️ Not financial advice. This is literally a casino. You will probably lose money. 🎰</p>
+            </div>
+          </div>
+          <div class="screen-footer">
+            <button id="btn-start" type="button" class="btn-primary">🚀 YOLO Into The Market</button>
+            <form class="seed-form" id="seed-form" aria-label="Custom seed">
+              <label for="seed-input">Seed</label>
+              <input id="seed-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend's seed or type anything">
+              <button type="submit" class="btn-secondary">Load Seed</button>
+              <button id="btn-daily" type="button" class="btn-secondary">Daily Game</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Stock selection screen (Phase 2) -->
+        <div id="screen-stocks" class="screen">
+          <div class="screen-header">
+            <span class="badge badge--green">Pick Your Poison</span>
+            <p class="screen-label">Three stocks. One day. No refunds.</p>
+          </div>
+          <div class="stocks-body" id="stocks-body">
+            <!-- Populated by JS in Phase 2 -->
+          </div>
+        </div>
+
+        <!-- Trading screen (Phase 3) -->
+        <div id="screen-trading" class="screen">
+          <div class="screen-header">
+            <div class="round-info">
+              <span class="badge badge--green" id="trade-ticker">TSLA</span>
+              <span class="time-remaining">Time: <strong id="timer-display">60</strong>s</span>
+              <span class="pnl-display">P&amp;L: <strong id="pnl-display">$0</strong></span>
+            </div>
+          </div>
+          <canvas id="canvas-chart" width="880" height="360" aria-label="Stock price chart"></canvas>
+          <div id="news-ticker" class="news-ticker" aria-live="polite"></div>
+          <div class="screen-footer">
+            <div class="trade-controls">
+              <div class="price-row">
+                <span class="price-label">Price:</span>
+                <span class="current-price" id="current-price">$—</span>
+                <span class="shares-owned">Long: <strong id="shares-owned">0</strong></span>
+                <span class="shares-shorted">Short: <strong id="shares-shorted">0</strong></span>
+                <span class="cash-remaining">Cash: <strong id="cash-display">$—</strong></span>
+              </div>
+              <div class="buy-sell-row">
+                <div class="btn-group">
+                  <button class="btn-buy" data-qty="1">Buy 1</button>
+                  <button class="btn-buy" data-qty="10">Buy 10</button>
+                  <button class="btn-buy" data-qty="50">Buy 50</button>
+                  <button class="btn-buy" id="btn-buy-max">Buy Max</button>
+                </div>
+                <div class="btn-group">
+                  <button class="btn-sell" data-qty="1">Sell 1</button>
+                  <button class="btn-sell" data-qty="10">Sell 10</button>
+                  <button class="btn-sell" data-qty="50">Sell 50</button>
+                  <button class="btn-sell" id="btn-sell-all">Sell All</button>
+                </div>
+              </div>
+              <div class="short-cover-row">
+                <div class="btn-group">
+                  <button class="btn-short" data-qty="1">Short 1</button>
+                  <button class="btn-short" data-qty="10">Short 10</button>
+                  <button class="btn-short" data-qty="50">Short 50</button>
+                  <button class="btn-short" id="btn-short-max">Short Max</button>
+                </div>
+                <div class="btn-group">
+                  <button class="btn-cover" data-qty="1">Cover 1</button>
+                  <button class="btn-cover" data-qty="10">Cover 10</button>
+                  <button class="btn-cover" data-qty="50">Cover 50</button>
+                  <button class="btn-cover" id="btn-cover-all">Cover All</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results screen -->
+        <div id="screen-results" class="screen">
+          <div class="final-content">
+            <h2 class="final-title" id="final-rank">—</h2>
+            <p class="final-tagline" id="final-tagline">—</p>
+            <div class="result-stats" id="result-stats"></div>
+            <div class="news-recap" id="news-recap"></div>
+            <div class="final-actions">
+              <button id="btn-share" type="button" class="btn-secondary">📋 Share Results</button>
+              <button id="btn-restart" type="button" class="btn-primary">🔄 Trade Again</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How To Play</h2>
+        <div class="rules">
+          <p><strong>Pick:</strong> choose one of three stocks to trade for the day. Real tickers, fake prices, maximum chaos.</p>
+          <p><strong>Trade:</strong> watch the price chart move in real time. Buy and sell shares whenever you want during the trading day.</p>
+          <p><strong>News:</strong> events pop up mid-session and send the stock flying. Good news sometimes crashes it. Bad news sometimes pumps it. Welcome to the market.</p>
+          <p><strong>Rank:</strong> your final P&L earns you a rank — from "Regarded Investor" to "Hedge Fund Destroyer." Try to end the day up.</p>
+          <p><strong>Daily:</strong> everyone gets the same stocks, same news, same chaos each day. Resets at midnight.</p>
+        </div>
+      </section>
+
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
