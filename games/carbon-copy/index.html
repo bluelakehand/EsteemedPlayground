@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carbon Copy</title>
+    <meta name="description" content="Watch a line get drawn. Remember it. Recreate it. Try not to embarrass yourself.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily Line Drawing Challenge</p>
+          <h1 id="game-title">Carbon<br><span class="accent">Copy</span></h1>
+          <p class="lede">Watch the line. Remember the line. Be the line.</p>
+        </div>
+        <div class="stat-card" aria-label="Player stats">
+          <span>Best Score</span>
+          <strong id="best-score">—</strong>
+          <small id="streak">Streak: 0</small>
+        </div>
+      </section>
+
+      <section class="game-card" id="game-area">
+
+        <!-- Landing screen -->
+        <div id="screen-landing" class="screen active">
+          <div class="screen-header">
+            <span class="badge">Ready to Copy</span>
+            <p class="screen-label">Three lines. One shot each. How close can you get?</p>
+          </div>
+          <div class="landing-body">
+            <div class="landing-icon" aria-hidden="true">✏️</div>
+            <p class="landing-desc">You'll watch each line draw itself, get 3 seconds to study it, then recreate it from memory. Your accuracy gets scored — and judged.</p>
+          </div>
+          <div class="screen-footer">
+            <button id="btn-start" type="button" class="btn-primary">Start Copying</button>
+            <form class="seed-form" id="seed-form" aria-label="Custom seed">
+              <label for="seed-input">Seed</label>
+              <input id="seed-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend's seed or type anything">
+              <button type="submit" class="btn-secondary">Load Seed</button>
+              <button id="btn-daily" type="button" class="btn-secondary">Daily Game</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Preview screen — watch the line draw, then countdown -->
+        <div id="screen-preview" class="screen">
+          <div class="screen-header">
+            <div class="round-info">
+              <span class="badge" id="preview-badge">Line 1 of 3</span>
+              <span class="preview-status" id="preview-status">Watch carefully...</span>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="canvas-preview" width="880" height="480" aria-label="Line preview"></canvas>
+            <div class="countdown-overlay" id="countdown-overlay" aria-live="polite">
+              <span id="countdown-number"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawing screen — player recreates the line -->
+        <div id="screen-drawing" class="screen">
+          <div class="screen-header">
+            <div class="round-info">
+              <span class="badge" id="drawing-badge">Line 1 of 3</span>
+              <span class="drawing-hint">Draw from memory — click Done when finished</span>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="canvas-drawing" width="880" height="480" aria-label="Your drawing canvas"></canvas>
+          </div>
+          <div class="screen-footer">
+            <div class="drawing-controls">
+              <button id="btn-clear" type="button" class="btn-secondary">Clear</button>
+              <button id="btn-done" type="button" class="btn-primary">Done →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Round result screen -->
+        <div id="screen-result" class="screen">
+          <div class="screen-header">
+            <span class="badge" id="result-badge">Result</span>
+            <p class="screen-label" id="result-roast">—</p>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="canvas-result" width="880" height="480" aria-label="Your attempt vs the original"></canvas>
+          </div>
+          <div class="result-meta" id="result-meta"></div>
+          <div class="screen-footer">
+            <button id="btn-next" type="button" class="btn-primary">Next Line →</button>
+          </div>
+        </div>
+
+        <!-- Summary screen -->
+        <div id="screen-summary" class="screen">
+          <div class="final-content">
+            <h2 class="final-title" id="final-grade">—</h2>
+            <p class="final-tagline" id="final-tagline">—</p>
+            <div class="score-grid" id="score-grid"></div>
+            <div class="final-actions">
+              <button id="btn-share" type="button" class="btn-secondary">📋 Share Results</button>
+              <button id="btn-restart" type="button" class="btn-primary">Try Again</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How To Play</h2>
+        <div class="rules">
+          <p><strong>Watch:</strong> a line draws itself on screen. Pay attention — it could go anywhere.</p>
+          <p><strong>Study:</strong> after drawing completes, you get 3 seconds to memorise it before it disappears.</p>
+          <p><strong>Copy:</strong> recreate the line as accurately as you can. Mouse or touch, your choice.</p>
+          <p><strong>Score:</strong> accuracy is measured by how closely your line matches the original. Single-stroke copies score higher.</p>
+          <p><strong>Roast:</strong> the game will tell you exactly how you did. Honestly. Perhaps too honestly.</p>
+          <p><strong>Daily:</strong> everyone gets the same three lines each day. New set at midnight.</p>
+        </div>
+      </section>
+
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
