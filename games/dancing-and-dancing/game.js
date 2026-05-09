@@ -154,14 +154,26 @@ function computeTiming() {
 
 // ─── Note generation ──────────────────────────────────────────────────────────
 
-function buildNotes() {
-  const cfg  = DIFF[diff];
-  const pool = [...NOUNS, ...ADJECTIVES].filter(w => /^[a-zA-Z]+$/.test(w) && w.length <= cfg.maxLen);
-  const rng  = makePRNG(strHash(seed + diff));
+// Set to true to use PARAGRAPHS[ACTIVE_PARAGRAPH] from paragraphs.js in order.
+// Set to false to use the shuffled NOUNS/ADJECTIVES word lists.
+const PARAGRAPH_MODE = false;
 
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
+function buildNotes() {
+  const cfg = DIFF[diff];
+  let pool;
+
+  if (PARAGRAPH_MODE) {
+    // Words from the configured paragraph, in order, looping if needed.
+    const text = PARAGRAPHS[ACTIVE_PARAGRAPH].text;
+    pool = text.split(/\s+/).map(w => w.replace(/[^a-zA-Z]/g, '')).filter(w => w.length > 0);
+  } else {
+    // Seeded-random shuffle of the built-in word lists.
+    pool = [...NOUNS, ...ADJECTIVES].filter(w => /^[a-zA-Z]+$/.test(w) && w.length <= cfg.maxLen);
+    const rng = makePRNG(strHash(seed + diff));
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
   }
 
   wordLetterXCache = {};
