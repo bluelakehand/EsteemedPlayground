@@ -624,6 +624,7 @@ const G = {
   landY: 0,
   holeAnimStart: 0,
   finalPinState: null,
+  spaceLock: false,
 };
 
 // --- Physics ---
@@ -963,7 +964,7 @@ function showResult() {
   resultBadge.textContent = G.holeCount === 1
     ? 'Your Result' : `Hole ${G.holeIdx + 1} Result`;
 
-  const q = inHole || isOOB ? 'bad' : hitBunker ? 'ok' : d < 5 ? 'good' : d < 20 ? 'ok' : 'bad';
+  const q = inHole || isOOB ? 'bad' : hitBunker ? 'ok' : d < 10 ? 'good' : d < 20 ? 'ok' : 'bad';
   const dispDist = inHole ? 'IN THE HOLE' : `${d.toFixed(1)} yds`;
   let dispScore;
   if (inHole)        dispScore = `${score.toFixed(0)} yds (in-hole penalty)`;
@@ -1022,7 +1023,7 @@ function showScorecard() {
     const isOOB   = G.oobFlags[i];
     const isBunker = G.bunkerFlags[i];
     const rawDist = inHole ? hole.distance : score - (isOOB ? 20 : isBunker ? 10 : 0);
-    const q = inHole || isOOB ? 'bad' : isBunker ? 'ok' : score < 5 ? 'good' : score < 20 ? 'ok' : 'bad';
+    const q = inHole || isOOB ? 'bad' : isBunker ? 'ok' : rawDist < 10 ? 'good' : rawDist < 20 ? 'ok' : 'bad';
     const resultText = inHole  ? 'In hole (penalty)'
       : isOOB   ? `${rawDist.toFixed(1)} yds · OOB +20`
       : isBunker ? `${rawDist.toFixed(1)} yds · Hazard +10`
@@ -1239,6 +1240,9 @@ document.getElementById('btn-share').addEventListener('click', shareResult);
 document.addEventListener('keydown', e => {
   if (e.code !== 'Space') return;
   e.preventDefault();
+  if (e.repeat || G.spaceLock) return;
+  G.spaceLock = true;
+  setTimeout(() => { G.spaceLock = false; }, 450);
   if (G.phase === 'aim') lockAim();
   else if (G.phase === 'power') lockPower();
   else if (G.phase === 'result') document.getElementById('btn-next').click();
