@@ -53,12 +53,35 @@ const SERVICE_REQUIRED = 0.55;
 const SIDE_OBSTACLE_BUFFER = 360;
 
 const CLEANUP_NAMES = [
+  'road apples',
   'mystery lump',
   'flat fur incident',
   'county pancake',
   'shoulder surprise',
   'biological speed bump',
   'unclaimed protein',
+  'asphalt lasagna',
+  'curb jerky',
+  'median mousse',
+  'bumper tartare',
+  'ditch nuggets',
+  'wildlife receipt',
+  'municipal meatball',
+  'fur tortilla',
+  'rural ravioli',
+  'highway hash',
+  'shoulder sashimi',
+  'gravel garnish',
+  'tire-kissed brisket',
+];
+
+const CLEANUP_MESSAGES = [
+  '{item} bagged. The county sleeps easier.',
+  'Recovered {item}. Nobody ask follow-up questions.',
+  '{item} secured. Public works remains undefeated.',
+  '{item} removed from the travel lane. Heroism is a weird job.',
+  'Clean scoop: {item}. Put it on the invoice.',
+  '{item} collected. Circle of life, but municipal.',
 ];
 
 const keys = {};
@@ -68,7 +91,8 @@ let lastTs = 0;
 const state = {
   seed: dailySeed(),
   isDaily: true,
-  rng: mulberry32(hashSeed(dailySeed())),
+  spawnRng: mulberry32(hashSeed(`rcc-spawns-${dailySeed()}`)),
+  fxRng: mulberry32(hashSeed(`rcc-fx-${dailySeed()}`)),
   running: false,
   ended: false,
   elapsed: 0,
@@ -84,6 +108,8 @@ const state = {
   speed: BASE_SPEED,
   roadOffset: 0,
   spawnTimer: 0,
+  stationBlocks: [],
+  routeLog: [],
   serviceTimer: 0,
   message: 'Roll out.',
   messageUntil: 0,
@@ -124,16 +150,24 @@ function chaosPressure() {
   return clamp(state.elapsed / 70, 0, 1);
 }
 
-function randRange(min, max) {
-  return min + state.rng() * (max - min);
+function spawnRange(min, max) {
+  return min + state.spawnRng() * (max - min);
 }
 
-function randInt(min, max) {
-  return min + Math.floor(state.rng() * (max - min + 1));
+function spawnInt(min, max) {
+  return min + Math.floor(state.spawnRng() * (max - min + 1));
 }
 
-function pick(arr) {
-  return arr[Math.floor(state.rng() * arr.length)];
+function spawnPick(arr) {
+  return arr[Math.floor(state.spawnRng() * arr.length)];
+}
+
+function fxRange(min, max) {
+  return min + state.fxRng() * (max - min);
+}
+
+function fxPick(arr) {
+  return arr[Math.floor(state.fxRng() * arr.length)];
 }
 
 function normalizeSeed(seed) {
@@ -160,7 +194,8 @@ function loadSeed(seed, isDaily = false) {
   const normalized = normalizeSeed(seed) || dailySeed();
   state.seed = normalized;
   state.isDaily = isDaily || normalized === dailySeed();
-  state.rng = mulberry32(hashSeed(`rcc-${state.seed}`));
+  state.spawnRng = mulberry32(hashSeed(`rcc-spawns-${state.seed}`));
+  state.fxRng = mulberry32(hashSeed(`rcc-fx-${state.seed}`));
   els.startSeedChip.textContent = seedLabel();
   els.playSeedChip.textContent = seedLabel();
   refreshBest();
@@ -187,7 +222,8 @@ function updateBest(score) {
 
 function startShift() {
   cancelAnimationFrame(rafId);
-  state.rng = mulberry32(hashSeed(`rcc-${state.seed}`));
+  state.spawnRng = mulberry32(hashSeed(`rcc-spawns-${state.seed}`));
+  state.fxRng = mulberry32(hashSeed(`rcc-fx-${state.seed}`));
   state.running = true;
   state.ended = false;
   state.elapsed = 0;
@@ -203,6 +239,8 @@ function startShift() {
   state.speed = BASE_SPEED;
   state.roadOffset = 0;
   state.spawnTimer = 0.15;
+  state.stationBlocks = [];
+  state.routeLog = [];
   state.serviceTimer = 0;
   state.message = 'Roll out.';
   state.messageUntil = 1.2;
@@ -266,7 +304,7 @@ function update(dt) {
   state.spawnTimer -= dt;
   if (state.spawnTimer <= 0) {
     spawnObject();
-    state.spawnTimer = clamp(randRange(0.28, 0.58) - pressure * randRange(0.12, 0.31), 0.16, 0.58);
+    state.spawnTimer = clamp(spawnRange(0.28, 0.58) - pressure * spawnRange(0.12, 0.31), 0.16, 0.58);
   }
 
   updateObjects(dt, brake);
@@ -283,9 +321,9 @@ function update(dt) {
 
 function spawnObject() {
   const pressure = chaosPressure();
-  const lane = randInt(0, LANE_COUNT - 1);
-  const x = laneCenter(lane) + randRange(-LANE_W * 0.23, LANE_W * 0.23);
-  const roll = state.rng();
+  const lane = spawnInt(0, LANE_COUNT - 1);
+  const x = laneCenter(lane) + spawnRange(-LANE_W * 0.23, LANE_W * 0.23);
+  const roll = state.spawnRng();
 
   if (state.elapsed > 10 && roll < 0.09) {
     spawnBay('gas');
@@ -295,7 +333,7 @@ function spawnObject() {
     spawnBay('repair');
     return;
   }
-  if (state.elapsed > 8 && state.rng() < 0.18 + pressure * 0.24 && spawnSideObstacle()) {
+  if (state.elapsed > 8 && state.spawnRng() < 0.18 + pressure * 0.24 && spawnSideObstacle()) {
     return;
   }
   const cleanupLimit = 0.51 - pressure * 0.07;
@@ -307,11 +345,12 @@ function spawnObject() {
       type: 'cleanup',
       x,
       y: -35,
-      w: randRange(24, 34),
-      h: randRange(14, 24),
-      label: pick(CLEANUP_NAMES),
+      w: spawnRange(24, 34),
+      h: spawnRange(14, 24),
+      label: spawnPick(CLEANUP_NAMES),
       hit: false,
     });
+    logRouteObject(state.objects[state.objects.length - 1]);
     return;
   }
   if (roll < trafficLimit) {
@@ -319,12 +358,13 @@ function spawnObject() {
       type: 'traffic',
       x,
       y: -70,
-      w: state.rng() < 0.22 + pressure * 0.18 ? 58 : 46,
-      h: state.rng() < 0.22 + pressure * 0.18 ? 98 : 72,
-      color: pick(['#65a9d8', '#e7c654', '#d95a52', '#d9dde3', '#8fd072']),
-      rel: randRange(-35, 70 + pressure * 70),
+      w: state.spawnRng() < 0.22 + pressure * 0.18 ? 58 : 46,
+      h: state.spawnRng() < 0.22 + pressure * 0.18 ? 98 : 72,
+      color: spawnPick(['#65a9d8', '#e7c654', '#d95a52', '#d9dde3']),
+      rel: spawnRange(-35, 70 + pressure * 70),
       hit: false,
     });
+    logRouteObject(state.objects[state.objects.length - 1]);
     return;
   }
   if (roll < debrisLimit) {
@@ -332,11 +372,12 @@ function spawnObject() {
       type: 'debris',
       x,
       y: -35,
-      w: randRange(26, 42),
-      h: randRange(20, 36),
-      flavor: pick(['cone', 'pothole', 'trash']),
+      w: spawnRange(26, 42),
+      h: spawnRange(20, 36),
+      flavor: spawnPick(['cone', 'pothole', 'trash']),
       hit: false,
     });
+    logRouteObject(state.objects[state.objects.length - 1]);
     return;
   }
   state.objects.push({
@@ -345,14 +386,17 @@ function spawnObject() {
     y: -35,
     w: 30,
     h: 34,
-    flavor: state.rng() < 0.65 ? 'fuel' : 'net',
+    flavor: state.spawnRng() < 0.65 ? 'fuel' : 'net',
     hit: false,
   });
+  logRouteObject(state.objects[state.objects.length - 1]);
 }
 
 function spawnBay(kind) {
   const onRight = kind === 'gas';
-  clearStationApproach(onRight ? 'right' : 'left');
+  const side = onRight ? 'right' : 'left';
+  state.stationBlocks.push({ side, until: state.elapsed + 2.35 });
+  clearStationApproach(side);
   state.objects.push({
     type: 'bay',
     kind,
@@ -363,15 +407,16 @@ function spawnBay(kind) {
     service: 0,
     hit: false,
   });
+  logRouteObject(state.objects[state.objects.length - 1]);
 }
 
 function spawnSideObstacle() {
-  const firstSide = state.rng() < 0.5 ? 'left' : 'right';
+  const firstSide = state.spawnRng() < 0.5 ? 'left' : 'right';
   const sides = [firstSide, firstSide === 'left' ? 'right' : 'left'];
   const side = sides.find(canSpawnSideObstacle);
   if (!side) return false;
 
-  const flavor = pick(['cone', 'barrier', 'cat', 'stroller']);
+  const flavor = spawnPick(['cone', 'barrier', 'cat', 'stroller']);
   const specs = {
     cone: { w: 30, h: 38 },
     barrier: { w: 76, h: 34 },
@@ -382,21 +427,19 @@ function spawnSideObstacle() {
     type: 'sideObstacle',
     side,
     flavor,
-    x: sideX(side) + randRange(-14, 14),
+    x: sideX(side) + spawnRange(-14, 14),
     y: -50,
     w: specs[flavor].w,
     h: specs[flavor].h,
     hit: false,
   });
+  logRouteObject(state.objects[state.objects.length - 1]);
   return true;
 }
 
 function canSpawnSideObstacle(side) {
-  return !state.objects.some(obj => (
-    obj.type === 'bay' &&
-    baySide(obj.kind) === side &&
-    Math.abs(obj.y + 50) < SIDE_OBSTACLE_BUFFER
-  ));
+  state.stationBlocks = state.stationBlocks.filter(block => block.until > state.elapsed);
+  return !state.stationBlocks.some(block => block.side === side);
 }
 
 function clearStationApproach(side) {
@@ -414,6 +457,16 @@ function baySide(kind) {
 
 function sideX(side) {
   return side === 'right' ? ROAD_RIGHT + 70 : ROAD_LEFT - 70;
+}
+
+function logRouteObject(obj) {
+  state.routeLog.push({
+    t: Number(state.elapsed.toFixed(2)),
+    type: obj.type,
+    kind: obj.kind || obj.flavor || obj.label || '',
+    side: obj.side || '',
+    x: Number(obj.x.toFixed(1)),
+  });
 }
 
 function laneCenter(lane) {
@@ -483,8 +536,8 @@ function handleNetHit(obj) {
     state.bestStreak = Math.max(state.bestStreak, state.streak);
     state.net = clamp(state.net - 0.9, 0, 100);
     const points = 100 + Math.min(60, state.streak * 6);
-    addScore(points, obj.x, obj.y, `+${points}`);
-    flashMessage(`Recovered ${obj.label}.`, 0.9);
+    addScore(points, obj.x, obj.y, `+${obj.label}`);
+    flashMessage(cleanupMessage(obj.label), 0.9);
     puff(obj.x, obj.y, '#f1c84b', 12);
     return;
   }
@@ -611,13 +664,25 @@ function applySupply(obj) {
   if (obj.flavor === 'fuel') {
     state.fuel = clamp(state.fuel + 18, 0, 100);
     addScore(20, obj.x, obj.y, 'GAS');
-    flashMessage('Found a can. No questions asked.', 0.9);
+    flashMessage(fxPick([
+      'Found a gas can. The cap is optional, apparently.',
+      'Emergency fuel acquired. Smells legal enough.',
+      'A little roadside gasoline, as a treat.',
+    ]), 0.9);
   } else {
     state.net = clamp(state.net + 16, 0, 100);
     addScore(20, obj.x, obj.y, 'PATCH');
-    flashMessage('Net patch acquired.', 0.9);
+    flashMessage(fxPick([
+      'Net patch acquired. Craft services calls this tape.',
+      'Mesh restored. Standards remain theoretical.',
+      'Net repair kit found. Somehow not expired.',
+    ]), 0.9);
   }
   puff(obj.x, obj.y, '#43c478', 10);
+}
+
+function cleanupMessage(label) {
+  return fxPick(CLEANUP_MESSAGES).replace('{item}', label);
 }
 
 function nudgePlayer(obj) {
@@ -652,11 +717,11 @@ function puff(x, y, color, count) {
     state.particles.push({
       x,
       y,
-      vx: randRange(-60, 60),
-      vy: randRange(-85, 25),
-      r: randRange(2, 5),
+      vx: fxRange(-60, 60),
+      vy: fxRange(-85, 25),
+      r: fxRange(2, 5),
       color,
-      life: randRange(0.35, 0.8),
+      life: fxRange(0.35, 0.8),
       max: 0.8,
     });
   }
@@ -1159,9 +1224,11 @@ function roundRect(x, y, w, h, r) {
   ctx.closePath();
 }
 
-function toggleNet() {
-  if (!state.running || state.net <= 0) return;
-  state.netActive = !state.netActive;
+function setNetActive(active) {
+  if (!state.running) return;
+  const next = active && state.net > 0;
+  if (state.netActive === next) return;
+  state.netActive = next;
   flashMessage(state.netActive ? 'Net deployed.' : 'Net retracted.', 0.5);
 }
 
@@ -1177,26 +1244,72 @@ function shareResult() {
     url,
   ].join('\n');
 
-  navigator.clipboard?.writeText(text).then(() => {
-    const old = els.btnShare.textContent;
-    els.btnShare.textContent = 'Copied';
-    setTimeout(() => { els.btnShare.textContent = old; }, 1500);
-  }).catch(() => {
+  copyShareText(text).then(copied => {
+    if (copied) {
+      flashShareButton('Copied');
+      return;
+    }
     window.prompt('Copy result', text);
   });
 }
 
+function flashShareButton(label) {
+  const old = els.btnShare.textContent;
+  els.btnShare.textContent = label;
+  setTimeout(() => { els.btnShare.textContent = old; }, 1500);
+}
+
+async function copyShareText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (_) {
+      // Fall through to the older selection-based copy path.
+    }
+  }
+
+  return copyWithTextArea(text);
+}
+
+function copyWithTextArea(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  ta.style.top = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+
+  let copied = false;
+  try {
+    copied = document.execCommand && document.execCommand('copy');
+  } catch (_) {
+    copied = false;
+  }
+
+  document.body.removeChild(ta);
+  return copied;
+}
+
 document.addEventListener('keydown', event => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar'].includes(event.key)) {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Space', 'Spacebar'].includes(event.key)) {
     event.preventDefault();
   }
-  if ((event.key === ' ' || event.key === 'Spacebar') && !event.repeat) {
-    toggleNet();
+  if ((event.key === ' ' || event.key === 'Space' || event.key === 'Spacebar') && !event.repeat) {
+    setNetActive(true);
   }
   keys[event.key] = true;
 });
 
 document.addEventListener('keyup', event => {
+  if (event.key === ' ' || event.key === 'Space' || event.key === 'Spacebar') {
+    event.preventDefault();
+    setNetActive(false);
+  }
   keys[event.key] = false;
 });
 
@@ -1238,6 +1351,8 @@ window.roadkillCleanupCrew = {
     net: state.net,
     car: state.car,
     objects: state.objects.length,
+    netActive: state.netActive,
+    routeLog: state.routeLog.slice(),
   }),
   start: startShift,
 };
