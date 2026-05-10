@@ -561,6 +561,109 @@ function lockPower() {
   G.flightStart = performance.now();
 }
 
+// --- Per-hole roast ---
+function getHoleRoast(hole, holeIdx, landX, landY, d, inHole) {
+  const pick = (arr, seed) => arr[Math.abs(seed) % arr.length];
+  const seed = holeIdx * 17 + Math.floor(d * 3);
+
+  // OOB: outside fairway width AND outside green
+  const onFairway = Math.abs(landX) <= 20 && landY >= 0 && landY <= hole.distance + hole.greenRadius;
+  const onGreen = Math.hypot(landX - hole.pinOffsetX, landY - hole.distance) <= hole.greenRadius;
+
+  if (!onFairway && !onGreen) {
+    // ~80% chance WTF RICHARD, deterministic so same hole always shows same roast
+    if ((holeIdx * 17 + Math.floor(d)) % 10 < 8) return { text: 'WTF RICHARD?', wtf: true };
+    return { text: pick([
+      "That's not the fairway.",
+      "The course ends somewhere around there. Probably.",
+      "Outstanding choice of landing zone.",
+      "That went fully elsewhere.",
+    ], seed), wtf: false };
+  }
+
+  if (inHole) return { text: pick([
+    "You went IN. The one thing you weren't supposed to do.",
+    "In. The. Hole. Remarkable.",
+    "Technically you nailed it. Unfortunately, that's the wrong answer.",
+  ], seed), wtf: false };
+
+  if (d < 5) return { text: pick([
+    "Fine. We'll allow it.",
+    "Barely any room to complain. Barely.",
+    "We're not NOT impressed.",
+    "That was good. We said it. Move on.",
+  ], seed), wtf: false };
+
+  if (d < 10) return { text: pick([
+    "Close enough to hear the flag.",
+    "That'll do.",
+    "On the green. That counts for something.",
+    "Not bad at all. Don't let it go to your head.",
+  ], seed), wtf: false };
+
+  if (d < 20) return { text: pick([
+    "In the vicinity. Loosely.",
+    "The pin saw you coming and didn't flinch.",
+    "Points for proximity. Some points.",
+    "You were on the right course. This course.",
+  ], seed), wtf: false };
+
+  if (d < 40) return { text: pick([
+    "That went somewhere on this property.",
+    "The rough did nothing to deserve this.",
+    "Ambitious distance from the pin.",
+    "Room to improve. Large room.",
+  ], seed), wtf: false };
+
+  return { text: pick([
+    "Where were you aiming, exactly?",
+    "This is a closest-to-pin contest. Just so we're clear.",
+    "The course notes this outcome with concern.",
+    "Groundskeeping will need a moment.",
+  ], seed), wtf: false };
+}
+
+// --- Roast canvas overlay ---
+function drawRoastOverlay(canvas, roast) {
+  const ctx = canvas.getContext('2d');
+  const cx = CW / 2;
+  const cy = CH * 0.56;
+
+  ctx.font = roast.wtf
+    ? 'bold 50px "Arial Narrow", Arial, sans-serif'
+    : 'italic 22px Georgia, serif';
+
+  const tw = ctx.measureText(roast.text).width;
+  const fh = roast.wtf ? 50 : 22;
+  const padX = roast.wtf ? 36 : 28;
+  const padY = roast.wtf ? 22 : 18;
+  const bw = tw + padX * 2;
+  const bh = fh + padY * 2;
+
+  ctx.fillStyle = 'rgba(6, 3, 0, 0.84)';
+  ctx.beginPath();
+  ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 10);
+  ctx.fill();
+  ctx.strokeStyle = roast.wtf ? 'rgba(239, 83, 80, 0.35)' : 'rgba(245, 124, 0, 0.22)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (roast.wtf) {
+    ctx.fillStyle = '#ef5350';
+    ctx.shadowColor = 'rgba(239, 83, 80, 0.65)';
+    ctx.shadowBlur = 26;
+  } else {
+    ctx.fillStyle = '#fff3e0';
+    ctx.shadowBlur = 0;
+  }
+  ctx.fillText(roast.text, cx, cy);
+  ctx.shadowBlur = 0;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+}
+
 // --- Show per-hole result ---
 function showResult() {
   const hole = G.holes[G.holeIdx];
@@ -603,6 +706,9 @@ function showResult() {
       <span class="value">${hole.distance} yds</span>
     </div>
   `;
+
+  const roast = getHoleRoast(hole, G.holeIdx, G.landX, G.landY, d, inHole);
+  drawRoastOverlay(cvResult, roast);
 
   const isLast = G.holeIdx >= G.holeCount - 1;
   document.getElementById('btn-next').textContent = isLast ? 'See Scorecard' : 'Next Hole';
@@ -833,6 +939,7 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   if (G.phase === 'aim') lockAim();
   else if (G.phase === 'power') lockPower();
+  else if (G.phase === 'result') document.getElementById('btn-next').click();
 });
 
 // --- Init ---
