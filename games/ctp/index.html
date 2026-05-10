@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CTP</title>
+    <meta name="description" content="A daily closest-to-pin challenge. One shot. How close can you get?">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+    <main class="shell">
+
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily closest-to-pin challenge</p>
+          <h1 id="game-title">CTP</h1>
+          <p class="lede">One shot. One chance. Don't go in.</p>
+        </div>
+        <div class="stat-card" id="stat-card" aria-label="Best score">
+          <span id="stat-label">Best Score</span>
+          <strong id="best-score">—</strong>
+          <small id="best-context">Select a round length</small>
+        </div>
+      </section>
+
+      <section class="game-card" id="game-area">
+
+        <!-- Start screen -->
+        <div id="screen-start" class="screen active">
+          <div class="screen-header">
+            <div class="header-row">
+              <span class="badge">CTP</span>
+              <span class="seed-chip daily" id="start-seed-chip"></span>
+            </div>
+            <p class="screen-label">Choose a round length, then tee it up.</p>
+          </div>
+          <div class="start-content">
+            <div class="hole-options" role="group" aria-label="Round length">
+              <button class="hole-opt-btn" data-holes="1">
+                <span class="opt-num">1</span>
+                <span class="opt-label">Hole</span>
+                <span class="opt-desc">One shot. That's it.</span>
+              </button>
+              <button class="hole-opt-btn" data-holes="9">
+                <span class="opt-num">9</span>
+                <span class="opt-label">Holes</span>
+                <span class="opt-desc">Front nine.</span>
+              </button>
+              <button class="hole-opt-btn" data-holes="18">
+                <span class="opt-num">18</span>
+                <span class="opt-label">Holes</span>
+                <span class="opt-desc">Full round.</span>
+              </button>
+            </div>
+            <button id="btn-play" type="button" class="btn-primary" disabled>Start Round</button>
+          </div>
+          <div class="screen-footer">
+            <form class="seed-form" id="seed-form" aria-label="Custom seed">
+              <label for="seed-input">Seed</label>
+              <input id="seed-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend's seed or type anything">
+              <button type="submit" class="btn-secondary">Load Seed</button>
+              <button id="btn-daily" type="button" class="btn-secondary">Daily</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Hole screen -->
+        <div id="screen-hole" class="screen">
+          <div class="screen-header">
+            <div class="round-info">
+              <span class="badge" id="hole-badge">Hole 1</span>
+              <span class="score-running">Total: <strong id="running-score">0.0</strong> yds</span>
+              <span class="seed-chip daily" id="hole-seed-chip"></span>
+            </div>
+            <p class="screen-label" id="hole-distance-label">150 yards to the pin</p>
+          </div>
+          <canvas id="canvas-hole" width="880" height="480" aria-label="Golf hole top-down view"></canvas>
+          <div class="screen-footer">
+            <div id="controls-aim">
+              <p class="hint">The arrow is wandering. Click to lock your aim — or press Space.</p>
+              <div class="aim-display">
+                <span class="aim-label">Aim</span>
+                <span class="aim-value" id="aim-display">—</span>
+              </div>
+              <button id="btn-lock-aim" type="button" class="btn-primary">Lock Aim</button>
+            </div>
+            <div id="controls-power" style="display:none">
+              <p class="hint">Hit the sweet spot. <strong>Swing when the bar reaches the marker.</strong></p>
+              <div class="power-meter-wrap" role="progressbar" aria-label="Power meter">
+                <div class="power-sweet" id="power-sweet"></div>
+                <div class="power-fill" id="power-fill"></div>
+              </div>
+              <div class="power-ticks" aria-hidden="true">
+                <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+              </div>
+              <button id="btn-swing" type="button" class="btn-primary">Swing!</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-hole result screen -->
+        <div id="screen-result" class="screen">
+          <div class="screen-header">
+            <span class="badge" id="result-badge">Result</span>
+          </div>
+          <canvas id="canvas-result" width="880" height="480" aria-label="Shot result"></canvas>
+          <div class="result-stats" id="result-stats" aria-live="polite"></div>
+          <div class="screen-footer">
+            <button id="btn-next" type="button" class="btn-primary">Next Hole</button>
+          </div>
+        </div>
+
+        <!-- Scorecard -->
+        <div id="screen-scorecard" class="screen">
+          <div class="final-content">
+            <h2 class="final-title">Round Complete</h2>
+            <p class="final-tagline" id="final-tagline">Here's where your shots landed.</p>
+            <table class="scorecard" id="scorecard" aria-label="Round scorecard"></table>
+            <div class="final-total">
+              Total: <strong id="final-score">—</strong>
+              <small>(lower is better — golf rules)</small>
+            </div>
+            <div class="final-actions">
+              <button id="btn-share" type="button" class="btn-secondary">Share Result</button>
+              <button id="btn-restart" type="button" class="btn-primary">Play Again</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How To Play</h2>
+        <div class="rules">
+          <p><strong>Aim:</strong> an arrow oscillates left and right. Click — or press Space — to lock your direction.</p>
+          <p><strong>Swing:</strong> a power bar sweeps back and forth. The gold marker shows the distance to the pin. Click when the bar hits it.</p>
+          <p><strong>Score:</strong> golf rules — lower is better. Your score is the distance in yards from where the ball lands to the pin. Going in the hole scores the full starting distance.</p>
+          <p><strong>Daily:</strong> everyone plays the same holes each day. Share your result at the end to settle it.</p>
+        </div>
+      </section>
+
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>

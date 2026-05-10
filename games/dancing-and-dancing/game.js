@@ -26,6 +26,10 @@ const ADJECTIVES = [
   'shiny','colorful','scared','rainbow',
 ];
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function rainbowHue(t) { return ((t * 360) % 360 + 360) % 360; }
+
 // ─── Seeded PRNG ──────────────────────────────────────────────────────────────
 
 function strHash(s) {
@@ -68,9 +72,12 @@ const $diffDesc  = document.getElementById('diff-desc');
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-let gameState = 'loading';
-let seed      = '';
-let diff      = 'hard';
+let gameState   = 'loading';
+let seed        = '';
+let diff        = 'hard';
+let seizureSafe    = false;
+let seizureExtreme = false;
+let lastBeatFlash  = -Infinity;
 let manifest  = null;
 let chipPlayer = null;
 let songBuffer = null;
@@ -104,6 +111,68 @@ let hitFx    = [];  // { age, color, char, x }
 let judgeFx  = null; // { text, color, age }
 let lastFrameMs = 0;
 
+// Countdown state
+let countdownText    = '';  // '3' | '2' | '1' | 'GO!' | ''
+let countdownPhaseSt = 0;   // performance.now() when current text was set
+
+// ─── Menu music ───────────────────────────────────────────────────────────────
+
+const MENU_SEEDS = ['menu-1', 'menu-2', 'menu-3'];
+let menuBuffer = null;
+let menuPlayer = null;
+let menuGain   = null;
+
+// Pre-fetch a random menu song then start playing immediately.
+// If the AudioContext is suspended (browser autoplay policy), it will resume
+// on the user's first interaction automatically.
+(async function prefetchMenuSong() {
+  const s = MENU_SEEDS[Math.floor(Math.random() * MENU_SEEDS.length)];
+  try {
+    const staticRes = await fetch(`/games/dancing-and-dancing/songs/${encodeURIComponent(s)}.json`);
+    let songFile;
+    if (staticRes.ok) {
+      songFile = (await staticRes.json()).songFile;
+    } else {
+      const apiRes = await fetch(`/api/song?seed=${encodeURIComponent(s)}`);
+      if (!apiRes.ok) return;
+      songFile = (await apiRes.json()).songFile;
+    }
+    const itRes = await fetch(songFile);
+    if (!itRes.ok) return;
+    menuBuffer = new Uint8Array(await itRes.arrayBuffer());
+  } catch (_) { return; }
+  startMenuMusic();
+})();
+
+function startMenuMusic() {
+  if (!menuBuffer || menuPlayer) return;
+  try {
+    menuPlayer = new ChiptuneJsPlayer(new ChiptuneJsConfig(0, 100, 8, null));
+    menuPlayer.play(menuBuffer);
+    menuPlayer.module_ctl_set('play.loopcount', '-1');
+    menuGain = menuPlayer.context.createGain();
+    menuGain.gain.value = parseFloat(document.getElementById('vol-slider').value);
+    menuPlayer.currentPlayingNode.disconnect();
+    menuPlayer.currentPlayingNode.connect(menuGain);
+    menuGain.connect(menuPlayer.context.destination);
+
+    // Browser autoplay policy: AudioContext may start suspended if there has
+    // been no user gesture yet. Resume it silently on the next interaction.
+    if (menuPlayer.context.state === 'suspended') {
+      const resume = () => { menuPlayer?.context.resume(); };
+      document.addEventListener('click',   resume, { once: true });
+      document.addEventListener('keydown', resume, { once: true });
+    }
+  } catch (_) { menuPlayer = null; menuGain = null; }
+}
+
+function stopMenuMusic() {
+  if (!menuPlayer) return;
+  try { menuPlayer.stop(); } catch (_) {}
+  menuPlayer = null;
+  menuGain   = null;
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 (async function init() {
@@ -128,13 +197,21 @@ async function loadSong(s) {
   if (chipPlayer) { try { chipPlayer.stop(); } catch (_) {} chipPlayer = null; }
   songBuffer = null;
 
+  // Try pre-generated static manifest first (works on S3 / static hosting),
+  // then fall back to the local dev API which spawns autotracker3.py on demand.
   let mft;
   try {
-    const res = await fetch(`/api/song?seed=${encodeURIComponent(s)}`);
-    if (!res.ok) throw new Error(res.status);
-    mft = await res.json();
+    const staticUrl = `/games/dancing-and-dancing/songs/${encodeURIComponent(s)}.json`;
+    const staticRes = await fetch(staticUrl);
+    if (staticRes.ok) {
+      mft = await staticRes.json();
+    } else {
+      const apiRes = await fetch(`/api/song?seed=${encodeURIComponent(s)}`);
+      if (!apiRes.ok) throw new Error(apiRes.status);
+      mft = await apiRes.json();
+    }
   } catch (_) {
-    document.getElementById('loading-msg').textContent = 'Error generating track. Try refreshing.';
+    document.getElementById('loading-msg').textContent = 'Error loading track. Try refreshing.';
     return;
   }
 
@@ -250,15 +327,17 @@ function startGame() {
 }
 
 function doStart() {
+  stopMenuMusic();
   score = 0; combo = 0; maxCombo = 0; totalHits = 0; goodHits = 0;
   hitFx = []; judgeFx = null; lastFrameMs = 0;
+  countdownText = ''; countdownPhaseSt = 0;
+  lastBeatFlash = -Infinity;
 
   computeTiming();
   buildNotes();
 
   showScreen('play');
 
-  // Size canvas after it becomes visible
   canvas = document.getElementById('lane-canvas');
   ctx    = canvas.getContext('2d');
   setTimeout(resizeCanvas, 0);
@@ -266,18 +345,85 @@ function doStart() {
   updateWordContext();
   renderStats();
 
-  chipPlayer.handlers = [];
-  chipPlayer.onEnded(function () { if (gameState === 'playing') endGame(); });
-  chipPlayer.play(songBuffer);
+  gameState = 'countdown';
+  requestAnimationFrame(countdownFrame);
+  startCountdown(() => {
+    if (gameState !== 'countdown') return; // aborted (e.g. user hit Menu)
+    chipPlayer.handlers = [];
+    chipPlayer.onEnded(function () { if (gameState === 'playing') endGame(); });
+    chipPlayer.play(songBuffer);
 
-  gainNode = chipPlayer.context.createGain();
-  gainNode.gain.value = parseFloat(document.getElementById('vol-slider').value);
-  chipPlayer.currentPlayingNode.disconnect();
-  chipPlayer.currentPlayingNode.connect(gainNode);
-  gainNode.connect(chipPlayer.context.destination);
+    gainNode = chipPlayer.context.createGain();
+    gainNode.gain.value = parseFloat(document.getElementById('vol-slider').value);
+    chipPlayer.currentPlayingNode.disconnect();
+    chipPlayer.currentPlayingNode.connect(gainNode);
+    gainNode.connect(chipPlayer.context.destination);
 
-  gameState = 'playing';
-  requestAnimationFrame(gameLoop);
+    gameState = 'playing';
+    requestAnimationFrame(gameLoop);
+  });
+}
+
+function startCountdown(onComplete) {
+  const steps = ['3', '2', '1', 'GO!'];
+  let i = 0;
+
+  function advance() {
+    countdownText    = steps[i];
+    countdownPhaseSt = performance.now();
+    i++;
+    if (i < steps.length) {
+      setTimeout(advance, 750);
+    } else {
+      setTimeout(onComplete, 550); // linger on GO! then start
+    }
+  }
+  advance();
+}
+
+function countdownFrame(timestamp) {
+  if (gameState !== 'countdown') return;
+  draw(-99999); // renders the empty lane + hit zone; no notes at t=-∞
+
+  if (!ctx || !countdownText) { requestAnimationFrame(countdownFrame); return; }
+
+  const age  = timestamp - countdownPhaseSt;
+  const dur  = countdownText === 'GO!' ? 550 : 750;
+  const t    = Math.min(age / dur, 1);
+
+  const isGo    = countdownText === 'GO!';
+  const numSize = Math.min(Math.round(H * 0.24), 150);
+
+  // Number / GO! text
+  const scale = isGo ? (1 + (1 - t) * 0.15) : (1.35 - 0.35 * t);
+  const alpha = isGo ? Math.min(1, (1 - t) * 1.8) : (t < 0.65 ? 1 : 1 - (t - 0.65) / 0.35);
+
+  ctx.save();
+  ctx.globalAlpha  = Math.max(0, alpha);
+  ctx.font         = `bold ${numSize}px Impact, "Arial Narrow Bold", sans-serif`;
+  ctx.fillStyle    = isGo ? '#3fff8a' : '#ffd35a';
+  if (!seizureSafe) { ctx.shadowColor = isGo ? '#3fff8a' : '#ffd35a'; ctx.shadowBlur = 28 * (1 - t); }
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.translate(LANE_X, H * 0.42);
+  ctx.scale(scale, scale);
+  ctx.fillText(countdownText, 0, 0);
+  ctx.restore();
+
+  // Prompt text — only during 3/2/1, fades out with the number
+  if (!isGo) {
+    ctx.save();
+    ctx.globalAlpha  = Math.max(0, alpha * 0.65);
+    ctx.font         = '13px "Courier New", monospace';
+    ctx.fillStyle    = '#f3b87a';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    try { ctx.letterSpacing = '3px'; } catch (_) {}
+    ctx.fillText('GET YOUR HANDS ON THE KEYBOARD', LANE_X, H * 0.42 + numSize * 0.72);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(countdownFrame);
 }
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
@@ -337,17 +483,37 @@ function gameLoop(timestamp) {
   const cfg = DIFF[diff];
   let needWordUpdate = false;
 
-  // Mark missed notes
+  // Mark missed notes — count each miss against accuracy just like a wrong keypress
+  let needFlash = false;
   for (const n of notes) {
     if (n.status === 'pending' && elapsedMs > n.targetMs + cfg.windowMs + 60) {
       n.status = 'miss';
       wordList[n.wordIdx].chars[n.charIdx].status = 'miss';
       combo = 0;
+      totalHits++;  // goodHits not incremented → accuracy drops
       needWordUpdate = true;
+      needFlash = true;
     }
   }
 
+  if (needFlash) {
+    flash('miss');
+    if (seizureExtreme) shakeCanvas();
+  }
   if (needWordUpdate) { updateWordContext(); renderStats(); }
+
+  // Extreme mode: beat-synced strobe
+  if (seizureExtreme) {
+    const beatNum = Math.floor(elapsedMs / beatMs);
+    if (beatNum !== lastBeatFlash) {
+      lastBeatFlash = beatNum;
+      const hue = (beatNum * 137) % 360 | 0;
+      $flash.style.background = `hsla(${hue},100%,60%,0.55)`;
+      $flash.className = '';
+      void $flash.offsetWidth;
+      $flash.className = 'beat-strobe';
+    }
+  }
   if (elapsedMs >= totalMs) { endGame(); return; }
 
   draw(elapsedMs);
@@ -392,9 +558,15 @@ function draw(elapsedMs) {
 
   // Hit zone line
   ctx.save();
-  ctx.shadowColor = 'rgba(255,211,90,0.9)';
-  ctx.shadowBlur  = 10;
-  ctx.strokeStyle = 'rgba(255,211,90,0.75)';
+  if (seizureExtreme) {
+    const hue = rainbowHue(performance.now() * 0.0011);
+    ctx.strokeStyle = `hsl(${hue | 0},100%,65%)`;
+    ctx.shadowColor = `hsl(${hue | 0},100%,65%)`;
+    ctx.shadowBlur  = 35;
+  } else {
+    if (!seizureSafe) { ctx.shadowColor = 'rgba(255,211,90,0.9)'; ctx.shadowBlur = 10; }
+    ctx.strokeStyle = 'rgba(255,211,90,0.75)';
+  }
   ctx.lineWidth   = 2.5;
   ctx.beginPath();
   ctx.moveTo(LANE_X - LANE_W / 2, HZ_Y);
@@ -434,7 +606,7 @@ function draw(elapsedMs) {
       }
       ctx.save();
       ctx.fillStyle = color;
-      if (ch.status === 'hit') { ctx.shadowColor = '#35e7ff'; ctx.shadowBlur = 14; }
+      if (ch.status === 'hit' && !seizureSafe) { ctx.shadowColor = '#35e7ff'; ctx.shadowBlur = 14; }
       ctx.fillText(ch.c.toUpperCase(), positions[i] ?? LANE_X, WORD_Y);
       ctx.restore();
     });
@@ -470,15 +642,26 @@ function draw(elapsedMs) {
       color = 'rgba(255,77,125,0.3)';
       alpha = Math.max(0, 1 - (progress - 1) * 4);
     } else {
-      color = inZone ? '#ffd35a' : '#fff7db';
+      if (seizureExtreme) {
+        const hue = rainbowHue(n.beatNum * 0.131 + performance.now() * 0.000417);
+        color = `hsl(${hue | 0},100%,70%)`;
+      } else {
+        color = inZone ? '#ffd35a' : '#fff7db';
+      }
       alpha = Math.min(1, progress * 8);
     }
 
     ctx.save();
     ctx.globalAlpha = alpha;
     if (n.status === 'pending' && inZone) {
-      ctx.shadowColor = '#ffd35a';
-      ctx.shadowBlur  = 18;
+      if (seizureExtreme) {
+        const hue = rainbowHue(n.beatNum * 0.131 + performance.now() * 0.000417);
+        ctx.shadowColor = `hsl(${hue | 0},100%,65%)`;
+        ctx.shadowBlur  = 40;
+      } else if (!seizureSafe) {
+        ctx.shadowColor = '#ffd35a';
+        ctx.shadowBlur  = 18;
+      }
     }
     ctx.font         = 'bold 52px Impact, "Arial Narrow Bold", sans-serif';
     ctx.fillStyle    = color;
@@ -495,10 +678,10 @@ function draw(elapsedMs) {
     ctx.globalAlpha = (1 - t) * 0.85;
     ctx.strokeStyle = fx.color;
     ctx.lineWidth   = 3 - t * 2;
-    ctx.shadowColor = fx.color;
-    ctx.shadowBlur  = 8;
+    if (seizureExtreme) { ctx.shadowColor = fx.color; ctx.shadowBlur = 32; }
+    else if (!seizureSafe) { ctx.shadowColor = fx.color; ctx.shadowBlur = 8; }
     ctx.beginPath();
-    ctx.arc(LANE_X, HZ_Y, 18 + t * 65, 0, Math.PI * 2);
+    ctx.arc(LANE_X, HZ_Y, seizureExtreme ? 26 + t * 120 : 18 + t * 65, 0, Math.PI * 2);
     ctx.stroke();
     ctx.globalAlpha  = (1 - t) * 0.95;
     ctx.fillStyle    = fx.color;
@@ -560,7 +743,14 @@ document.addEventListener('keydown', function (e) {
     const color = bestOff < 50 ? '#35e7ff' : bestOff < 110 ? '#ffd35a' : '#f3b87a';
     const label = bestOff < 50 ? 'PERFECT' : bestOff < 110 ? 'GOOD' : 'OK';
 
-    hitFx.push({ age: 0, color, char: best.char });
+    if (seizureExtreme) {
+      for (let r = 0; r < 3; r++) {
+        const h = rainbowHue(performance.now() * 0.00139 + r * 0.333) | 0;
+        hitFx.push({ age: r * 90, color: `hsl(${h},100%,65%)`, char: best.char });
+      }
+    } else {
+      hitFx.push({ age: 0, color, char: best.char });
+    }
     judgeFx = { text: label, color, age: 0 };
     wordList[best.wordIdx].chars[best.charIdx].status = 'hit';
     flash('hit');
@@ -569,6 +759,7 @@ document.addEventListener('keydown', function (e) {
     combo = 0;
     wordList[best.wordIdx].chars[best.charIdx].status = 'wrong';
     flash('miss');
+    if (seizureExtreme) shakeCanvas();
   }
 
   updateWordContext();
@@ -613,9 +804,27 @@ function renderStats() {
 // ─── Flash ────────────────────────────────────────────────────────────────────
 
 function flash(type) {
+  if (seizureSafe) return;
+  if (seizureExtreme) {
+    const hue = (performance.now() * 1.37) % 360 | 0;
+    const opacity = type === 'hit' ? 0.55 : 0.8;
+    $flash.style.background = `hsla(${hue},100%,60%,${opacity})`;
+    $flash.className = '';
+    void $flash.offsetWidth;
+    $flash.className = type === 'hit' ? 'extreme-hit' : 'extreme-miss';
+    return;
+  }
   $flash.className = '';
   void $flash.offsetWidth;
   $flash.className = type;
+}
+
+function shakeCanvas() {
+  if (!canvas) return;
+  canvas.classList.remove('shake');
+  void canvas.offsetWidth;
+  canvas.classList.add('shake');
+  setTimeout(() => canvas?.classList.remove('shake'), 280);
 }
 
 // ─── End game ─────────────────────────────────────────────────────────────────
@@ -630,8 +839,131 @@ function endGame() {
   document.getElementById('e-acc').textContent   = acc;
   document.getElementById('e-combo').textContent = 'x' + maxCombo;
 
+  document.getElementById('end-roast').textContent = generateRoast();
+
   buildEndPara();
   showScreen('end');
+}
+
+function generateRoast() {
+  const accPct = totalHits > 0 ? Math.round((goodHits / totalHits) * 100) : 100;
+  const tier   = accPct >= 90 ? 'high' : accPct >= 50 ? 'mid' : 'low';
+  const pick   = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // Find the most embarrassing specific failure.
+  // Prefer the shortest fully-missed word (nothing more shameful than "cat").
+  const fullyMissed = wordList
+    .filter(w => w.chars.length > 0 && w.chars.every(c => c.status === 'miss'))
+    .sort((a, b) => a.word.length - b.word.length);
+  const hadError = wordList.filter(w => w.chars.some(c => c.status === 'miss' || c.status === 'wrong'));
+  const shameEntry = fullyMissed[0] ?? hadError[0] ?? null;
+  const shameWord  = shameEntry?.word.toUpperCase() ?? null;
+
+  const lines = {
+    baby: {
+      high: [
+        'Congratulations. You can type. On baby mode.',
+        '100% accuracy on the difficulty named after infants. Progress.',
+        'Great score! The bar was ankle height, but you cleared it.',
+        'Nailed it! Have you considered a difficulty where the notes don\'t wait for you?',
+        'Your fingers work. Gold star. Baby-mode gold star.',
+      ],
+      mid: [
+        'Wow. Great score — for a baby.',
+        'Baby mode and you STILL fumbled some. Incredible.',
+        'The training wheels were apparently insufficient.',
+        'Not bad! For a first attempt. At the easiest setting. Ever made.',
+        'Baby mode called. It says to try harder next time.',
+      ],
+      low: [
+        'You failed baby mode. I\'ll let that sink in.',
+        'Baby mode has formally requested you stop playing.',
+        'The difficulty is literally called Baby. What happened in there?',
+        'Even actual babies mash keys better than this.',
+        'Baby mode was too fast? Have you tried… not playing?',
+      ],
+    },
+    hard: {
+      high: [
+        'Solid score. On a difficulty that isn\'t Chad. But sure.',
+        'Hard difficulty cleared. The game is proud of you. Barely.',
+        'Not bad. Completely unimpressive in the grand scheme, but not bad.',
+        'You did fine. Fine is the most diplomatic word available.',
+        'Hard difficulty, decent run. Just one question: scared of Chad?',
+      ],
+      mid: [
+        'Not great, not terrible. Mostly terrible.',
+        'The "Hard" in Hard mode was working overtime today.',
+        'An accuracy that says "I tried" without saying what at.',
+        'Hard difficulty: partial credit, minimal glory.',
+        'You gave it your best. Your best needs practice.',
+      ],
+      low: [
+        'Hard difficulty: 1. You: 0.',
+        'The only thing hard about that was watching.',
+        'Hard mode found that… appropriately named.',
+        'Hard mode suggested you revisit baby mode. Some shame. All shame.',
+        'You hard-moded yourself right into the floor.',
+      ],
+    },
+    chad: {
+      high: [
+        '…okay fine. You\'re actually a chad.',
+        'We take it back. That was legitimately real.',
+        'Perfect on Chad difficulty. You may now speak of this.',
+        'Fine. You\'re built different. We reluctantly accept it.',
+        'Chad difficulty nods in reluctant respect.',
+      ],
+      mid: [
+        'Chad? More like Trad.',
+        'Chad-adjacent. Chad-curious, even.',
+        'Somewhere between Chad and Dad.',
+        'You picked Chad. Chad picked you apart. It\'s complicated.',
+        'Chad difficulty has noted your effort and remained unimpressed.',
+      ],
+      low: [
+        'Chad? More like Bad.',
+        'Chad difficulty has filed a restraining order.',
+        'The word "Chad" is now suing for defamation.',
+        'You picked Chad and delivered something closer to Sad.',
+        'Chad mode called. It doesn\'t know who you are.',
+        'Buddy. Come on. Chad mode.',
+      ],
+    },
+  };
+
+  // Build all candidate roasts, then pick exactly one.
+  const candidates = [...lines[diff][tier]];
+
+  if (shameWord) {
+    const len = shameEntry.word.length;
+    const wordJabs = [
+      `Really? "${shameWord}" was the one that did you in?`,
+      `"${shameWord}" said good day to you personally.`,
+      `The word "${shameWord}" sends its regards.`,
+      `You couldn't handle "${shameWord}"? That one specifically?`,
+      `"${shameWord}" is embarrassed on your behalf.`,
+      `The whole song and "${shameWord}" was where it fell apart.`,
+    ];
+    if (len <= 4) {
+      wordJabs.push(
+        `"${shameWord}." ${len} letters. You couldn't do "${shameWord}."`,
+        `It was ${len} letters. "${shameWord}." ${len} letters.`,
+        `${len}-letter word. "${shameWord}." Gone.`,
+      );
+    }
+    candidates.push(...wordJabs);
+  }
+
+  if (maxCombo === 0) {
+    candidates.push(
+      'Your best combo was zero. Statistically, you were just pressing keys.',
+      'A max combo of zero is a special kind of achievement.',
+      'Zero combo. Not a single consecutive pair of correct notes. Remarkable.',
+    );
+  }
+
+  return pick(candidates);
 }
 
 function buildEndPara() {
@@ -656,6 +988,32 @@ function buildEndPara() {
 
 document.getElementById('start-btn').addEventListener('click', function () { startGame(); });
 
+document.getElementById('seizure-safe-btn').addEventListener('click', () => {
+  seizureSafe = !seizureSafe;
+  if (seizureSafe && seizureExtreme) {
+    seizureExtreme = false;
+    const eb = document.getElementById('extreme-btn');
+    eb.textContent = 'Extreme Mode: OFF';
+    eb.classList.remove('active');
+  }
+  const btn = document.getElementById('seizure-safe-btn');
+  btn.textContent = `Seizure Safe Mode: ${seizureSafe ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', seizureSafe);
+});
+
+document.getElementById('extreme-btn').addEventListener('click', () => {
+  seizureExtreme = !seizureExtreme;
+  if (seizureExtreme && seizureSafe) {
+    seizureSafe = false;
+    const sb = document.getElementById('seizure-safe-btn');
+    sb.textContent = 'Seizure Safe Mode: OFF';
+    sb.classList.remove('active');
+  }
+  const btn = document.getElementById('extreme-btn');
+  btn.textContent = `Extreme Mode: ${seizureExtreme ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', seizureExtreme);
+});
+
 document.querySelectorAll('.diff-btn').forEach(btn => {
   btn.addEventListener('click', () => applyDiff(btn.dataset.diff));
 });
@@ -677,18 +1035,52 @@ $seedInput.addEventListener('keydown', e => {
 document.getElementById('play-again-btn').addEventListener('click', () => {
   gameState = 'ready';
   showScreen('start');
+  startMenuMusic();
+});
+
+document.getElementById('return-btn').addEventListener('click', () => {
+  if (gameState !== 'playing' && gameState !== 'countdown') return;
+  const wasPlaying = gameState === 'playing';
+  gameState = 'ready';
+  countdownText = '';
+  if (wasPlaying && chipPlayer) { try { chipPlayer.stop(); } catch (_) {} }
+  showScreen('start');
+  startMenuMusic();
 });
 
 document.getElementById('vol-slider').addEventListener('input', function () {
-  if (gainNode) gainNode.gain.value = parseFloat(this.value);
+  const v = parseFloat(this.value);
+  if (gainNode)   gainNode.gain.value   = v;
+  if (menuGain)   menuGain.gain.value   = v;
 });
 
 document.getElementById('share-btn').addEventListener('click', () => {
+  const btn     = document.getElementById('share-btn');
+  const accPct  = totalHits > 0 ? Math.round((goodHits / totalHits) * 100) : 100;
+  const isDaily = seed === ((() => { const d = new Date(); return `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`; })());
+  const seedLine = isDaily ? `📅 ${seed}` : `🌱 ${seed}`;
+  const diffLabel = { baby: 'BABY', hard: 'HARD', chad: 'CHAD' }[diff] ?? diff.toUpperCase();
   const url = `${location.origin}${location.pathname}?seed=${encodeURIComponent(seed)}&diff=${diff}`;
-  navigator.clipboard?.writeText(url).then(() => {
-    const btn = document.getElementById('share-btn');
-    const orig = btn.textContent;
-    btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = orig; }, 1500);
-  }).catch(() => { prompt('Share this link:', url); });
+  const roast = document.getElementById('end-roast').textContent;
+
+  const text = [
+    `💃 Dancing & Dancing`,
+    `${seedLine} · ${diffLabel}`,
+    ``,
+    `Score: ${score.toLocaleString()}  ·  Accuracy: ${accPct}%  ·  Best combo: x${maxCombo}`,
+    roast ? `"${roast}"` : '',
+    ``,
+    url,
+  ].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n'); // collapse double blanks
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Share Result'; }, 2000);
+      })
+      .catch(() => { prompt('Copy and share:', text); });
+  } else {
+    prompt('Copy and share:', text);
+  }
 });

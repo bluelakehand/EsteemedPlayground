@@ -44,12 +44,14 @@ const els = {
   btnSubmit:       document.getElementById('btn-submit'),
   btnNext:         document.getElementById('btn-next'),
   btnShare:        document.getElementById('btn-share'),
+  zoomSlider:      document.getElementById('zoom-slider'),
+  zoomDisplay:     document.getElementById('zoom-display'),
   btnRestart:      document.getElementById('btn-restart'),
   seedForm:        document.getElementById('seed-form'),
   seedInput:       document.getElementById('seed-input'),
   btnDaily:        document.getElementById('btn-daily'),
   seedIndicator:   document.getElementById('seed-indicator'),
-  seedLabel:       document.getElementById('seed-label'),
+  refSeedChip:     document.getElementById('ref-seed-chip'),
   guessSlider:     document.getElementById('guess-slider'),
   guessInput:      document.getElementById('guess-input'),
   runningScore:    document.getElementById('running-score'),
@@ -267,9 +269,15 @@ function generateDayDecks(seed = dailySeed()) {
       }
     }
 
+    // Default zoom: show deck at ~80% of canvas so there's visible context
+    const deckPxW    = bbox.w * scale;
+    const deckPxH    = bbox.h * scale;
+    const zoomToFill = Math.min((CANVAS_W * 0.8) / deckPxW, (CANVAS_H * 0.8) / deckPxH);
+    const defaultZoom = Math.max(ZOOM_MIN / 100, Math.min(ZOOM_MAX / 100, zoomToFill));
+
     return { pts, area: Math.round(area), bbox, scale, ox, oy,
              hasFence, fenceSides, hasHouse, houseSide, items, hotTub,
-             grainSeed: hashSeed(`${seed}-g${i}`) };
+             defaultZoom, grainSeed: hashSeed(`${seed}-g${i}`) };
   });
 }
 
@@ -578,18 +586,40 @@ function drawHotTub(ctx, deck) {
 }
 
 // ── Draw a puzzle deck onto a canvas ─────────────────────────────────────────
-function drawPuzzleDeck(canvas, deck) {
+function drawPuzzleDeck(canvas, deck, zoom = 1) {
   const ctx = canvas.getContext('2d');
   const W   = canvas.width, H = canvas.height;
   const rng = mulberry32(hashSeed(`yard-${deck.grainSeed}`));
 
-  drawYard(ctx, W, H, rng, deck.scale);
+  ctx.clearRect(0, 0, W, H);
+
+  // Everything zooms together — grass stripes are the scale cue.
+  // Yard is drawn oversized so no black edges appear at minimum zoom.
+  const minZoom = ZOOM_MIN / 100;
+  const yardW   = W / minZoom;
+  const yardH   = H / minZoom;
+  const yardOX  = -(yardW - W) / 2;
+  const yardOY  = -(yardH - H) / 2;
+
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(zoom, zoom);
+  ctx.translate(-W / 2, -H / 2);
+
+  // Oversized yard — always covers canvas even at minimum zoom
+  ctx.save();
+  ctx.translate(yardOX, yardOY);
+  drawYard(ctx, yardW, yardH, rng, deck.scale);
+  ctx.restore();
+
   if (deck.hasHouse) drawHouseWall(ctx, W, H, deck.houseSide);
   if (deck.hasFence) drawFence(ctx, W, H, deck, rng);
   drawPolyFrame(ctx, deck.pts, deck.ox, deck.oy, deck.scale);
   drawPolyWood(ctx, deck.pts, deck.ox, deck.oy, deck.scale, deck.grainSeed, woodTint(deck.area));
   if (deck.hotTub) drawHotTub(ctx, deck);
   drawItems(ctx, deck.items, deck.ox, deck.oy, deck.scale);
+
+  ctx.restore();
 }
 
 // ── Reference screen ──────────────────────────────────────────────────────────
@@ -654,6 +684,8 @@ function drawReference() {
 // ── Slider / number input sync ────────────────────────────────────────────────
 const GUESS_MIN = 5;
 const GUESS_MAX = 200;
+const ZOOM_MIN  = 70;   // 0.7×
+const ZOOM_MAX  = 200;  // 2.0×
 
 function clampGuess(v) { return Math.max(GUESS_MIN, Math.min(GUESS_MAX, Math.round(v))); }
 
@@ -979,10 +1011,28 @@ function buildFinalScreen() {
 
 // ── Share ─────────────────────────────────────────────────────────────────────
 function buildShareText() {
-  const d = new Date();
+  const d       = new Date();
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const blocks = state.guesses.map(g => scoreEmoji(g.score)).join('');
-  return `Deck Measuring Contest ${dateStr}\nScore: ${state.runningScore}\n${blocks}\nPlay at: ${location.href}`;
+  const isDaily = state.seed === dailySeed();
+  const seedLine = isDaily ? `📅 ${dateStr}` : `🌱 Seed: ${state.seed}`;
+
+  const emojis  = state.guesses.map(g => scoreEmoji(g.score)).join('  ');
+  const verdict = FINAL_LINES.find(([lo, hi]) => state.runningScore >= lo && state.runningScore <= hi)?.[2]
+    ?? FINAL_LINES.at(-1)[2];
+
+  const shareUrl = `${location.origin}${location.pathname}?seed=${encodeURIComponent(state.seed)}`;
+
+  return [
+    `📐 Deck Measuring Contest`,
+    seedLine,
+    ``,
+    emojis,
+    ``,
+    `Score: ${state.runningScore} pts`,
+    `"${verdict}"`,
+    ``,
+    shareUrl,
+  ].join('\n');
 }
 
 // ── Game state ────────────────────────────────────────────────────────────────
@@ -992,6 +1042,7 @@ const state = {
   guesses:      [],
   runningScore: 0,
   seed:         dailySeed(),
+  zoom:         1,
 };
 
 // ── Seed loading ──────────────────────────────────────────────────────────────
@@ -1005,17 +1056,43 @@ function loadSeed(seed) {
   updateSlider();
   els.runningScore.textContent = 0;
 
-  const isDaily = seed === dailySeed();
-  els.seedIndicator.classList.toggle('visible', !isDaily);
-  if (!isDaily) els.seedLabel.textContent = seed;
+  const isDaily   = seed === dailySeed();
+  const chipClass = isDaily ? 'daily' : 'custom';
+  const chipText  = isDaily ? 'Daily Game' : `Seed: ${seed}`;
+
+  [els.refSeedChip, els.seedIndicator].forEach(el => {
+    el.className  = `seed-chip ${chipClass}`;
+    el.textContent = chipText;
+  });
+
+  els.seedInput.value = seed;
 
   drawReference();
   showScreen('screen-reference');
 }
 
 // ── Event wiring ──────────────────────────────────────────────────────────────
+function setZoom(val) {
+  state.zoom = val;
+  els.zoomSlider.value = Math.round(val * 100);
+  els.zoomDisplay.textContent = `${val.toFixed(1)}×`;
+  const pct = ((val * 100 - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)) * 100;
+  els.zoomSlider.style.setProperty('--pct', `${pct.toFixed(1)}%`);
+}
+
+function resetZoom() {
+  const deck = state.decks[state.current];
+  setZoom(deck ? deck.defaultZoom : 1);
+}
+
+els.zoomSlider.addEventListener('input', () => {
+  setZoom(Number(els.zoomSlider.value) / 100);
+  drawPuzzleDeck(els.canvasDeck, state.decks[state.current], state.zoom);
+});
+
 els.btnStart.addEventListener('click', () => {
-  drawPuzzleDeck(els.canvasDeck, state.decks[0]);
+  resetZoom();
+  drawPuzzleDeck(els.canvasDeck, state.decks[0], state.zoom);
   els.roundBadge.textContent = `Deck 1 of ${DECKS_PER_DAY}`;
   showScreen('screen-guess');
 });
@@ -1031,10 +1108,11 @@ els.btnNext.addEventListener('click', () => {
     buildFinalScreen();
     return;
   }
-  // Reset slider and draw next deck
+  // Reset slider, zoom, and draw next deck
   els.guessSlider.value = 50;
   updateSlider();
-  drawPuzzleDeck(els.canvasDeck, state.decks[state.current]);
+  resetZoom();
+  drawPuzzleDeck(els.canvasDeck, state.decks[state.current], state.zoom);
   els.roundBadge.textContent     = `Deck ${state.current + 1} of ${DECKS_PER_DAY}`;
   els.runningScore.textContent   = state.runningScore;
   showScreen('screen-guess');
@@ -1069,4 +1147,5 @@ els.btnDaily.addEventListener('click', () => {
 const storedBest = localStorage.getItem('dmc-best');
 if (storedBest) els.bestScore.textContent = storedBest;
 
-loadSeed(dailySeed());
+const urlSeed = new URLSearchParams(location.search).get('seed');
+loadSeed(urlSeed || dailySeed());

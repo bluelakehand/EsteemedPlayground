@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dancing and Dancing</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../arcade-home-link.css">
 </head>
 <body>
 
+<a class="arcade-home-link" href="../../">Esteemed Arcade</a>
 <div id="flash"></div>
 
 <div id="vol-control">
@@ -55,6 +57,8 @@
   </div>
   <div id="diff-desc">Words every ~1.5s, fair timing window</div>
   <button class="btn primary" id="start-btn">▶ Start</button>
+  <button class="btn" id="seizure-safe-btn">Seizure Safe Mode: OFF</button>
+  <button class="btn" id="extreme-btn">Extreme Mode: OFF</button>
   <p>Type the words as they appear — one letter at a time, to the beat</p>
 </div>
 
@@ -68,18 +72,22 @@
   <canvas id="lane-canvas"></canvas>
 
   <div id="bottom-bar">
-    <div class="bstat">
-      <div class="bstat-label">Score</div>
-      <div class="bstat-value" id="b-score">0</div>
+    <button class="btn" id="return-btn">← Menu</button>
+    <div class="bottom-stats">
+      <div class="bstat">
+        <div class="bstat-label">Score</div>
+        <div class="bstat-value" id="b-score">0</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-label">Combo</div>
+        <div class="bstat-value" id="b-combo">x0</div>
+      </div>
+      <div class="bstat">
+        <div class="bstat-label">Accuracy</div>
+        <div class="bstat-value" id="b-acc">—</div>
+      </div>
     </div>
-    <div class="bstat">
-      <div class="bstat-label">Combo</div>
-      <div class="bstat-value" id="b-combo">x0</div>
-    </div>
-    <div class="bstat">
-      <div class="bstat-label">Accuracy</div>
-      <div class="bstat-value" id="b-acc">—</div>
-    </div>
+    <div class="bottom-spacer"></div>
   </div>
 </div>
 
@@ -100,11 +108,12 @@
       <div class="end-score-label">Best Combo</div>
     </div>
   </div>
+  <p id="end-roast"></p>
   <p style="font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted)">Your Passage</p>
   <div id="end-para"></div>
   <div class="end-btn-row">
     <button class="btn primary" id="play-again-btn" style="font-size:1.1rem;padding:0.6rem 2rem">Play Again</button>
-    <button class="btn" id="share-btn">Share Seed</button>
+    <button class="btn" id="share-btn">Share Result</button>
   </div>
 </div>
 

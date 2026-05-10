@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rogue Light Deck Builder</title>
+  <link rel="stylesheet" href="../../arcade-home-link.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+
+  <div id="game-wrap">
+    <div id="hud">
+      <div id="hud-left">
+        <span id="phase-label">INFILTRATION</span>
+      </div>
+      <div id="hud-center">
+        <span id="timer-display">3:00</span>
+      </div>
+      <div id="hud-right">
+        <span id="suspicion-label">⚠</span>
+        <div id="suspicion-bg"><div id="suspicion-fill"></div></div>
+      </div>
+    </div>
+
+    <canvas id="canvas" width="1100" height="620"></canvas>
+
+    <div id="bottom-bar">
+      <div id="inventory-panel">
+        <span class="panel-label">LOOT:</span>
+        <div id="inventory-items"></div>
+      </div>
+      <div id="build-panel" style="display:none">
+        <span class="panel-label">HAND:</span>
+        <div id="build-hand"></div>
+        <button id="btn-submit">SUBMIT DECK</button>
+      </div>
+      <div id="seed-panel">
+        <input id="seed-input" type="text" placeholder="daily seed" maxlength="24" spellcheck="false">
+        <button id="btn-play">▶ Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay" class="hidden">
+    <div id="overlay-box">
+      <h1 id="overlay-title"></h1>
+      <div id="overlay-body"></div>
+      <div id="overlay-actions"></div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -6,8 +6,10 @@
     <title>Deck Measuring Contest</title>
     <meta name="description" content="A daily wood sizing challenge. Five decks. No rulers. How well do you measure up?">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
   </head>
   <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
     <main class="shell">
 
       <section class="hero" aria-labelledby="game-title">
@@ -28,7 +30,10 @@
         <!-- Reference screen -->
         <div id="screen-reference" class="screen active">
           <div class="screen-header">
-            <span class="badge">Know Your Wood</span>
+            <div class="header-row">
+              <span class="badge">Know Your Wood</span>
+              <span class="seed-chip" id="ref-seed-chip"></span>
+            </div>
             <p class="screen-label">This is exactly <strong>10 m²</strong> of deck. Burn it into your brain.</p>
           </div>
           <canvas id="canvas-reference" width="880" height="480" aria-label="10 square metre reference deck"></canvas>
@@ -52,7 +57,7 @@
             <div class="round-info">
               <span class="badge" id="round-badge">Deck 1 of 5</span>
               <span class="score-running">Score: <strong id="running-score">0</strong></span>
-              <span class="seed-indicator" id="seed-indicator">Seed: <span id="seed-label"></span></span>
+              <span class="seed-chip" id="seed-indicator"></span>
             </div>
             <p class="screen-label">How many square metres is this deck?</p>
           </div>
@@ -68,6 +73,11 @@
               <div class="slider-ticks" aria-hidden="true">
                 <span>5</span><span>55</span><span>100</span><span>150</span><span>200</span>
               </div>
+            </div>
+            <div class="zoom-row" aria-label="Zoom control">
+              <span class="zoom-label">🔍</span>
+              <input id="zoom-slider" type="range" min="70" max="200" value="100" step="5" aria-label="Zoom level">
+              <span id="zoom-display">1.0×</span>
             </div>
             <button id="btn-submit" type="button" class="btn-primary">That's My Final Measurement</button>
           </div>
