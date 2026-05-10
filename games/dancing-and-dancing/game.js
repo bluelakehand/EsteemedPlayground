@@ -574,16 +574,19 @@ function draw(elapsedMs) {
   ctx.stroke();
   ctx.restore();
 
-  // ── Word display at top of canvas ──────────────────────────────────────────
-  // Show the word whose fall started most recently (transitions naturally when
-  // the next word's first letter begins its descent).
+  // ── Word template at hit zone ──────────────────────────────────────────────
+  // The full word sits on the hit zone bar as a dim target; letters fall into
+  // their column positions from above. Stay on the current word until all its
+  // chars are resolved — the next word's letters start falling long before the
+  // current word's last letter arrives, so we can't just track the latest fall start.
   let displayWordIdx = -1;
-  let latestStartMs  = -Infinity;
-  for (const n of notes) {
-    const startMs = n.targetMs - cfg.fallMs;
-    if (elapsedMs >= startMs && startMs > latestStartMs) {
-      latestStartMs  = startMs;
-      displayWordIdx = n.wordIdx;
+  for (let wi = 0; wi < wordList.length; wi++) {
+    const word = wordList[wi];
+    if (!word.chars.some(c => c.status === 'pending')) continue; // fully resolved
+    const firstNote = notes.find(n => n.wordIdx === wi && n.charIdx === 0);
+    if (firstNote && elapsedMs >= firstNote.targetMs - cfg.fallMs) {
+      displayWordIdx = wi;
+      break;
     }
   }
 
@@ -593,27 +596,32 @@ function draw(elapsedMs) {
     ctx.font         = 'bold 48px Impact, "Arial Narrow Bold", sans-serif';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
+
+    // Dark background box so the word reads clearly against falling letters
+    const str      = word.word.toUpperCase();
+    const boxW     = ctx.measureText(str).width + 28;
+    const boxH     = 54;
+    ctx.save();
+    ctx.fillStyle = 'rgba(8,2,18,0.72)';
+    ctx.fillRect(LANE_X - boxW / 2, HZ_Y - boxH / 2, boxW, boxH);
+    ctx.restore();
+
     word.chars.forEach((ch, i) => {
       let color;
       if (ch.status === 'hit')        color = '#35e7ff';
       else if (ch.status === 'wrong') color = '#ff4d7d';
       else if (ch.status === 'miss')  color = 'rgba(255,77,125,0.45)';
-      else {
-        // pending — dim while waiting, slightly brighter once falling
-        const note      = notes.find(n => n.wordIdx === displayWordIdx && n.charIdx === i);
-        const isFalling = note && elapsedMs >= note.targetMs - cfg.fallMs;
-        color = isFalling ? 'rgba(255,247,219,0.28)' : 'rgba(255,247,219,0.15)';
-      }
+      else                            color = 'rgba(255,247,219,0.22)';
       ctx.save();
       ctx.fillStyle = color;
       if (ch.status === 'hit' && !seizureSafe) { ctx.shadowColor = '#35e7ff'; ctx.shadowBlur = 14; }
-      ctx.fillText(ch.c.toUpperCase(), positions[i] ?? LANE_X, WORD_Y);
+      ctx.fillText(ch.c.toUpperCase(), positions[i] ?? LANE_X, HZ_Y);
       ctx.restore();
     });
   }
 
   // ── Falling notes ───────────────────────────────────────────────────────────
-  // Each letter travels from its position in the word display to the center hit zone.
+  // Each letter falls straight down its column to its position in the word at HZ_Y.
   for (const n of notes) {
     const startMs = n.targetMs - cfg.fallMs;
     const age     = elapsedMs - startMs;
@@ -624,10 +632,9 @@ function draw(elapsedMs) {
 
     if (n.status === 'hit') continue; // handled by hitFx
 
-    // X: start at the letter's position inside the word, converge to center
+    // X: fixed at the letter's column in the word — falls straight down
     const positions = getLetterXPositions(n.wordIdx);
-    const startX    = positions[n.charIdx] ?? LANE_X;
-    const x         = startX + (LANE_X - startX) * Math.min(progress, 1);
+    const x         = positions[n.charIdx] ?? LANE_X;
 
     // Y: fall from word display line down to (and slightly past) hit zone
     const y      = WORD_Y + fallDist * Math.min(progress, 1.7);
@@ -671,9 +678,10 @@ function draw(elapsedMs) {
     ctx.restore();
   }
 
-  // ── Hit effects (expanding ring + rising char) ──────────────────────────────
+  // ── Hit effects (expanding ring + rising char at letter's column) ──────────
   for (const fx of hitFx) {
-    const t = fx.age / 600;
+    const t    = fx.age / 600;
+    const fxX  = fx.x ?? LANE_X;
     ctx.save();
     ctx.globalAlpha = (1 - t) * 0.85;
     ctx.strokeStyle = fx.color;
@@ -681,14 +689,14 @@ function draw(elapsedMs) {
     if (seizureExtreme) { ctx.shadowColor = fx.color; ctx.shadowBlur = 32; }
     else if (!seizureSafe) { ctx.shadowColor = fx.color; ctx.shadowBlur = 8; }
     ctx.beginPath();
-    ctx.arc(LANE_X, HZ_Y, seizureExtreme ? 26 + t * 120 : 18 + t * 65, 0, Math.PI * 2);
+    ctx.arc(fxX, HZ_Y, seizureExtreme ? 26 + t * 120 : 18 + t * 65, 0, Math.PI * 2);
     ctx.stroke();
     ctx.globalAlpha  = (1 - t) * 0.95;
     ctx.fillStyle    = fx.color;
     ctx.font         = 'bold 52px Impact, "Arial Narrow Bold", sans-serif';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(fx.char.toUpperCase(), LANE_X, HZ_Y - t * 55);
+    ctx.fillText(fx.char.toUpperCase(), fxX, HZ_Y - t * 55);
     ctx.restore();
   }
 
@@ -742,14 +750,15 @@ document.addEventListener('keydown', function (e) {
 
     const color = bestOff < 50 ? '#35e7ff' : bestOff < 110 ? '#ffd35a' : '#f3b87a';
     const label = bestOff < 50 ? 'PERFECT' : bestOff < 110 ? 'GOOD' : 'OK';
+    const hitX  = (getLetterXPositions(best.wordIdx))[best.charIdx] ?? LANE_X;
 
     if (seizureExtreme) {
       for (let r = 0; r < 3; r++) {
         const h = rainbowHue(performance.now() * 0.00139 + r * 0.333) | 0;
-        hitFx.push({ age: r * 90, color: `hsl(${h},100%,65%)`, char: best.char });
+        hitFx.push({ age: r * 90, color: `hsl(${h},100%,65%)`, char: best.char, x: hitX });
       }
     } else {
-      hitFx.push({ age: 0, color, char: best.char });
+      hitFx.push({ age: 0, color, char: best.char, x: hitX });
     }
     judgeFx = { text: label, color, age: 0 };
     wordList[best.wordIdx].chars[best.charIdx].status = 'hit';

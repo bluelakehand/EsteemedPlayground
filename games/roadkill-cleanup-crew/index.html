@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Roadkill Cleanup Crew</title>
+    <meta
+      name="description"
+      content="A daily highway cleanup driving game about reflexes, fuel, net durability, and questionable municipal contracts."
+    >
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+
+    <main class="shell">
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily highway sanitation reflex test</p>
+          <h1 id="game-title">Roadkill Cleanup Crew</h1>
+          <p class="lede">Keep the truck moving, keep the net alive, and do not miss the gas stops.</p>
+        </div>
+        <div class="stat-card" aria-label="Best cleanup score">
+          <span>Best Score</span>
+          <strong id="best-score">---</strong>
+          <small id="best-context">Daily shift</small>
+        </div>
+      </section>
+
+      <section class="game-card" aria-label="Roadkill Cleanup Crew game">
+        <div id="screen-start" class="screen active">
+          <div class="screen-header">
+            <div class="header-row">
+              <span class="badge">Contract</span>
+              <span class="seed-chip" id="start-seed-chip">Daily</span>
+            </div>
+            <p class="screen-label">A 180-second public works disaster. Pickups score big; survival keeps the paperwork clean.</p>
+          </div>
+
+          <div class="start-grid">
+            <div class="contract-board">
+              <div>
+                <span class="board-label">Objective</span>
+                <strong>Recover more than you ruin</strong>
+              </div>
+              <div>
+                <span class="board-label">Controls</span>
+                <strong>Arrows or WASD, Space for net</strong>
+              </div>
+              <div>
+                <span class="board-label">Service Bays</span>
+                <strong>Brake inside GAS and FIX stops</strong>
+              </div>
+            </div>
+
+            <div class="start-actions">
+              <button id="btn-start" class="btn-primary" type="button">Start Shift</button>
+              <form class="seed-form" id="seed-form" aria-label="Custom seed">
+                <label for="seed-input">Seed</label>
+                <input id="seed-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend's seed">
+                <button type="submit" class="btn-secondary">Load Seed</button>
+                <button id="btn-daily" type="button" class="btn-secondary">Daily</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div id="screen-play" class="screen">
+          <div class="screen-header play-header">
+            <div class="score-row">
+              <span class="badge">On Route</span>
+              <span>Pickups <strong id="pickup-count">0</strong></span>
+              <span>Score <strong id="score-count">0</strong></span>
+              <span>Time <strong id="time-count">180</strong></span>
+            </div>
+            <span class="seed-chip" id="play-seed-chip">Daily</span>
+          </div>
+
+          <canvas id="road" width="960" height="560" aria-label="Top-down cleanup truck driving on a highway"></canvas>
+
+          <div class="screen-footer">
+            <div class="meter-grid">
+              <div class="meter">
+                <div class="meter-top"><span>Fuel</span><strong id="fuel-value">100%</strong></div>
+                <div class="meter-track"><div id="fuel-fill" class="meter-fill fuel"></div></div>
+              </div>
+              <div class="meter">
+                <div class="meter-top"><span>Net</span><strong id="net-value">100%</strong></div>
+                <div class="meter-track"><div id="net-fill" class="meter-fill net"></div></div>
+              </div>
+              <div class="meter">
+                <div class="meter-top"><span>Truck</span><strong id="car-value">100%</strong></div>
+                <div class="meter-track"><div id="car-fill" class="meter-fill car"></div></div>
+              </div>
+            </div>
+            <div class="control-row">
+              <p id="status-line" class="status-line" aria-live="polite">Roll out.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="screen-over" class="screen">
+          <div class="final-panel">
+            <span class="badge" id="end-badge">Shift Over</span>
+            <h2 id="end-title">Paperwork Time</h2>
+            <p id="end-summary" class="final-copy"></p>
+            <div class="result-grid">
+              <div><span>Score</span><strong id="final-score">0</strong></div>
+              <div><span>Pickups</span><strong id="final-pickups">0</strong></div>
+              <div><span>Time</span><strong id="final-time">0s</strong></div>
+              <div><span>Best Streak</span><strong id="final-streak">0</strong></div>
+            </div>
+            <div class="final-actions">
+              <button id="btn-share" class="btn-secondary" type="button">Share Result</button>
+              <button id="btn-restart" class="btn-primary" type="button">Run It Back</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">Route Notes</h2>
+        <div class="rules">
+          <div class="roadkill-guide" aria-label="Roadkill target example">
+            <div class="roadkill-sample" aria-hidden="true">
+              <span></span>
+            </div>
+            <p><strong>Roadkill:</strong> scoop the flat brown shapes with yellow X marks.</p>
+          </div>
+          <p><strong>Net:</strong> deploy it before the cleanup target reaches your bumper. Dragging it forever burns durability.</p>
+          <p><strong>Gas and repairs:</strong> pull into the shoulder bay and brake. Watch the shoulder for cones, barriers, cats, and strollers.</p>
+          <p><strong>Score:</strong> pickups are king. Time survived, streaks, and spare resources decide the respectable contracts.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
