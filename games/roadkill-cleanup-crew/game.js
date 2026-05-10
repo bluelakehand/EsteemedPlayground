@@ -84,6 +84,47 @@ const CLEANUP_MESSAGES = [
   '{item} collected. Circle of life, but municipal.',
 ];
 
+const CAT_NAMES = [
+  'Fluffy',
+  "lil' brudder",
+  'Mittens',
+  'Mr. Biscuits',
+  'Chairman Meow',
+  'Beans',
+  'Waffles',
+  'Trash Cat',
+  'Little Boots',
+  'Princess Toe Beans',
+  'Soup',
+  'Kevin',
+];
+
+const STROLLER_NAMES = [
+  'Timmy',
+  'Aiden',
+  'Maddie',
+  'Jackson',
+  'Kaylee',
+  'Evan',
+  'Brayden',
+  'Scout',
+  'Parker',
+  'Olivia',
+  'Mason',
+  'Lil Slugger',
+];
+
+const STROLLER_HIT_LINES = [
+  '{name} will never be a baseball star...',
+  '{name} had so much juice-box potential...',
+  '{name} was pre-approved for finger painting...',
+  '{name} never got to see the big slide...',
+  '{name} had a whole snack cup waiting...',
+  '{name} was two naps from greatness...',
+  '{name} just learned object permanence...',
+  '{name} was going to change preschool forever...',
+];
+
 const keys = {};
 let rafId = 0;
 let lastTs = 0;
@@ -427,6 +468,7 @@ function spawnSideObstacle() {
     type: 'sideObstacle',
     side,
     flavor,
+    ...sideObstacleIdentity(flavor),
     x: sideX(side) + spawnRange(-14, 14),
     y: -50,
     w: specs[flavor].w,
@@ -435,6 +477,20 @@ function spawnSideObstacle() {
   });
   logRouteObject(state.objects[state.objects.length - 1]);
   return true;
+}
+
+function sideObstacleIdentity(flavor) {
+  if (flavor === 'cat') {
+    const name = spawnPick(CAT_NAMES);
+    return { name, hitLine: `${name} :(` };
+  }
+
+  if (flavor === 'stroller') {
+    const name = spawnPick(STROLLER_NAMES);
+    return { name, hitLine: spawnPick(STROLLER_HIT_LINES).replace('{name}', name) };
+  }
+
+  return {};
 }
 
 function canSpawnSideObstacle(side) {
@@ -463,7 +519,7 @@ function logRouteObject(obj) {
   state.routeLog.push({
     t: Number(state.elapsed.toFixed(2)),
     type: obj.type,
-    kind: obj.kind || obj.flavor || obj.label || '',
+    kind: obj.name || obj.kind || obj.flavor || obj.label || '',
     side: obj.side || '',
     x: Number(obj.x.toFixed(1)),
   });
@@ -571,9 +627,10 @@ function handleNetHit(obj) {
 
   if (obj.type === 'sideObstacle') {
     obj.hit = true;
-    state.net = clamp(state.net - sideObstacleDamage(obj).net, 0, 100);
+    const damage = sideObstacleDamage(obj);
+    state.net = clamp(state.net - damage.net, 0, 100);
     state.streak = 0;
-    addScore(-35, obj.x, obj.y, 'NOPE');
+    addScore(-35, obj.x, obj.y, sideObstacleHitText(obj, damage));
     flashMessage(sideObstacleNetMessage(obj), 0.9);
     puff(obj.x, obj.y, '#e99b38', 12);
   }
@@ -626,7 +683,7 @@ function handleCarHit(obj) {
     state.fuel = clamp(state.fuel - damage.fuel, 0, 100);
     state.streak = 0;
     nudgePlayerTowardRoad(obj);
-    addScore(-damage.score, obj.x, obj.y, damage.label);
+    addScore(-damage.score, obj.x, obj.y, sideObstacleHitText(obj, damage));
     flashMessage(sideObstacleCarMessage(obj), 1);
     puff(obj.x, obj.y, damage.color, 14);
   }
@@ -642,21 +699,25 @@ function sideObstacleDamage(obj) {
   return table[obj.flavor] || table.cone;
 }
 
+function sideObstacleHitText(obj, damage) {
+  return obj.hitLine || damage.label;
+}
+
 function sideObstacleCarMessage(obj) {
+  if (obj.flavor === 'cat') return obj.hitLine || 'cat :(';
+  if (obj.flavor === 'stroller') return obj.hitLine || 'Timmy will never be a baseball star...';
   return {
     cone: 'Shoulder cone. Still counts as city property.',
     barrier: 'Construction barrier. The shoulder is fighting back.',
-    cat: 'Stray cat panic. Nobody enjoyed that.',
-    stroller: 'Abandoned stroller. Extremely cursed obstacle.',
   }[obj.flavor] || 'Shoulder obstacle. Camping denied.';
 }
 
 function sideObstacleNetMessage(obj) {
+  if (obj.flavor === 'cat') return obj.hitLine || 'cat :(';
+  if (obj.flavor === 'stroller') return obj.hitLine || 'Timmy will never be a baseball star...';
   return {
     cone: 'The net is not a cone collector.',
     barrier: 'The barrier tried to become part of the net.',
-    cat: 'Do not scoop the cat.',
-    stroller: 'Wrong municipal department.',
   }[obj.flavor] || 'That does not go in the cleanup net.';
 }
 
