@@ -34,10 +34,102 @@ function generateHoles(seedStr, count) {
   const rng = mulberry32(hashSeed(seedStr));
   const holes = [];
   for (let i = 0; i < count; i++) {
-    const distance = Math.round(100 + rng() * 150);   // 100–250 yards
-    const greenRadius = 9 + rng() * 8;                // 9–17 yards
-    const pinOffsetX = (rng() - 0.5) * 12;            // ±6 yards lateral
-    const maxDistance = 300; // 100% of bar = 300 yards always
+    const distance = Math.round(100 + rng() * 150);
+
+    // Type first — island needs a larger green
+    const fwRoll = rng();
+    let fwType;
+    if      (fwRoll < 0.20) fwType = 'straight';
+    else if (fwRoll < 0.30) fwType = 'wide';
+    else if (fwRoll < 0.40) fwType = 'narrow';
+    else if (fwRoll < 0.53) fwType = 'dogleg-l';
+    else if (fwRoll < 0.66) fwType = 'dogleg-r';
+    else if (fwRoll < 0.76) fwType = 'S-curve';
+    else if (fwRoll < 0.84) fwType = 'funnel';
+    else if (fwRoll < 0.92) fwType = 'rev-funnel';
+    else                    fwType = 'island';
+
+    const greenRadius = fwType === 'island' ? 15 + rng() * 6 : 9 + rng() * 8;
+
+    // Build waypoints + pinOffsetX per type
+    // Waypoints: { cx, cy, hw } — game yards, cx/cy relative to tee at (0,0)
+    let waypoints, pinOffsetX;
+    const d = distance;
+
+    if (fwType === 'straight') {
+      pinOffsetX = (rng() - 0.5) * 12;
+      waypoints = [
+        { cx: 0,          cy: 0,  hw: 19 },
+        { cx: pinOffsetX, cy: d,  hw: 19 },
+      ];
+    } else if (fwType === 'wide') {
+      pinOffsetX = (rng() - 0.5) * 22;
+      waypoints = [
+        { cx: 0,          cy: 0,  hw: 34 },
+        { cx: pinOffsetX, cy: d,  hw: 34 },
+      ];
+    } else if (fwType === 'narrow') {
+      pinOffsetX = (rng() - 0.5) * 8;
+      waypoints = [
+        { cx: 0,          cy: 0,  hw: 11 },
+        { cx: pinOffsetX, cy: d,  hw: 11 },
+      ];
+    } else if (fwType === 'dogleg-l') {
+      const bY = d * (0.35 + rng() * 0.30);
+      const bX = -(16 + rng() * 20);
+      pinOffsetX = bX + (rng() - 0.5) * 10;
+      waypoints = [
+        { cx: 0,          cy: 0,   hw: 18 },
+        { cx: 0,          cy: bY,  hw: 18 },
+        { cx: pinOffsetX, cy: d,   hw: 18 },
+      ];
+    } else if (fwType === 'dogleg-r') {
+      const bY = d * (0.35 + rng() * 0.30);
+      const bX = 16 + rng() * 20;
+      pinOffsetX = bX + (rng() - 0.5) * 10;
+      waypoints = [
+        { cx: 0,          cy: 0,   hw: 18 },
+        { cx: 0,          cy: bY,  hw: 18 },
+        { cx: pinOffsetX, cy: d,   hw: 18 },
+      ];
+    } else if (fwType === 'S-curve') {
+      const dir = rng() < 0.5 ? 1 : -1;
+      const b1Y = d * (0.28 + rng() * 0.15);
+      const b1X = dir  * (13 + rng() * 14);
+      const b2Y = d * (0.55 + rng() * 0.15);
+      const b2X = -dir * (11 + rng() * 11);
+      pinOffsetX = b2X + (rng() - 0.5) * 8;
+      waypoints = [
+        { cx: 0,          cy: 0,    hw: 16 },
+        { cx: b1X,        cy: b1Y,  hw: 16 },
+        { cx: b2X,        cy: b2Y,  hw: 16 },
+        { cx: pinOffsetX, cy: d,    hw: 16 },
+      ];
+    } else if (fwType === 'funnel') {
+      pinOffsetX = (rng() - 0.5) * 10;
+      waypoints = [
+        { cx: 0,                cy: 0,       hw: 34 },
+        { cx: pinOffsetX * 0.5, cy: d * 0.5, hw: 20 },
+        { cx: pinOffsetX,       cy: d,       hw: 10 },
+      ];
+    } else if (fwType === 'rev-funnel') {
+      pinOffsetX = (rng() - 0.5) * 18;
+      waypoints = [
+        { cx: 0,                cy: 0,       hw: 10 },
+        { cx: pinOffsetX * 0.4, cy: d * 0.4, hw: 20 },
+        { cx: pinOffsetX,       cy: d,       hw: 30 },
+      ];
+    } else { // island
+      pinOffsetX = (rng() - 0.5) * 8;
+      const approachEnd = d - greenRadius * 2.0;
+      waypoints = [
+        { cx: 0,                  cy: 0,                hw: 9 },
+        { cx: pinOffsetX * 0.4,   cy: approachEnd * 0.6, hw: 9 },
+        { cx: pinOffsetX,         cy: approachEnd,       hw: 9 },
+      ];
+    }
+
+    const fairway = { type: fwType, waypoints };
 
     const numBunkers = 1 + Math.floor(rng() * 3);
     const bunkers = [];
@@ -54,48 +146,30 @@ function generateHoles(seedStr, count) {
 
     const numTrees = 3 + Math.floor(rng() * 5);
     const trees = [];
+    const maxHw = Math.max(...waypoints.map(w => w.hw));
     for (let t = 0; t < numTrees; t++) {
       const side = rng() > 0.5 ? 1 : -1;
       trees.push({
-        x: side * (22 + rng() * 14),
+        x: side * (maxHw + 5 + rng() * 14),
         y: 15 + rng() * (distance - 25),
         r: 5 + rng() * 7,
       });
     }
 
     const wAng = rng() * Math.PI * 2;
-    const wSpd = rng() * 7;
+    const wSpd = rng() * 22;
 
     let holeAnim = null;
-    if (rng() < 1 / 2) {
+    const animChance = (fwType === 'island' || fwType === 'narrow') ? 0.2 : 0.5;
+    if (rng() < animChance) {
       if (rng() < 0.5) {
-        holeAnim = {
-          type: 'pulse',
-          speed: 0.3 + rng() * 0.4,       // Hz — full cycle every 2.5–3.3s
-          minR: 0.15 + rng() * 0.2,        // yards (very small)
-          maxR: 1.6 + rng() * 1.4,         // yards (large)
-        };
+        holeAnim = { type: 'pulse', speed: 0.3 + rng() * 0.4, minR: 0.15 + rng() * 0.2, maxR: 1.6 + rng() * 1.4 };
       } else {
-        holeAnim = {
-          type: 'move',
-          speed: 0.12 + rng() * 0.14,      // Hz — full lap every 4–8s
-          moveRadius: greenRadius * (0.25 + rng() * 0.2),
-          pattern: rng() < 0.5 ? 'circle' : 'figure8',
-          phase: rng() * Math.PI * 2,
-        };
+        holeAnim = { type: 'move', speed: 0.12 + rng() * 0.14, moveRadius: greenRadius * (0.25 + rng() * 0.2), pattern: rng() < 0.5 ? 'circle' : 'figure8', phase: rng() * Math.PI * 2 };
       }
     }
 
-    holes.push({
-      distance,
-      greenRadius,
-      pinOffsetX,
-      maxDistance,
-      bunkers,
-      trees,
-      wind: { dx: Math.cos(wAng) * wSpd, dy: Math.sin(wAng) * wSpd },
-      holeAnim,
-    });
+    holes.push({ distance, greenRadius, pinOffsetX, maxDistance: 300, bunkers, trees, fairway, wind: { dx: Math.cos(wAng) * wSpd, dy: Math.sin(wAng) * wSpd }, holeAnim });
   }
   return holes;
 }
@@ -106,6 +180,60 @@ function holeScale(hole) { return (TEE_Y - PIN_MARGIN) / hole.distance; }
 function toPx(yx, yy, hole) {
   const s = holeScale(hole);
   return { x: CW / 2 + yx * s, y: TEE_Y - yy * s };
+}
+
+// --- Bunker collision ---
+function isInBunker(hole, lx, ly) {
+  for (const b of hole.bunkers) {
+    const dx = (lx - b.x) / b.rx;
+    const dy = (ly - b.y) / b.ry;
+    if (dx * dx + dy * dy <= 1) return true;
+  }
+  return false;
+}
+
+// --- Fairway collision (waypoint-based, handles all shapes including funnel) ---
+function isOnFairway(hole, lx, ly) {
+  const wps = hole.fairway.waypoints;
+  if (Math.hypot(lx - hole.pinOffsetX, ly - hole.distance) <= hole.greenRadius) return true;
+  for (let i = 0; i < wps.length - 1; i++) {
+    const a = wps[i], b = wps[i + 1];
+    const sdx = b.cx - a.cx, sdy = b.cy - a.cy;
+    const lenSq = sdx * sdx + sdy * sdy;
+    if (lenSq < 0.01) continue;
+    const t = Math.max(0, Math.min(1, ((lx - a.cx) * sdx + (ly - a.cy) * sdy) / lenSq));
+    const perpDist = Math.hypot(lx - (a.cx + t * sdx), ly - (a.cy + t * sdy));
+    if (perpDist <= a.hw + t * (b.hw - a.hw)) return true;
+  }
+  return false;
+}
+
+// --- Fairway polygon builder (game coords → left/right edge arrays) ---
+function buildFairwayPoly(waypoints) {
+  const n = waypoints.length;
+  const left = [], right = [];
+  for (let i = 0; i < n; i++) {
+    const wp = waypoints[i];
+    let tx, ty;
+    if (i === 0) {
+      const dx = waypoints[1].cx - wp.cx, dy = waypoints[1].cy - wp.cy;
+      const l = Math.hypot(dx, dy) || 1; tx = dx / l; ty = dy / l;
+    } else if (i === n - 1) {
+      const dx = wp.cx - waypoints[i-1].cx, dy = wp.cy - waypoints[i-1].cy;
+      const l = Math.hypot(dx, dy) || 1; tx = dx / l; ty = dy / l;
+    } else {
+      const dx1 = wp.cx - waypoints[i-1].cx, dy1 = wp.cy - waypoints[i-1].cy;
+      const l1 = Math.hypot(dx1, dy1) || 1;
+      const dx2 = waypoints[i+1].cx - wp.cx, dy2 = waypoints[i+1].cy - wp.cy;
+      const l2 = Math.hypot(dx2, dy2) || 1;
+      const ax = dx1/l1 + dx2/l2, ay = dy1/l1 + dy2/l2;
+      const al = Math.hypot(ax, ay) || 1; tx = ax / al; ty = ay / al;
+    }
+    // Perpendicular left in game space: rotate tangent 90° CCW → (-ty, tx)
+    left.push({ cx: wp.cx + (-ty) * wp.hw, cy: wp.cy + tx * wp.hw });
+    right.push({ cx: wp.cx - (-ty) * wp.hw, cy: wp.cy - tx * wp.hw });
+  }
+  return { left, right };
 }
 
 // --- Animated pin state ---
@@ -143,21 +271,66 @@ function drawHole(canvas, hole, opts = {}) {
   ctx.fillStyle = '#1a4a09';
   ctx.fillRect(0, 0, CW, CH);
 
-  // Fairway strip — lightly textured lighter green
-  const fw = 40 * s;
-  ctx.fillStyle = '#267014';
-  ctx.beginPath();
-  ctx.rect(cx - fw / 2, staticPx.y - hole.greenRadius * s * 0.9, fw, TEE_Y - staticPx.y + hole.greenRadius * s * 0.9);
-  ctx.fill();
-
-  // Subtle fairway stripes
-  ctx.globalAlpha = 0.06;
-  ctx.fillStyle = '#ffffff';
-  const stripeH = 18 * s;
-  for (let sy = staticPx.y; sy < TEE_Y; sy += stripeH * 2) {
-    ctx.fillRect(cx - fw / 2, sy, fw, stripeH);
+  // OOB diagonal stripes over the rough — fairway polygon drawn on top covers these
+  ctx.strokeStyle = 'rgba(210, 45, 45, 0.30)';
+  ctx.lineWidth = 1.4;
+  const obSp = 26;
+  for (let off = -CH; off < CW + CH; off += obSp) {
+    ctx.beginPath(); ctx.moveTo(off, CH); ctx.lineTo(off + CH, 0); ctx.stroke();
   }
-  ctx.globalAlpha = 1;
+
+  // Island: water hazard drawn under the fairway so the approach strip crosses it
+  if (hole.fairway.type === 'island') {
+    const wr = hole.greenRadius * 1.8;
+    ctx.fillStyle = '#0d3d5c';
+    ctx.beginPath();
+    ctx.ellipse(staticPx.x, staticPx.y, wr * s, wr * s * 0.88, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(56, 160, 220, 0.22)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(staticPx.x, staticPx.y, wr * s * 0.72, wr * s * 0.63, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Fairway — drawn as a polygon from waypoints so any shape works
+  {
+    const wps = hole.fairway.waypoints;
+    const { left, right } = buildFairwayPoly(wps);
+    // Convert game coords to canvas px
+    const toC = (pt) => ({ x: cx + pt.cx * s, y: TEE_Y - pt.cy * s });
+    const lc = left.map(toC);
+    const rc = right.map(toC);
+
+    const fairwayPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(lc[0].x, lc[0].y);
+      for (let k = 1; k < lc.length; k++) ctx.lineTo(lc[k].x, lc[k].y);
+      for (let k = rc.length - 1; k >= 0; k--) ctx.lineTo(rc[k].x, rc[k].y);
+      ctx.closePath();
+    };
+
+    ctx.fillStyle = '#267014';
+    // Rounded caps at every waypoint smooth corners and ends
+    for (const wp of wps) {
+      ctx.beginPath();
+      ctx.arc(cx + wp.cx * s, TEE_Y - wp.cy * s, wp.hw * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    fairwayPath(); ctx.fill();
+
+    // Mowed stripes, clipped to the polygon
+    ctx.save();
+    fairwayPath(); ctx.clip();
+    ctx.globalAlpha = 0.07;
+    ctx.fillStyle = '#ffffff';
+    const stripeH = 18 * s;
+    for (let sy = 0; sy < TEE_Y + stripeH; sy += stripeH * 2) {
+      ctx.fillRect(0, sy, CW, stripeH);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
 
   // Green (always centred on the original static position)
   ctx.fillStyle = '#33a020';
@@ -187,6 +360,17 @@ function drawHole(canvas, hole, opts = {}) {
       ctx.arc(bx, by, 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
+    // Hazard yellow diagonal stripes clipped to bunker ellipse
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(bp.x, bp.y, b.rx * s, b.ry * s, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(230, 195, 0, 0.72)';
+    ctx.lineWidth = 1.3;
+    for (let off = -CH; off < CW + CH; off += 9) {
+      ctx.beginPath(); ctx.moveTo(off, CH); ctx.lineTo(off + CH, 0); ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // Trees
@@ -335,51 +519,81 @@ function drawHole(canvas, hole, opts = {}) {
 }
 
 function drawWindIndicator(ctx, wind) {
-  const wx = CW - 62, wy = 44;
-  ctx.fillStyle = 'rgba(0,0,0,0.58)';
-  ctx.beginPath();
-  ctx.arc(wx, wy, 24, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.font = '9px "Arial Narrow", Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('WIND', wx, wy + 36);
+  const wx = CW - 66, wy = 52;
+  const R = 34;
 
   const spd = Math.hypot(wind.dx, wind.dy);
+  const color = spd < 5  ? '#7dd3f5'
+              : spd < 12 ? '#ffa726'
+              : '#ef5350';
+
+  // Background
+  ctx.fillStyle = 'rgba(4, 2, 0, 0.88)';
+  ctx.beginPath();
+  ctx.arc(wx, wy, R, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Strength ring
+  ctx.strokeStyle = spd < 0.6 ? 'rgba(255,255,255,0.18)' : color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(wx, wy, R, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Subtle compass ticks
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(wx + Math.cos(a) * (R - 7), wy + Math.sin(a) * (R - 7));
+    ctx.lineTo(wx + Math.cos(a) * (R - 2), wy + Math.sin(a) * (R - 2));
+    ctx.stroke();
+  }
+
+  // Labels outside the circle
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = 'bold 9px "Arial Narrow", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('WIND', wx, wy + R + 13);
+
   if (spd < 0.6) {
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font = 'bold 10px "Arial Narrow"';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = 'bold 12px "Arial Narrow", Arial, sans-serif';
     ctx.fillText('CALM', wx, wy + 4);
     return;
   }
 
+  // Speed label below circle
+  ctx.fillStyle = color;
+  ctx.font = `bold 11px "Arial Narrow", Arial, sans-serif`;
+  ctx.fillText(`${spd.toFixed(0)} yds`, wx, wy + R + 24);
+
+  // Arrow — tail to tip spanning full radius
   const ang = Math.atan2(wind.dx, -wind.dy);
-  const len = Math.min(18, spd * 2.6);
-  const ex = wx + Math.sin(ang) * len;
-  const ey = wy - Math.cos(ang) * len;
+  const tailX = wx - Math.sin(ang) * (R * 0.28);
+  const tailY = wy + Math.cos(ang) * (R * 0.28);
+  const tipX  = wx + Math.sin(ang) * (R * 0.72);
+  const tipY  = wy - Math.cos(ang) * (R * 0.72);
 
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3.5;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(wx, wy);
-  ctx.lineTo(ex, ey);
+  ctx.moveTo(tailX, tailY);
+  ctx.lineTo(tipX, tipY);
   ctx.stroke();
+  ctx.lineCap = 'butt';
 
-  ctx.fillStyle = '#ffffff';
+  // Arrowhead
+  const hs = 9, ha = 0.42;
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(ex, ey);
-  ctx.lineTo(ex - 5 * Math.sin(ang + 0.5), ey + 5 * Math.cos(ang + 0.5));
-  ctx.lineTo(ex - 5 * Math.sin(ang - 0.5), ey + 5 * Math.cos(ang - 0.5));
+  ctx.moveTo(tipX, tipY);
+  ctx.lineTo(tipX - hs * Math.sin(ang + ha), tipY + hs * Math.cos(ang + ha));
+  ctx.lineTo(tipX - hs * Math.sin(ang - ha), tipY + hs * Math.cos(ang - ha));
   ctx.closePath();
   ctx.fill();
-
-  ctx.fillStyle = '#7dd3f5';
-  ctx.font = 'bold 10px "Arial Narrow"';
-  ctx.fillText(`${spd.toFixed(0)}y`, wx, wy + 5);
 }
 
 // --- Game state ---
@@ -389,6 +603,8 @@ const G = {
   holeIdx: 0,
   scores: [],
   inHoleFlags: [],
+  oobFlags: [],
+  bunkerFlags: [],
   holes: [],
   seed: '',
   isDaily: true,
@@ -511,7 +727,13 @@ function startHole() {
   const hole = G.holes[G.holeIdx];
   holeBadge.textContent = G.holeCount === 1
     ? 'CTP' : `Hole ${G.holeIdx + 1} of ${G.holeCount}`;
-  distLabel.textContent = `${hole.distance} yards to the pin`;
+  const fwLabels = {
+    straight: '', wide: ' · Wide fairway', narrow: ' · Narrow fairway',
+    'dogleg-l': ' · Dogleg left', 'dogleg-r': ' · Dogleg right',
+    'S-curve': ' · S-curve', funnel: ' · Narrows to pin',
+    'rev-funnel': ' · Opens to green', island: ' · Island green',
+  };
+  distLabel.textContent = `${hole.distance} yards to the pin${fwLabels[hole.fairway.type] || ''}`;
   holeChip.textContent = seedChipText();
   holeChip.className = `seed-chip ${G.isDaily ? 'daily' : 'custom'}`;
 
@@ -562,22 +784,65 @@ function lockPower() {
 }
 
 // --- Per-hole roast ---
-function getHoleRoast(hole, holeIdx, landX, landY, d, inHole) {
+function getHoleRoast(hole, holeIdx, landX, landY, d, inHole, isOOB, inBunker) {
   const pick = (arr, seed) => arr[Math.abs(seed) % arr.length];
   const seed = holeIdx * 17 + Math.floor(d * 3);
+  const fw = hole.fairway;
 
-  // OOB: outside fairway width AND outside green
-  const onFairway = Math.abs(landX) <= 20 && landY >= 0 && landY <= hole.distance + hole.greenRadius;
-  const onGreen = Math.hypot(landX - hole.pinOffsetX, landY - hole.distance) <= hole.greenRadius;
+  if (inBunker) return { text: pick([
+    "That's a bunker. +10. Sand is not your friend.",
+    "Hazard. Yellow lines meant something. +10.",
+    "Professionally placed in the sand trap. +10 yds.",
+    "The bunker was right there and you found it anyway. +10.",
+  ], seed), wtf: false };
 
-  if (!onFairway && !onGreen) {
-    // ~80% chance WTF RICHARD, deterministic so same hole always shows same roast
-    if ((holeIdx * 17 + Math.floor(d)) % 10 < 8) return { text: 'WTF RICHARD?', wtf: true };
+  if (isOOB) {
+    const wtfThresh = fw.type === 'wide' ? 9 : fw.type === 'narrow' ? 6
+      : fw.type === 'island' ? 9 : fw.type.startsWith('dogleg') ? 7
+      : fw.type === 'S-curve' ? 7 : 8;
+    if ((holeIdx * 17 + Math.floor(d)) % 10 < wtfThresh) return { text: 'WTF RICHARD?', wtf: true };
+    if (fw.type === 'island') return { text: pick([
+      "That's in the water. +20. Your ball is gone.",
+      "The island green is not the surrounding water. +20 for reference.",
+      "Splash. +20. You knew what this was.",
+      "The bridge was right there. Metaphorically. +20.",
+    ], seed), wtf: false };
+    if (fw.type === 'dogleg-l' || fw.type === 'dogleg-r') return { text: pick([
+      "The fairway bends. Your ball did not. +20.",
+      "It's a dogleg. The dog legged. You didn't. +20.",
+      "There's a turn on this hole. Consider that information. +20.",
+      "Outstanding commitment to the straight line. +20 OOB.",
+    ], seed), wtf: false };
+    if (fw.type === 'S-curve') return { text: pick([
+      "It bends both ways. You went neither. +20.",
+      "An S-curve requires at least one of the S's. +20.",
+      "The fairway goes left, then right. You found option C. +20.",
+    ], seed), wtf: false };
+    if (fw.type === 'wide') return { text: pick([
+      "You missed a fairway that's basically a parking lot. +20.",
+      "This fairway is aggressively wide and yet. +20.",
+      "Outstanding. The one direction with no grass, and +20.",
+    ], seed), wtf: false };
+    if (fw.type === 'narrow') return { text: pick([
+      "It's a tight line. You found the gap. Wrong gap. +20.",
+      "Narrow fairway. Narrower ball flight. +20.",
+      "These things happen on a tight hole. +20 anyway.",
+    ], seed), wtf: false };
+    if (fw.type === 'funnel') return { text: pick([
+      "That was the wide part. You missed it. +20.",
+      "It funnels to the green. You chose the outside. +20.",
+      "The whole thing narrows down there. You missed the wide part up here. +20.",
+    ], seed), wtf: false };
+    if (fw.type === 'rev-funnel') return { text: pick([
+      "It opens up near the green. You missed the opening. +20.",
+      "The landing area near the pin is enormous. +20 somehow.",
+      "There's a lot of room up there. Not here. +20.",
+    ], seed), wtf: false };
     return { text: pick([
-      "That's not the fairway.",
-      "The course ends somewhere around there. Probably.",
-      "Outstanding choice of landing zone.",
-      "That went fully elsewhere.",
+      "That's OOB. +20. Just so we're aligned.",
+      "The red lines meant something. +20.",
+      "Outstanding landing zone. Also OOB. +20.",
+      "That went fully elsewhere. +20.",
     ], seed), wtf: false };
   }
 
@@ -670,10 +935,20 @@ function showResult() {
   const ps = G.finalPinState || { x: hole.pinOffsetX, y: hole.distance, gameRadius: HOLE_RADIUS, cupPx: 4 };
   const d = Math.hypot(G.landX - ps.x, G.landY - ps.y);
   const inHole = d < ps.gameRadius;
-  const score = inHole ? hole.distance : d;
+  const hitBunker = !inHole && isInBunker(hole, G.landX, G.landY);
+  const onFairway  = !inHole && isOnFairway(hole, G.landX, G.landY);
+  const isOOB      = !inHole && !hitBunker && !onFairway;
+
+  let score;
+  if (inHole)      score = hole.distance;
+  else if (isOOB)  score = d + 20;
+  else if (hitBunker) score = d + 10;
+  else             score = d;
 
   G.scores.push(score);
   G.inHoleFlags.push(inHole);
+  G.oobFlags.push(isOOB);
+  G.bunkerFlags.push(hitBunker);
 
   const total = G.scores.reduce((a, b) => a + b, 0);
   runScore.textContent = total.toFixed(1);
@@ -688,16 +963,27 @@ function showResult() {
   resultBadge.textContent = G.holeCount === 1
     ? 'Your Result' : `Hole ${G.holeIdx + 1} Result`;
 
-  const q = inHole ? 'bad' : d < 5 ? 'good' : d < 20 ? 'ok' : 'bad';
+  const q = inHole || isOOB ? 'bad' : hitBunker ? 'ok' : d < 5 ? 'good' : d < 20 ? 'ok' : 'bad';
   const dispDist = inHole ? 'IN THE HOLE' : `${d.toFixed(1)} yds`;
-  const dispScore = inHole ? `${score.toFixed(0)} yds (penalty)` : `${score.toFixed(1)} yds`;
+  let dispScore;
+  if (inHole)        dispScore = `${score.toFixed(0)} yds (in-hole penalty)`;
+  else if (isOOB)    dispScore = `${d.toFixed(1)} + 20 OOB = ${score.toFixed(1)} yds`;
+  else if (hitBunker) dispScore = `${d.toFixed(1)} + 10 hazard = ${score.toFixed(1)} yds`;
+  else               dispScore = `${score.toFixed(1)} yds`;
+
+  const penaltyPill = isOOB
+    ? `<div class="stat-pill bad"><span class="label">OOB Penalty</span><span class="value">+20 yds</span></div>`
+    : hitBunker
+    ? `<div class="stat-pill ok"><span class="label">Hazard Penalty</span><span class="value">+10 yds</span></div>`
+    : '';
 
   resultStats.innerHTML = `
     <div class="stat-pill ${q}">
       <span class="label">Distance from Pin</span>
       <span class="value">${dispDist}</span>
     </div>
-    <div class="stat-pill ${inHole ? 'bad' : q}">
+    ${penaltyPill}
+    <div class="stat-pill ${q}">
       <span class="label">Score (this hole)</span>
       <span class="value">${dispScore}</span>
     </div>
@@ -707,7 +993,7 @@ function showResult() {
     </div>
   `;
 
-  const roast = getHoleRoast(hole, G.holeIdx, G.landX, G.landY, d, inHole);
+  const roast = getHoleRoast(hole, G.holeIdx, G.landX, G.landY, d, inHole, isOOB, hitBunker);
   drawRoastOverlay(cvResult, roast);
 
   const isLast = G.holeIdx >= G.holeCount - 1;
@@ -732,13 +1018,20 @@ function showScorecard() {
   const tbody = document.createElement('tbody');
   G.scores.forEach((score, i) => {
     const hole = G.holes[i];
-    const inHole = G.inHoleFlags[i];
-    const q = inHole ? 'bad' : score < 5 ? 'good' : score < 20 ? 'ok' : 'bad';
+    const inHole  = G.inHoleFlags[i];
+    const isOOB   = G.oobFlags[i];
+    const isBunker = G.bunkerFlags[i];
+    const rawDist = inHole ? hole.distance : score - (isOOB ? 20 : isBunker ? 10 : 0);
+    const q = inHole || isOOB ? 'bad' : isBunker ? 'ok' : score < 5 ? 'good' : score < 20 ? 'ok' : 'bad';
+    const resultText = inHole  ? 'In hole (penalty)'
+      : isOOB   ? `${rawDist.toFixed(1)} yds · OOB +20`
+      : isBunker ? `${rawDist.toFixed(1)} yds · Hazard +10`
+      : `${rawDist.toFixed(1)} yds from pin`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${i + 1}</td>
       <td>${hole.distance} yds</td>
-      <td class="${inHole ? 'bad' : ''}">${inHole ? 'In hole' : `${(score).toFixed(1)} yds from pin`}</td>
+      <td class="${isOOB || inHole ? 'bad' : isBunker ? 'ok' : ''}">${resultText}</td>
       <td class="${q}">${score.toFixed(1)}</td>
     `;
     tbody.appendChild(tr);
@@ -839,19 +1132,26 @@ function shareResult() {
   const total = G.scores.reduce((a, b) => a + b, 0);
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   const emojiLine = G.scores.map((score, i) => {
-    if (G.inHoleFlags[i]) return '⛳';
-    if (score < 5) return '🎯';
+    if (G.inHoleFlags[i])  return '⛳';
+    if (G.oobFlags[i])     return '🚫';
+    if (G.bunkerFlags[i])  return '⚠️';
+    if (score < 5)  return '🎯';
     if (score < 10) return '🟢';
     if (score < 20) return '🟡';
     return '🔴';
   }).join('');
   const text = `CTP — ${date}\n${G.holeCount}-Hole · ${total.toFixed(1)} yds\n${emojiLine}\n${location.href}`;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('btn-share');
-    const orig = btn.textContent;
-    btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = orig; }, 1800);
-  });
+  const btn = document.getElementById('btn-share');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Share Result'; }, 1800);
+      })
+      .catch(() => { prompt('Copy and share:', text); });
+  } else {
+    prompt('Copy and share:', text);
+  }
 }
 
 // --- Stat card ---
@@ -885,6 +1185,8 @@ document.getElementById('btn-play').addEventListener('click', () => {
   G.holeIdx = 0;
   G.scores = [];
   G.inHoleFlags = [];
+  G.oobFlags = [];
+  G.bunkerFlags = [];
   runScore.textContent = '0.0';
   G.holes = generateHoles(G.seed, G.holeCount);
   startHole();
