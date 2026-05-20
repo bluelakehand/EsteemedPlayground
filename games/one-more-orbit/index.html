@@ -6,7 +6,7 @@
     <title>One More Orbit</title>
     <meta
       name="description"
-      content="One More Orbit is a daily gravity puzzle about plotting a probe through beacons and docking with limited burns."
+      content="One More Orbit is a daily gravity puzzle about plotting a probe through beacons, asteroids, and a docking ring."
     >
     <link rel="stylesheet" href="../../arcade-home-link.css">
     <link rel="stylesheet" href="styles.css">
@@ -21,13 +21,13 @@
             <img class="site-logo" src="Logo.svg" alt="One More Orbit">
           </h1>
           <p class="lede">
-            Slingshot a probe through signal beacons and dock before your redirects run dry.
+            Slingshot a probe through signal beacons, dodge asteroids, and dock as fast as you can.
           </p>
         </div>
         <div class="mission-card" aria-label="Daily mission stats">
           <span>Mission</span>
           <strong id="mission-id">Loading...</strong>
-          <small>Lowest burn score wins</small>
+          <small>Fastest docking time wins</small>
         </div>
       </section>
 
@@ -38,12 +38,12 @@
             <strong id="beacon-count">0 / 0</strong>
           </div>
           <div>
-            <span class="label">Used</span>
-            <strong id="burn-count">0</strong>
+            <span class="label">Tethers</span>
+            <strong id="tether-count">0</strong>
           </div>
           <div>
-            <span class="label">Redirects</span>
-            <strong id="fuel-count">3</strong>
+            <span class="label">Asteroids</span>
+            <strong id="asteroid-count">0</strong>
           </div>
           <div>
             <span class="label">Elapsed</span>
@@ -64,7 +64,7 @@
         </div>
 
         <p id="status" class="status" role="status">
-          Drag anywhere to launch. In flight, drag anywhere again for a burn, or hold right click for an orbit tether.
+          Drag anywhere to launch. In flight, left-click an asteroid tether or hold right-click for a planet tether.
         </p>
       </section>
 
@@ -72,9 +72,9 @@
         <h2 id="how-title">How to Play</h2>
         <div class="rules">
           <p><strong>Launch:</strong> Drag anywhere and release to set the first trajectory.</p>
-          <p><strong>Redirect:</strong> While coasting, drag anywhere for course corrections. Each beacon adds one redirect charge.</p>
-          <p><strong>Tether:</strong> Hold right click to spend one redirect and keep altitude around the nearest planet.</p>
-          <p><strong>Win:</strong> Touch every beacon, then enter the docking ring slowly enough to capture.</p>
+          <p><strong>Tether:</strong> Left-click after launch tethers to the nearest asteroid. Hold right-click to tether to the nearest planet. The orbit slowly decays while tethered.</p>
+          <p><strong>Dodge:</strong> Avoid asteroids crossing the field after launch.</p>
+          <p><strong>Win:</strong> Touch every beacon, then enter the docking ring.</p>
         </div>
       </section>
     </main>

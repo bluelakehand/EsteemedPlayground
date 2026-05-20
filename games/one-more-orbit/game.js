@@ -8,8 +8,8 @@ const els = {
   reset: document.querySelector("#reset-btn"),
   practice: document.querySelector("#practice-btn"),
   beaconCount: document.querySelector("#beacon-count"),
-  burnCount: document.querySelector("#burn-count"),
-  fuelCount: document.querySelector("#fuel-count"),
+  tetherCount: document.querySelector("#tether-count"),
+  asteroidCount: document.querySelector("#asteroid-count"),
   timeCount: document.querySelector("#time-count"),
   status: document.querySelector("#status"),
 };
@@ -17,14 +17,15 @@ const els = {
 const W = canvas.width;
 const H = canvas.height;
 const PROBE_RADIUS = 8;
-const DOCK_SPEED = 110;
 const MAX_LAUNCH = 180;
-const MAX_BURN = 160;
-const MAX_REDIRECTS = 3;
 const GRAVITY_SCALE = 7.5;
 const TIME_LIMIT = 90;
 const PLANET_SIZE_SCALE = 0.5;
 const ORBIT_RANGE_SCALE = 0.75;
+const TETHER_DECAY_PER_SECOND = 0.99;
+const ASTEROID_RADIUS = 13;
+const ASTEROID_SPAWN_MIN = 2.2;
+const ASTEROID_SPAWN_MAX = 4.2;
 
 const state = {
   seed: "",
@@ -32,6 +33,7 @@ const state = {
   stars: [],
   planets: [],
   beacons: [],
+  asteroids: [],
   station: null,
   probe: null,
   launched: false,
@@ -39,8 +41,8 @@ const state = {
   aimStart: null,
   aimNow: null,
   tether: null,
-  redirects: MAX_REDIRECTS,
-  burns: 0,
+  tetherUses: 0,
+  asteroidTimer: 0,
   elapsed: 0,
   lastTime: 0,
   won: false,
@@ -121,6 +123,7 @@ function buildMission(seed) {
   state.stars = createStars(state.rand);
   state.planets = createPlanets(state.rand);
   state.beacons = createBeacons(state.rand);
+  state.asteroids = [];
   state.station = createStation(state.rand);
   state.probe = {
     x: 94,
@@ -134,8 +137,8 @@ function buildMission(seed) {
   state.aimStart = null;
   state.aimNow = null;
   state.tether = null;
-  state.redirects = MAX_REDIRECTS;
-  state.burns = 0;
+  state.tetherUses = 0;
+  state.asteroidTimer = randRange(state.rand, ASTEROID_SPAWN_MIN, ASTEROID_SPAWN_MAX);
   state.elapsed = 0;
   state.lastTime = 0;
   state.won = false;
@@ -143,7 +146,7 @@ function buildMission(seed) {
 
   els.missionId.textContent = seed;
   els.seedInput.value = seed;
-  els.status.textContent = "Drag anywhere to launch. Aim for every beacon before docking.";
+  els.status.textContent = "Drag anywhere to launch. Use the tether to ride gravity, collect beacons, and dock fast.";
   updateUi();
 }
 
@@ -189,6 +192,7 @@ function planetSpec(x, y, r, mass, color) {
     r: physicalRadius,
     mass,
     color,
+    kind: "planet",
     orbitRange: (r + 74) * 2 * ORBIT_RANGE_SCALE,
   };
 }
@@ -219,7 +223,12 @@ function onPointerDown(event) {
   if (state.won || state.lost) return;
   if (event.button === 2) {
     event.preventDefault();
-    startTether(event);
+    startTether(event, "planet");
+    return;
+  }
+  if (event.button !== 0) return;
+  if (state.launched) {
+    startTether(event, "asteroid");
     return;
   }
   const point = pointerFromEvent(event);
@@ -263,33 +272,32 @@ function cancelAim() {
   state.aimNow = null;
 }
 
-function startTether(event) {
+function startTether(event, targetKind) {
   if (!state.launched) {
     els.status.textContent = "Launch before using the orbit tether.";
     return;
   }
   if (state.tether) return;
-  if (state.redirects <= 0) {
-    els.status.textContent = "No redirects left for the orbit tether.";
+
+  const target = nearestTetherTarget(targetKind);
+  if (!target) {
+    els.status.textContent = `No ${targetKind} available to tether.`;
     return;
   }
-
-  const planet = nearestPlanet();
-  if (!planet) return;
-  const dx = state.probe.x - planet.x;
-  const dy = state.probe.y - planet.y;
-  const targetDistance = Math.max(Math.hypot(dx, dy), planet.r + PROBE_RADIUS + 6);
+  const dx = state.probe.x - target.x;
+  const dy = state.probe.y - target.y;
+  const targetDistance = Math.max(Math.hypot(dx, dy), target.r + PROBE_RADIUS + 6);
 
   canvas.setPointerCapture(event.pointerId);
   cancelAim();
   state.tether = {
     pointerId: event.pointerId,
-    planet,
+    target,
     targetDistance,
   };
-  state.redirects -= 1;
-  state.burns += 1;
-  els.status.textContent = "Orbit tether engaged. Hold right click to keep altitude.";
+  state.tetherUses += 1;
+  const buttonLabel = target.kind === "asteroid" ? "left click" : "right click";
+  els.status.textContent = `Orbit tether engaged on ${target.kind}. Hold ${buttonLabel} to hold a decaying orbit.`;
   updateUi();
 }
 
@@ -313,27 +321,11 @@ function releaseAim() {
     return;
   }
 
-  if (!state.launched) {
-    const scale = Math.min(MAX_LAUNCH, rawPower * 3.1) / rawPower;
-    state.probe.vx = dx * scale;
-    state.probe.vy = dy * scale;
-    state.launched = true;
-    els.status.textContent = "Probe away. Collect the beacons, then dock slowly.";
-  } else {
-    const burnPower = Math.min(MAX_BURN, rawPower * 1.35);
-    if (state.redirects <= 0) {
-      els.status.textContent = "No redirects left. Ride the gravity wells to the station.";
-      cancelAim();
-      return;
-    }
-
-    const scale = burnPower / rawPower;
-    state.probe.vx += dx * scale;
-    state.probe.vy += dy * scale;
-    state.redirects -= 1;
-    state.burns += 1;
-    els.status.textContent = "Redirect committed. Keep the docking speed gentle.";
-  }
+  const scale = Math.min(MAX_LAUNCH, rawPower * 3.1) / rawPower;
+  state.probe.vx = dx * scale;
+  state.probe.vy = dy * scale;
+  state.launched = true;
+  els.status.textContent = "Probe away. Collect the beacons, dodge asteroids, then dock.";
 
   cancelAim();
   updateUi();
@@ -385,6 +377,7 @@ function stepPhysics(dt) {
 
   state.probe.vx += ax * dt;
   state.probe.vy += ay * dt;
+  updateAsteroids(dt);
   applyTether(dt);
   state.probe.x += state.probe.vx * dt;
   state.probe.y += state.probe.vy * dt;
@@ -397,13 +390,17 @@ function stepPhysics(dt) {
 function applyTether(dt) {
   if (!state.tether) return;
 
-  const planet = state.tether.planet;
-  const dx = state.probe.x - planet.x;
-  const dy = state.probe.y - planet.y;
+  const target = state.tether.target;
+  const minDistance = target.r + PROBE_RADIUS + 5;
+  state.tether.targetDistance = Math.max(minDistance, state.tether.targetDistance * Math.pow(TETHER_DECAY_PER_SECOND, dt));
+  const dx = state.probe.x - target.x;
+  const dy = state.probe.y - target.y;
   const d = Math.max(Math.hypot(dx, dy), 1);
   const nx = dx / d;
   const ny = dy / d;
-  const radialVelocity = state.probe.vx * nx + state.probe.vy * ny;
+  const relativeVx = state.probe.vx - (target.vx || 0);
+  const relativeVy = state.probe.vy - (target.vy || 0);
+  const radialVelocity = relativeVx * nx + relativeVy * ny;
   const altitudeError = d - state.tether.targetDistance;
   const targetRadialVelocity = -altitudeError * 2.4;
   const radialDelta = (targetRadialVelocity - radialVelocity) * Math.min(1, dt * 12);
@@ -412,14 +409,58 @@ function applyTether(dt) {
   state.probe.vy += ny * radialDelta;
 }
 
-function nearestPlanet() {
+function updateAsteroids(dt) {
+  state.asteroidTimer -= dt;
+  if (state.asteroidTimer <= 0) {
+    spawnAsteroid();
+    state.asteroidTimer = randRange(state.rand, ASTEROID_SPAWN_MIN, ASTEROID_SPAWN_MAX);
+  }
+
+  for (const asteroid of state.asteroids) {
+    asteroid.x += asteroid.vx * dt;
+    asteroid.y += asteroid.vy * dt;
+    asteroid.spin += asteroid.spinSpeed * dt;
+  }
+
+  state.asteroids = state.asteroids.filter((asteroid) => (
+    asteroid.x > -90 &&
+    asteroid.x < W + 90 &&
+    asteroid.y > -90 &&
+    asteroid.y < H + 90
+  ));
+
+  if (state.tether && state.tether.target.kind === "asteroid" && !state.asteroids.includes(state.tether.target)) {
+    state.tether = null;
+    els.status.textContent = "Orbit tether released as the asteroid drifted away.";
+  }
+}
+
+function spawnAsteroid() {
+  const fromLeft = state.rand() < 0.5;
+  const y = randRange(state.rand, 65, H - 65);
+  const speed = randRange(state.rand, 120, 190);
+  const drift = randRange(state.rand, -55, 55);
+  state.asteroids.push({
+    x: fromLeft ? -ASTEROID_RADIUS * 2 : W + ASTEROID_RADIUS * 2,
+    y,
+    vx: fromLeft ? speed : -speed,
+    vy: drift,
+    r: randRange(state.rand, ASTEROID_RADIUS * 0.75, ASTEROID_RADIUS * 1.25),
+    kind: "asteroid",
+    spin: randRange(state.rand, 0, Math.PI * 2),
+    spinSpeed: randRange(state.rand, -2.4, 2.4),
+  });
+}
+
+function nearestTetherTarget(kind) {
   let nearest = null;
   let nearestDistance = Infinity;
 
-  for (const planet of state.planets) {
-    const d = distance(state.probe, planet);
+  for (const target of [...state.planets, ...state.asteroids]) {
+    if (target.kind !== kind) continue;
+    const d = distance(state.probe, target);
     if (d < nearestDistance) {
-      nearest = planet;
+      nearest = target;
       nearestDistance = d;
     }
   }
@@ -445,37 +486,36 @@ function checkCollisions() {
   for (const beacon of state.beacons) {
     if (!beacon.collected && distance(state.probe, beacon) <= beacon.r + PROBE_RADIUS) {
       beacon.collected = true;
-      state.redirects += 1;
-      els.status.textContent = "Beacon captured. Redirect gained.";
+      els.status.textContent = "Beacon captured.";
     }
   }
 
   const allCollected = state.beacons.every((beacon) => beacon.collected);
-  const speed = Math.hypot(state.probe.vx, state.probe.vy);
   if (distance(state.probe, state.station) <= state.station.r + PROBE_RADIUS) {
     if (!allCollected) {
       els.status.textContent = "Docking ring found. Collect all beacons first.";
       return;
     }
-    if (speed > DOCK_SPEED) {
+    state.won = true;
+    els.status.textContent = `Docked in ${state.elapsed.toFixed(1)}s.`;
+    return;
+  }
+
+  for (const asteroid of state.asteroids) {
+    if (distance(state.probe, asteroid) <= asteroid.r + PROBE_RADIUS) {
       state.lost = true;
-      els.status.textContent = "Docking approach was too fast. Slow it down next time.";
+      state.tether = null;
+      els.status.textContent = "Asteroid impact. Reset for another run.";
       return;
     }
-    state.won = true;
-    els.status.textContent = `Docked. Score ${scoreValue()} from ${state.burns} redirects in ${state.elapsed.toFixed(1)}s.`;
   }
-}
-
-function scoreValue() {
-  return Math.round(state.burns * 180 + state.elapsed * 2);
 }
 
 function updateUi() {
   const collected = state.beacons.filter((beacon) => beacon.collected).length;
   els.beaconCount.textContent = `${collected} / ${state.beacons.length}`;
-  els.burnCount.textContent = state.burns;
-  els.fuelCount.textContent = state.redirects;
+  els.tetherCount.textContent = state.tetherUses;
+  els.asteroidCount.textContent = state.asteroids.length;
   els.timeCount.textContent = `${state.elapsed.toFixed(1)}s`;
 }
 
@@ -486,6 +526,7 @@ function draw(time) {
   drawStation(time);
   drawBeacons(time);
   drawPlanets(time);
+  drawAsteroids(time);
   drawTrail();
   drawTether(time);
   drawProbe(time);
@@ -564,6 +605,39 @@ function drawBeacons(time) {
   }
 }
 
+function drawAsteroids(time) {
+  for (const asteroid of state.asteroids) {
+    ctx.save();
+    ctx.translate(asteroid.x, asteroid.y);
+    ctx.rotate(asteroid.spin + time * 0.0004);
+
+    ctx.fillStyle = "#8f7f70";
+    ctx.strokeStyle = "#2f2a27";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 9; i += 1) {
+      const angle = (Math.PI * 2 * i) / 9;
+      const radius = asteroid.r * (0.78 + ((i * 37) % 19) / 70);
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(247, 251, 255, 0.18)";
+    ctx.beginPath();
+    ctx.arc(-asteroid.r * 0.22, -asteroid.r * 0.28, asteroid.r * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 function drawStation(time) {
   const station = state.station;
   const pulse = 0.8 + Math.sin(time * 0.005) * 0.1;
@@ -601,14 +675,15 @@ function drawTrail() {
 function drawTether(time) {
   if (!state.tether) return;
 
-  const planet = state.tether.planet;
+  const target = state.tether.target;
+  const actualDistance = Math.hypot(state.probe.x - target.x, state.probe.y - target.y);
   const pulse = 0.58 + Math.sin(time * 0.012) * 0.18;
   ctx.save();
   ctx.strokeStyle = `rgba(73, 230, 107, ${pulse})`;
   ctx.lineWidth = 2.5;
   ctx.setLineDash([7, 8]);
   ctx.beginPath();
-  ctx.moveTo(planet.x, planet.y);
+  ctx.moveTo(target.x, target.y);
   ctx.lineTo(state.probe.x, state.probe.y);
   ctx.stroke();
   ctx.setLineDash([]);
@@ -616,7 +691,7 @@ function drawTether(time) {
   ctx.strokeStyle = "rgba(73, 230, 107, 0.32)";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(planet.x, planet.y, state.tether.targetDistance, 0, Math.PI * 2);
+  ctx.arc(target.x, target.y, actualDistance, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }
@@ -659,13 +734,13 @@ function drawAim() {
   const aimVector = currentAimVector();
   const dx = aimVector.x;
   const dy = aimVector.y;
-  const power = Math.min(state.launched ? MAX_BURN : MAX_LAUNCH, Math.hypot(dx, dy) * (state.launched ? 1.35 : 3.1));
-  const length = state.launched ? power * 0.95 : power * 0.55;
+  const power = Math.min(MAX_LAUNCH, Math.hypot(dx, dy) * 3.1);
+  const length = power * 0.55;
   const angle = Math.atan2(dy, dx);
   const endX = aimStart.x + Math.cos(angle) * length;
   const endY = aimStart.y + Math.sin(angle) * length;
 
-  ctx.strokeStyle = state.launched ? "#e85d75" : "#ffbd4a";
+  ctx.strokeStyle = "#ffbd4a";
   ctx.lineWidth = 4;
   ctx.setLineDash([9, 7]);
   ctx.beginPath();
@@ -674,7 +749,7 @@ function drawAim() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  ctx.fillStyle = state.launched ? "#e85d75" : "#ffbd4a";
+  ctx.fillStyle = "#ffbd4a";
   ctx.beginPath();
   ctx.arc(endX, endY, 6, 0, Math.PI * 2);
   ctx.fill();
@@ -695,7 +770,7 @@ function drawBanner() {
   if (!state.won && !state.lost) return;
   const title = state.won ? "Docking Complete" : "Mission Failed";
   const detail = state.won
-    ? `Score ${scoreValue()} | Redirects ${state.redirects} | Time ${state.elapsed.toFixed(1)}s`
+    ? `Time ${state.elapsed.toFixed(1)}s | Tethers ${state.tetherUses}`
     : "Reset the mission or roll a practice seed.";
 
   const width = 430;
