@@ -8,7 +8,6 @@ const els = {
   reset: document.querySelector("#reset-btn"),
   practice: document.querySelector("#practice-btn"),
   beaconCount: document.querySelector("#beacon-count"),
-  tetherCount: document.querySelector("#tether-count"),
   asteroidCount: document.querySelector("#asteroid-count"),
   timeCount: document.querySelector("#time-count"),
   status: document.querySelector("#status"),
@@ -23,7 +22,9 @@ const TIME_LIMIT = 90;
 const PLANET_SIZE_SCALE = 0.5;
 const ORBIT_RANGE_SCALE = 0.75;
 const TETHER_DECAY_PER_SECOND = 0.99;
-const ASTEROID_RADIUS = 13;
+const TETHER_TIME_MULTIPLIER = 1.5;
+const ASTEROID_RADIUS = 26;
+const ASTEROID_TETHER_RANGE_SCALE = 5;
 const ASTEROID_SPAWN_MIN = 2.2;
 const ASTEROID_SPAWN_MAX = 4.2;
 
@@ -41,7 +42,6 @@ const state = {
   aimStart: null,
   aimNow: null,
   tether: null,
-  tetherUses: 0,
   asteroidTimer: 0,
   elapsed: 0,
   lastTime: 0,
@@ -137,7 +137,6 @@ function buildMission(seed) {
   state.aimStart = null;
   state.aimNow = null;
   state.tether = null;
-  state.tetherUses = 0;
   state.asteroidTimer = randRange(state.rand, ASTEROID_SPAWN_MIN, ASTEROID_SPAWN_MAX);
   state.elapsed = 0;
   state.lastTime = 0;
@@ -295,7 +294,6 @@ function startTether(event, targetKind) {
     target,
     targetDistance,
   };
-  state.tetherUses += 1;
   const buttonLabel = target.kind === "asteroid" ? "left click" : "right click";
   els.status.textContent = `Orbit tether engaged on ${target.kind}. Hold ${buttonLabel} to hold a decaying orbit.`;
   updateUi();
@@ -346,7 +344,7 @@ function tick(time) {
 
   if (state.launched && !state.won && !state.lost) {
     stepPhysics(dt);
-    state.elapsed += dt;
+    state.elapsed += dt * (state.tether ? TETHER_TIME_MULTIPLIER : 1);
     if (state.elapsed >= TIME_LIMIT) {
       state.lost = true;
       els.status.textContent = "Mission timed out. Reset or try a practice seed.";
@@ -459,6 +457,7 @@ function nearestTetherTarget(kind) {
   for (const target of [...state.planets, ...state.asteroids]) {
     if (target.kind !== kind) continue;
     const d = distance(state.probe, target);
+    if (kind === "asteroid" && d > target.r * ASTEROID_TETHER_RANGE_SCALE) continue;
     if (d < nearestDistance) {
       nearest = target;
       nearestDistance = d;
@@ -514,7 +513,6 @@ function checkCollisions() {
 function updateUi() {
   const collected = state.beacons.filter((beacon) => beacon.collected).length;
   els.beaconCount.textContent = `${collected} / ${state.beacons.length}`;
-  els.tetherCount.textContent = state.tetherUses;
   els.asteroidCount.textContent = state.asteroids.length;
   els.timeCount.textContent = `${state.elapsed.toFixed(1)}s`;
 }
@@ -607,6 +605,14 @@ function drawBeacons(time) {
 
 function drawAsteroids(time) {
   for (const asteroid of state.asteroids) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(190, 196, 204, 0.18)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(asteroid.x, asteroid.y, asteroid.r * ASTEROID_TETHER_RANGE_SCALE, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
     ctx.save();
     ctx.translate(asteroid.x, asteroid.y);
     ctx.rotate(asteroid.spin + time * 0.0004);
@@ -770,7 +776,7 @@ function drawBanner() {
   if (!state.won && !state.lost) return;
   const title = state.won ? "Docking Complete" : "Mission Failed";
   const detail = state.won
-    ? `Time ${state.elapsed.toFixed(1)}s | Tethers ${state.tetherUses}`
+    ? `Time ${state.elapsed.toFixed(1)}s`
     : "Reset the mission or roll a practice seed.";
 
   const width = 430;
