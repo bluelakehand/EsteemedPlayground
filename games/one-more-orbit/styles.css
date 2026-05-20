@@ -171,6 +171,13 @@ button:focus-visible {
   transform: translateY(-1px);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.7) brightness(0.72);
+  opacity: 0.58;
+  transform: none;
+}
+
 .status {
   min-height: 1.35rem;
   margin: 0.82rem 0 0.1rem;

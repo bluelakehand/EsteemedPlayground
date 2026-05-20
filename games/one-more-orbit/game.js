@@ -7,6 +7,7 @@ const els = {
   setSeed: document.querySelector("#set-seed-btn"),
   reset: document.querySelector("#reset-btn"),
   practice: document.querySelector("#practice-btn"),
+  share: document.querySelector("#share-btn"),
   beaconCount: document.querySelector("#beacon-count"),
   asteroidCount: document.querySelector("#asteroid-count"),
   timeCount: document.querySelector("#time-count"),
@@ -74,6 +75,15 @@ function todayLabel() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function missionUrl() {
+  return `${location.origin}${location.pathname}?seed=${encodeURIComponent(state.seed)}`;
+}
+
+function updateSeedUrl() {
+  const url = missionUrl();
+  history.replaceState(null, "", url);
+}
+
 function randRange(rand, min, max) {
   return min + rand() * (max - min);
 }
@@ -83,7 +93,8 @@ function distance(a, b) {
 }
 
 function init() {
-  buildMission(todayLabel());
+  const urlSeed = new URLSearchParams(location.search).get("seed");
+  buildMission(urlSeed || todayLabel());
   bindEvents();
   requestAnimationFrame(tick);
 }
@@ -98,6 +109,11 @@ function bindEvents() {
   els.practice.addEventListener("click", () => {
     state.practiceCounter += 1;
     buildMission(`practice-${Date.now()}-${state.practiceCounter}`);
+  });
+  els.share.addEventListener("click", () => {
+    shareResult().catch(() => {
+      els.status.textContent = "Sharing failed. Your browser may block clipboard access.";
+    });
   });
   els.setSeed.addEventListener("click", applySeed);
   els.seedInput.addEventListener("keydown", (event) => {
@@ -117,6 +133,48 @@ function applySeed() {
   buildMission(nextSeed);
 }
 
+function buildShareText() {
+  const isDaily = state.seed === todayLabel();
+  const seedLine = isDaily ? `Daily ${state.seed}` : `Seed ${state.seed}`;
+  const beaconLine = `${state.beacons.length}/${state.beacons.length} beacons`;
+
+  return [
+    "One More Orbit",
+    seedLine,
+    "",
+    `Docked in ${state.elapsed.toFixed(1)}s`,
+    beaconLine,
+    "",
+    missionUrl(),
+  ].join("\n");
+}
+
+async function shareResult() {
+  if (!state.won) {
+    els.status.textContent = "Dock first, then share your result.";
+    return;
+  }
+
+  const text = buildShareText();
+  if (navigator.share) {
+    await navigator.share({ text });
+    return;
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    await navigator.clipboard.writeText(text);
+    const original = els.share.textContent;
+    els.share.textContent = "Copied!";
+    els.status.textContent = "Result copied to clipboard.";
+    setTimeout(() => {
+      els.share.textContent = original;
+    }, 1600);
+    return;
+  }
+
+  prompt("Copy your result:", text);
+}
+
 function buildMission(seed) {
   state.seed = seed;
   state.rand = createSeededRng(seed);
@@ -124,10 +182,11 @@ function buildMission(seed) {
   state.planets = createPlanets(state.rand);
   state.beacons = createBeacons(state.rand);
   state.asteroids = [];
-  state.station = createStation(state.rand);
+  const start = createProbeStart(state.rand, state.planets);
+  state.station = createStation(state.rand, start, state.planets);
   state.probe = {
-    x: 94,
-    y: H - 95,
+    x: start.x,
+    y: start.y,
     vx: 0,
     vy: 0,
     trail: [],
@@ -146,6 +205,7 @@ function buildMission(seed) {
   els.missionId.textContent = seed;
   els.seedInput.value = seed;
   els.status.textContent = "Drag anywhere to launch. Use the tether to ride gravity, collect beacons, and dock fast.";
+  updateSeedUrl();
   updateUi();
 }
 
@@ -163,24 +223,65 @@ function createStars(rand) {
 }
 
 function createPlanets(rand) {
-  const planets = [
-    planetSpec(randRange(rand, 285, 395), randRange(rand, 190, 330), randRange(rand, 38, 54), randRange(rand, 165000, 230000), "#ffbd4a"),
-    planetSpec(randRange(rand, 620, 780), randRange(rand, 135, 285), randRange(rand, 28, 42), randRange(rand, 105000, 155000), "#2fd7c4"),
-  ];
+  const zones = shuffle(
+    [
+      { x: [210, 380], y: [120, 320] },
+      { x: [430, 620], y: [90, 260] },
+      { x: [610, 820], y: [300, 505] },
+      { x: [255, 510], y: [350, 505] },
+      { x: [705, 865], y: [105, 275] },
+    ],
+    rand
+  );
+  const colors = shuffle(["#ffbd4a", "#2fd7c4", "#e85d75", "#8f7dff", "#49e66b"], rand);
+  const planetCount = rand() > 0.62 ? 4 : 3;
+  const planets = [];
 
-  if (rand() > 0.45) {
+  for (let i = 0; i < planetCount; i += 1) {
+    const zone = zones[i];
     planets.push(
       planetSpec(
-        randRange(rand, 535, 760),
-        randRange(rand, 405, 520),
-        randRange(rand, 22, 34),
-        randRange(rand, 65000, 105000),
-        "#e85d75"
+        randRange(rand, zone.x[0], zone.x[1]),
+        randRange(rand, zone.y[0], zone.y[1]),
+        randRange(rand, 18, 78),
+        randRange(rand, 72000, 270000),
+        colors[i]
       )
     );
   }
 
   return planets;
+}
+
+function shuffle(items, rand) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function createProbeStart(rand, planets) {
+  const starts = [
+    { x: [60, 150], y: [430, 550] },
+    { x: [55, 160], y: [75, 205] },
+    { x: [380, 580], y: [510, 560] },
+    { x: [770, 900], y: [65, 185] },
+  ];
+  for (let attempt = 0; attempt < 18; attempt += 1) {
+    const zone = starts[Math.floor(rand() * starts.length)];
+    const point = {
+      x: randRange(rand, zone.x[0], zone.x[1]),
+      y: randRange(rand, zone.y[0], zone.y[1]),
+    };
+    if (clearOfPlanets(point, planets, 72)) return point;
+  }
+  return { x: 94, y: H - 95 };
+}
+
+function clearOfPlanets(point, planets, buffer) {
+  return planets.every((planet) => distance(point, planet) > planet.r + buffer);
 }
 
 function planetSpec(x, y, r, mass, color) {
@@ -210,12 +311,31 @@ function createBeacons(rand) {
   return beacons;
 }
 
-function createStation(rand) {
-  return {
-    x: randRange(rand, 820, 885),
-    y: randRange(rand, 420, 510),
-    r: 26,
-  };
+function createStation(rand, start, planets) {
+  const stations = [
+    { x: [795, 900], y: [385, 530] },
+    { x: [770, 900], y: [70, 215] },
+    { x: [70, 185], y: [70, 225] },
+    { x: [420, 610], y: [65, 135] },
+    { x: [420, 610], y: [435, 535] },
+  ];
+  const farStations = stations.filter((zone) => {
+    const cx = (zone.x[0] + zone.x[1]) * 0.5;
+    const cy = (zone.y[0] + zone.y[1]) * 0.5;
+    return Math.hypot(cx - start.x, cy - start.y) > 420;
+  });
+  const choices = farStations.length ? farStations : stations;
+  for (let attempt = 0; attempt < 18; attempt += 1) {
+    const zone = choices[Math.floor(rand() * choices.length)];
+    const station = {
+      x: randRange(rand, zone.x[0], zone.x[1]),
+      y: randRange(rand, zone.y[0], zone.y[1]),
+      r: 26,
+    };
+    if (clearOfPlanets(station, planets, 88)) return station;
+  }
+
+  return { x: randRange(rand, 820, 885), y: randRange(rand, 420, 510), r: 26 };
 }
 
 function onPointerDown(event) {
@@ -515,6 +635,7 @@ function updateUi() {
   els.beaconCount.textContent = `${collected} / ${state.beacons.length}`;
   els.asteroidCount.textContent = state.asteroids.length;
   els.timeCount.textContent = `${state.elapsed.toFixed(1)}s`;
+  els.share.disabled = !state.won;
 }
 
 function draw(time) {
