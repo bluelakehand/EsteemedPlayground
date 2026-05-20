@@ -18,11 +18,13 @@ const W = canvas.width;
 const H = canvas.height;
 const PROBE_RADIUS = 8;
 const DOCK_SPEED = 110;
-const MAX_LAUNCH = 360;
+const MAX_LAUNCH = 180;
 const MAX_BURN = 160;
 const MAX_REDIRECTS = 3;
-const GRAVITY_SCALE = 6;
+const GRAVITY_SCALE = 7.5;
 const TIME_LIMIT = 90;
+const PLANET_SIZE_SCALE = 0.5;
+const ORBIT_RANGE_SCALE = 0.75;
 
 const state = {
   seed: "",
@@ -36,6 +38,7 @@ const state = {
   aiming: false,
   aimStart: null,
   aimNow: null,
+  tether: null,
   redirects: MAX_REDIRECTS,
   burns: 0,
   elapsed: 0,
@@ -87,7 +90,8 @@ function bindEvents() {
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove);
   canvas.addEventListener("pointerup", onPointerUp);
-  canvas.addEventListener("pointercancel", cancelAim);
+  canvas.addEventListener("pointercancel", onPointerCancel);
+  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
   els.reset.addEventListener("click", () => buildMission(state.seed));
   els.practice.addEventListener("click", () => {
     state.practiceCounter += 1;
@@ -129,6 +133,7 @@ function buildMission(seed) {
   state.aiming = false;
   state.aimStart = null;
   state.aimNow = null;
+  state.tether = null;
   state.redirects = MAX_REDIRECTS;
   state.burns = 0;
   state.elapsed = 0;
@@ -138,7 +143,7 @@ function buildMission(seed) {
 
   els.missionId.textContent = seed;
   els.seedInput.value = seed;
-  els.status.textContent = "Drag from the probe to launch. Aim for every beacon before docking.";
+  els.status.textContent = "Drag anywhere to launch. Aim for every beacon before docking.";
   updateUi();
 }
 
@@ -148,7 +153,7 @@ function createStars(rand) {
     stars.push({
       x: randRange(rand, 0, W),
       y: randRange(rand, 0, H),
-      r: randRange(rand, 0.5, 1.8),
+      r: randRange(rand, 0.25, 0.9),
       alpha: randRange(rand, 0.25, 0.9),
     });
   }
@@ -157,15 +162,15 @@ function createStars(rand) {
 
 function createPlanets(rand) {
   const planets = [
-    planetSpec(randRange(rand, 325, 440), randRange(rand, 210, 350), randRange(rand, 38, 54), randRange(rand, 165000, 230000), "#ffbd4a"),
-    planetSpec(randRange(rand, 570, 720), randRange(rand, 145, 285), randRange(rand, 28, 42), randRange(rand, 105000, 155000), "#2fd7c4"),
+    planetSpec(randRange(rand, 285, 395), randRange(rand, 190, 330), randRange(rand, 38, 54), randRange(rand, 165000, 230000), "#ffbd4a"),
+    planetSpec(randRange(rand, 620, 780), randRange(rand, 135, 285), randRange(rand, 28, 42), randRange(rand, 105000, 155000), "#2fd7c4"),
   ];
 
   if (rand() > 0.45) {
     planets.push(
       planetSpec(
-        randRange(rand, 510, 710),
-        randRange(rand, 380, 485),
+        randRange(rand, 535, 760),
+        randRange(rand, 405, 520),
         randRange(rand, 22, 34),
         randRange(rand, 65000, 105000),
         "#e85d75"
@@ -177,13 +182,14 @@ function createPlanets(rand) {
 }
 
 function planetSpec(x, y, r, mass, color) {
+  const physicalRadius = r * PLANET_SIZE_SCALE;
   return {
     x,
     y,
-    r,
+    r: physicalRadius,
     mass,
     color,
-    orbitRange: (r + 74) * 2,
+    orbitRange: (r + 74) * 2 * ORBIT_RANGE_SCALE,
   };
 }
 
@@ -211,18 +217,17 @@ function createStation(rand) {
 
 function onPointerDown(event) {
   if (state.won || state.lost) return;
+  if (event.button === 2) {
+    event.preventDefault();
+    startTether(event);
+    return;
+  }
   const point = pointerFromEvent(event);
   if (!point) return;
 
-  const probePoint = { x: state.probe.x, y: state.probe.y };
-  if (distance(point, probePoint) > 42) {
-    els.status.textContent = "Start the drag near the probe.";
-    return;
-  }
-
   canvas.setPointerCapture(event.pointerId);
   state.aiming = true;
-  state.aimStart = probePoint;
+  state.aimStart = point;
   state.aimNow = point;
 }
 
@@ -234,10 +239,22 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
+  if (state.tether && state.tether.pointerId === event.pointerId) {
+    endTether();
+    return;
+  }
   if (!state.aiming) return;
   const point = pointerFromEvent(event);
   if (point) state.aimNow = point;
   releaseAim();
+}
+
+function onPointerCancel(event) {
+  if (state.tether && state.tether.pointerId === event.pointerId) {
+    endTether();
+    return;
+  }
+  cancelAim();
 }
 
 function cancelAim() {
@@ -246,14 +263,50 @@ function cancelAim() {
   state.aimNow = null;
 }
 
+function startTether(event) {
+  if (!state.launched) {
+    els.status.textContent = "Launch before using the orbit tether.";
+    return;
+  }
+  if (state.tether) return;
+  if (state.redirects <= 0) {
+    els.status.textContent = "No redirects left for the orbit tether.";
+    return;
+  }
+
+  const planet = nearestPlanet();
+  if (!planet) return;
+  const dx = state.probe.x - planet.x;
+  const dy = state.probe.y - planet.y;
+  const targetDistance = Math.max(Math.hypot(dx, dy), planet.r + PROBE_RADIUS + 6);
+
+  canvas.setPointerCapture(event.pointerId);
+  cancelAim();
+  state.tether = {
+    pointerId: event.pointerId,
+    planet,
+    targetDistance,
+  };
+  state.redirects -= 1;
+  state.burns += 1;
+  els.status.textContent = "Orbit tether engaged. Hold right click to keep altitude.";
+  updateUi();
+}
+
+function endTether() {
+  state.tether = null;
+  els.status.textContent = "Orbit tether released.";
+}
+
 function releaseAim() {
   if (!state.aimStart || !state.aimNow) {
     cancelAim();
     return;
   }
 
-  const dx = state.aimStart.x - state.aimNow.x;
-  const dy = state.aimStart.y - state.aimNow.y;
+  const aimVector = currentAimVector();
+  const dx = aimVector.x;
+  const dy = aimVector.y;
   const rawPower = Math.hypot(dx, dy);
   if (rawPower < 8) {
     cancelAim();
@@ -332,12 +385,46 @@ function stepPhysics(dt) {
 
   state.probe.vx += ax * dt;
   state.probe.vy += ay * dt;
+  applyTether(dt);
   state.probe.x += state.probe.vx * dt;
   state.probe.y += state.probe.vy * dt;
   state.probe.trail.push({ x: state.probe.x, y: state.probe.y });
   if (state.probe.trail.length > 220) state.probe.trail.shift();
 
   checkCollisions();
+}
+
+function applyTether(dt) {
+  if (!state.tether) return;
+
+  const planet = state.tether.planet;
+  const dx = state.probe.x - planet.x;
+  const dy = state.probe.y - planet.y;
+  const d = Math.max(Math.hypot(dx, dy), 1);
+  const nx = dx / d;
+  const ny = dy / d;
+  const radialVelocity = state.probe.vx * nx + state.probe.vy * ny;
+  const altitudeError = d - state.tether.targetDistance;
+  const targetRadialVelocity = -altitudeError * 2.4;
+  const radialDelta = (targetRadialVelocity - radialVelocity) * Math.min(1, dt * 12);
+
+  state.probe.vx += nx * radialDelta;
+  state.probe.vy += ny * radialDelta;
+}
+
+function nearestPlanet() {
+  let nearest = null;
+  let nearestDistance = Infinity;
+
+  for (const planet of state.planets) {
+    const d = distance(state.probe, planet);
+    if (d < nearestDistance) {
+      nearest = planet;
+      nearestDistance = d;
+    }
+  }
+
+  return nearest;
 }
 
 function checkCollisions() {
@@ -358,7 +445,8 @@ function checkCollisions() {
   for (const beacon of state.beacons) {
     if (!beacon.collected && distance(state.probe, beacon) <= beacon.r + PROBE_RADIUS) {
       beacon.collected = true;
-      els.status.textContent = "Beacon captured.";
+      state.redirects += 1;
+      els.status.textContent = "Beacon captured. Redirect gained.";
     }
   }
 
@@ -399,6 +487,7 @@ function draw(time) {
   drawBeacons(time);
   drawPlanets(time);
   drawTrail();
+  drawTether(time);
   drawProbe(time);
   drawAim();
   drawBanner();
@@ -478,19 +567,19 @@ function drawBeacons(time) {
 function drawStation(time) {
   const station = state.station;
   const pulse = 0.8 + Math.sin(time * 0.005) * 0.1;
-  ctx.strokeStyle = "#ffbd4a";
+  ctx.strokeStyle = "#49e66b";
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.arc(station.x, station.y, station.r * pulse, 0, Math.PI * 2);
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(255, 189, 74, 0.42)";
+  ctx.strokeStyle = "rgba(73, 230, 107, 0.42)";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(station.x, station.y, station.r + 17, 0, Math.PI * 2);
   ctx.stroke();
 
-  ctx.fillStyle = "#f7fbff";
+  ctx.fillStyle = "#d9ffe1";
   ctx.fillRect(station.x - 4, station.y - 18, 8, 36);
   ctx.fillRect(station.x - 18, station.y - 4, 36, 8);
 }
@@ -507,6 +596,29 @@ function drawTrail() {
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
   }
+}
+
+function drawTether(time) {
+  if (!state.tether) return;
+
+  const planet = state.tether.planet;
+  const pulse = 0.58 + Math.sin(time * 0.012) * 0.18;
+  ctx.save();
+  ctx.strokeStyle = `rgba(73, 230, 107, ${pulse})`;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([7, 8]);
+  ctx.beginPath();
+  ctx.moveTo(planet.x, planet.y);
+  ctx.lineTo(state.probe.x, state.probe.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = "rgba(73, 230, 107, 0.32)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(planet.x, planet.y, state.tether.targetDistance, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawProbe(time) {
@@ -543,19 +655,21 @@ function drawProbe(time) {
 
 function drawAim() {
   if (!state.aiming || !state.aimStart || !state.aimNow) return;
-  const dx = state.aimStart.x - state.aimNow.x;
-  const dy = state.aimStart.y - state.aimNow.y;
+  const aimStart = currentAimStart();
+  const aimVector = currentAimVector();
+  const dx = aimVector.x;
+  const dy = aimVector.y;
   const power = Math.min(state.launched ? MAX_BURN : MAX_LAUNCH, Math.hypot(dx, dy) * (state.launched ? 1.35 : 3.1));
   const length = state.launched ? power * 0.95 : power * 0.55;
   const angle = Math.atan2(dy, dx);
-  const endX = state.aimStart.x + Math.cos(angle) * length;
-  const endY = state.aimStart.y + Math.sin(angle) * length;
+  const endX = aimStart.x + Math.cos(angle) * length;
+  const endY = aimStart.y + Math.sin(angle) * length;
 
   ctx.strokeStyle = state.launched ? "#e85d75" : "#ffbd4a";
   ctx.lineWidth = 4;
   ctx.setLineDash([9, 7]);
   ctx.beginPath();
-  ctx.moveTo(state.aimStart.x, state.aimStart.y);
+  ctx.moveTo(aimStart.x, aimStart.y);
   ctx.lineTo(endX, endY);
   ctx.stroke();
   ctx.setLineDash([]);
@@ -564,6 +678,17 @@ function drawAim() {
   ctx.beginPath();
   ctx.arc(endX, endY, 6, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function currentAimStart() {
+  return { x: state.probe.x, y: state.probe.y };
+}
+
+function currentAimVector() {
+  return {
+    x: state.aimNow.x - state.aimStart.x,
+    y: state.aimNow.y - state.aimStart.y,
+  };
 }
 
 function drawBanner() {
