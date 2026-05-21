@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rat Race</title>
+    <meta name="description" content="60 seconds. One rat. Infect the entire city.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+    <main class="shell">
+
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily Viral Strategy</p>
+          <h1 id="game-title">Rat<br><span class="accent">Race</span></h1>
+          <p class="lede">60 seconds. One rat. Maximum casualties.</p>
+        </div>
+        <div class="stat-card" aria-label="Player stats">
+          <span>Best Infected</span>
+          <strong id="best-score">—</strong>
+          <small id="streak">Streak: 0</small>
+        </div>
+      </section>
+
+      <section class="game-card" id="game-area">
+
+        <!-- Landing screen -->
+        <div id="screen-landing" class="screen active">
+          <div class="screen-header">
+            <span class="badge">Ready to Infect</span>
+            <p class="screen-label">Contaminate as many locations as possible before your time runs out.</p>
+          </div>
+          <div class="landing-body">
+            <div class="landing-icon" aria-hidden="true">🐀</div>
+            <p class="landing-desc">Use WASD or arrow keys to run through the city. Walk up to building entrances to contaminate them. Avoid the exterminators — and try to die somewhere strategic.</p>
+          </div>
+          <div class="screen-footer">
+            <button id="btn-start" type="button" class="btn-primary">Start Spreading</button>
+          </div>
+        </div>
+
+        <!-- Game screen -->
+        <div id="screen-game" class="screen">
+          <div class="screen-header topbar">
+            <div class="topbar-item">
+              <span class="topbar-label">Time Left</span>
+              <strong class="topbar-value" id="timer">60</strong>
+            </div>
+            <div class="topbar-item">
+              <span class="topbar-label">Infected</span>
+              <strong class="topbar-value" id="infected-count">0</strong>
+            </div>
+            <div class="topbar-item">
+              <span class="topbar-label">Est. People</span>
+              <strong class="topbar-value" id="spread-count">0</strong>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="canvas-map" width="880" height="520" aria-label="City map — use WASD or arrow keys to move"></canvas>
+          </div>
+        </div>
+
+        <!-- Result screen -->
+        <div id="screen-result" class="screen">
+          <div class="final-content">
+            <p class="result-eyebrow">Estimated infections</p>
+            <h2 class="final-title" id="final-count">—</h2>
+            <p class="final-tagline" id="final-tagline">—</p>
+            <div class="infection-grid" id="infection-grid"></div>
+            <div class="final-actions">
+              <button id="btn-share" type="button" class="btn-secondary">📋 Share Results</button>
+              <button id="btn-restart" type="button" class="btn-primary">Try Again</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="how-to" aria-labelledby="how-title">
+        <h2 id="how-title">How To Play</h2>
+        <div class="rules">
+          <p><strong>Move:</strong> WASD or arrow keys to run your rat through the city streets. On mobile, drag to steer.</p>
+          <p><strong>Infect:</strong> enter a building through its door and walk over all the contamination targets (green circles) inside to infect it. The virus then spreads to every person who visits. Higher-value buildings take more targets to fully contaminate.</p>
+          <p><strong>Avoid:</strong> exterminators patrol the streets and chase you on sight. Dedicated guards circle high-value buildings. Some buildings also have an indoor guard — slow, but lethal in close quarters.</p>
+          <p><strong>Lady rats 💋:</strong> two pink rats roam the city. Run into one to instantly spawn three baby rats. Each lady rat has a 10-second cooldown before she can breed again.</p>
+          <p><strong>Baby rats:</strong> your offspring autonomously infect buildings and distract exterminators — guards will chase and catch them instead of you. Exterminators pause briefly after catching a baby, giving you a window to escape.</p>
+          <p><strong>Death zones ☠️:</strong> three buildings are marked with a glowing skull border. Linger inside the ☠️ circle for one second to die there and multiply your final score — HIGH ×2, MEDIUM ×1.5, LOW ×1.25. A charge arc shows how close you are to triggering it. Or let the clock run out with no bonus.</p>
+          <p><strong>Score:</strong> total estimated number of people your virus reaches. The map is seeded daily — everyone gets the same city layout.</p>
+        </div>
+      </section>
+
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>

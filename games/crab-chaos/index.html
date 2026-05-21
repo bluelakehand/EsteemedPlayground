@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crab Chaos Racing</title>
+    <meta name="description" content="Six crabs. One finish line. Toss some bait. Try not to lose your shirt.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+    <main class="shell">
+
+      <section class="hero" aria-labelledby="game-title">
+        <div>
+          <p class="eyebrow">Daily Seeded Crab Betting</p>
+          <h1 id="game-title">Crab<br><span class="accent">Chaos</span></h1>
+          <p class="lede">Six crabs. One finish line. No dignity whatsoever.</p>
+        </div>
+        <div class="stat-card">
+          <span>Best Win</span>
+          <strong id="best-return">—</strong>
+          <small id="streak-display">Streak: 0</small>
+        </div>
+      </section>
+
+      <section class="game-card" id="game-area">
+
+        <!-- Landing -->
+        <div id="screen-landing" class="screen active">
+          <div class="screen-header">
+            <span class="badge">Ready to Race</span>
+            <p class="screen-label">Study the field. Pick a winner. Throw bait. Pray.</p>
+          </div>
+          <div class="landing-body">
+            <div class="landing-icon" aria-hidden="true">🦀</div>
+            <p class="landing-desc">Six seeded crabs scramble through a chaotic arena. Pick your winner, place your bet, and toss bait mid-race to influence the outcome. Everyone gets the same field each day.</p>
+            <button id="btn-view-field" class="btn-primary">View Today's Field →</button>
+            <form class="seed-form" id="seed-form" aria-label="Custom seed">
+              <label for="seed-input">Seed</label>
+              <input id="seed-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste a friend's seed or type anything">
+              <button type="submit" class="btn-secondary">Load Seed</button>
+              <button id="btn-daily" type="button" class="btn-secondary">Daily Race</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Paddock — pick your crab and bet -->
+        <div id="screen-paddock" class="screen">
+          <div class="screen-header paddock-header">
+            <div class="paddock-title-row">
+              <span class="badge" id="race-badge">Today's Field</span>
+              <span class="paddock-sub">6 runners · pick your winner</span>
+            </div>
+            <div class="bankroll-chip">
+              <span class="bankroll-label">Bankroll</span>
+              <span class="bankroll-amount" id="bankroll-display">$100</span>
+            </div>
+          </div>
+
+          <div class="runner-grid" id="runner-grid" aria-label="Crab field"></div>
+
+          <div class="bait-bar">
+            <span class="bait-bar-label">Today's bait supply:</span>
+            <div class="bait-icons" id="bait-icons" aria-label="Bait available"></div>
+            <span class="bait-bar-hint">Toss mid-race to attract (or distract) crabs</span>
+          </div>
+
+          <div class="bet-footer" id="bet-footer">
+            <div class="bet-empty" id="bet-empty">
+              <span>← Select a crab to place your bet</span>
+            </div>
+            <div class="bet-active hidden" id="bet-active">
+              <div class="bet-top-row">
+                <span class="bet-crab-label" id="bet-crab-label">—</span>
+                <div class="bet-quick-row">
+                  <button class="btn-quick" data-amount="10">$10</button>
+                  <button class="btn-quick" data-amount="25">$25</button>
+                  <button class="btn-quick" data-amount="50">$50</button>
+                  <button class="btn-quick btn-allin" data-amount="all">All In</button>
+                  <input id="bet-input" type="number" min="1" placeholder="$" aria-label="Bet amount">
+                </div>
+              </div>
+              <div class="bet-payout-row">
+                <span id="bet-payout" class="bet-payout-text">Choose an amount above</span>
+              </div>
+            </div>
+            <button id="btn-release" class="btn-primary btn-release" disabled>🦀 Release the Crabs!</button>
+          </div>
+        </div>
+
+        <!-- Race -->
+        <div id="screen-race" class="screen">
+          <div class="screen-header race-header">
+            <div class="race-status-row">
+              <span class="badge" id="race-status-badge">Get Ready</span>
+              <span class="race-hint" id="race-hint">Race starting…</span>
+            </div>
+            <div class="bait-hud" id="bait-hud" aria-label="Bait inventory"></div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="canvas-race" width="880" height="480" aria-label="Race track"></canvas>
+          </div>
+          <div class="race-footer">
+            <div class="race-positions" id="race-positions"></div>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div id="screen-result" class="screen">
+          <div class="screen-header">
+            <span class="badge" id="result-badge">Race Result</span>
+            <p class="screen-label" id="result-roast">—</p>
+          </div>
+          <div class="result-body">
+            <div class="result-hero" id="result-hero"></div>
+            <div class="result-order-wrap">
+              <p class="result-order-label">Final order</p>
+              <div class="result-order" id="result-order"></div>
+            </div>
+          </div>
+          <div class="screen-footer result-footer">
+            <button id="btn-share-result" type="button" class="btn-secondary">📋 Share</button>
+            <button id="btn-play-again" type="button" class="btn-primary">🔄 Play Again</button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
