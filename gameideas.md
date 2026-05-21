@@ -31,4 +31,4 @@ Glory hogs
     Top gun fighter pilots, but pigs
 
 Testy Male
-    
+    try to take your roids, hit PRs, make gains, and not beat your wife.
