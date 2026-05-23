@@ -537,11 +537,12 @@ function updateTradingUI() {
   });
   document.getElementById('btn-sell-all').disabled = state.sharesOwned === 0;
 
-  // Short buttons — limited to cash available (prevents infinite leverage)
+  // Short buttons — capped by total net worth (prevents infinite leverage)
+  const maxNewShort = Math.max(0, Math.floor(portfolioValue() / price) - state.shortShares);
   document.querySelectorAll('.btn-short[data-qty]').forEach(btn => {
-    btn.disabled = price * parseInt(btn.dataset.qty, 10) > state.cash;
+    btn.disabled = parseInt(btn.dataset.qty, 10) > maxNewShort;
   });
-  document.getElementById('btn-short-max').disabled = price > state.cash;
+  document.getElementById('btn-short-max').disabled = maxNewShort < 1;
   document.querySelectorAll('.btn-cover[data-qty]').forEach(btn => {
     btn.disabled = state.shortShares < parseInt(btn.dataset.qty, 10);
   });
@@ -577,8 +578,9 @@ function sellAll() { sell(state.sharesOwned); }
 // Open short: borrow shares and sell them, receiving cash now
 // Cover short: buy shares back to close the position
 function openShort(qty) {
-  const price    = state.pricePath[state.currentTick];
-  const canShort = Math.min(qty, Math.floor(state.cash / price));
+  const price     = state.pricePath[state.currentTick];
+  const shortCap  = Math.floor(portfolioValue() / price);
+  const canShort  = Math.min(qty, Math.max(0, shortCap - state.shortShares));
   if (canShort < 1) return;
   state.cash        += canShort * price;  // receive sale proceeds
   state.shortShares += canShort;
@@ -586,7 +588,9 @@ function openShort(qty) {
 }
 
 function shortMax() {
-  openShort(Math.floor(state.cash / state.pricePath[state.currentTick]));
+  const price    = state.pricePath[state.currentTick];
+  const shortCap = Math.floor(portfolioValue() / price);
+  openShort(Math.max(0, shortCap - state.shortShares));
 }
 
 function coverShort(qty) {
