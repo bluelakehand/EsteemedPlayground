@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arcane Glitch Program Reference</title>
+  <script src="metadata/programs.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020406;
+      --panel: rgba(9, 14, 17, 0.92);
+      --panel-soft: rgba(20, 35, 38, 0.78);
+      --line: rgba(151, 255, 190, 0.42);
+      --text: #f4f7ff;
+      --muted: #aeb9c4;
+      --green: #6dff9d;
+      --gold: #f8c04f;
+      --surge: #ff9040;
+      --life: #55f79b;
+      --mind: #6fd8ff;
+      --void: #9b67ff;
+      font-family: "Courier New", Consolas, monospace;
+      background: var(--bg);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        linear-gradient(rgba(67, 255, 188, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 255, 188, 0.055) 1px, transparent 1px),
+        radial-gradient(circle at 20% 12%, rgba(95, 255, 166, 0.14), transparent 24rem),
+        radial-gradient(circle at 86% 20%, rgba(120, 80, 255, 0.16), transparent 26rem),
+        #020406;
+      background-size: 64px 64px, 64px 64px, auto, auto, auto;
+      letter-spacing: 0;
+    }
+
+    .page-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .return-link {
+      display: inline-grid;
+      min-height: 42px;
+      place-items: center;
+      border: 1px solid rgba(246, 248, 255, 0.34);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      padding: 0 18px;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    .return-link:hover,
+    .return-link:focus-visible {
+      border-color: var(--green);
+      outline: none;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(151, 255, 190, 0.28);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--green);
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .count-badge {
+      min-width: 150px;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      background: rgba(5, 12, 13, 0.82);
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .count-badge span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .count-badge strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--gold);
+      font-size: 1.6rem;
+    }
+
+    .program-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .program-card {
+      position: relative;
+      min-height: 220px;
+      padding: 18px;
+      border: 1px solid color-mix(in srgb, var(--accent) 70%, white 12%);
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 48%),
+        var(--panel);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035), 0 16px 30px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    .program-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -42px auto;
+      width: 128px;
+      height: 128px;
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    .requirement-symbol img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      line-height: 1.1;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .program-kind {
+      display: block;
+      margin-top: 5px;
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .program-meta {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .requirement-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .requirement-symbol {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      padding: 3px;
+      border: 1px solid color-mix(in srgb, var(--symbol-accent) 74%, white 12%);
+      background: rgba(0, 0, 0, 0.42);
+    }
+
+    .requirement-symbol small {
+      position: absolute;
+      right: 2px;
+      bottom: 1px;
+      color: var(--text);
+      font-size: 0.55rem;
+      font-weight: 700;
+      line-height: 1;
+      text-shadow: 0 1px 3px #000;
+    }
+
+    .cooldown {
+      min-width: 88px;
+      padding: 7px 9px;
+      border: 1px solid rgba(248, 192, 79, 0.52);
+      color: var(--gold);
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .cooldown strong {
+      display: block;
+      margin-top: 2px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .summary {
+      margin: 16px 0 0;
+      color: var(--text);
+      font-size: 0.94rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .details {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.83rem;
+      line-height: 1.5;
+    }
+
+    .empty-state {
+      margin-top: 24px;
+      padding: 20px;
+      border: 1px solid rgba(255, 80, 80, 0.5);
+      color: #ffb0b0;
+      background: rgba(45, 0, 0, 0.3);
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        width: min(100% - 20px, 1180px);
+        padding-top: 24px;
+      }
+
+      header {
+        display: block;
+      }
+
+      .count-badge {
+        margin-top: 18px;
+      }
+
+      .program-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <nav class="top-nav" aria-label="Program reference navigation">
+      <a class="return-link" href="how-to-play.html">Return</a>
+    </nav>
+
+    <header>
+      <div>
+        <p class="subtitle">Arcane Glitch Databank</p>
+        <h1>Programs</h1>
+      </div>
+      <div class="count-badge" aria-live="polite">
+        <span>Total Programs</span>
+        <strong id="program-count">0</strong>
+      </div>
+    </header>
+
+    <section class="program-grid" id="program-grid" aria-label="Program list"></section>
+    <p class="empty-state" id="empty-state" hidden>No program metadata was found.</p>
+  </main>
+
+  <script>
+    const elementData = {
+      surge: { name: "Surge", accent: "#ff9040" },
+      life: { name: "Life", accent: "#55f79b" },
+      mind: { name: "Mind", accent: "#6fd8ff" },
+      void: { name: "Void", accent: "#9b67ff" },
+    };
+
+    const rarityLabels = {
+      1: "Common",
+      2: "Uncommon",
+      3: "Rare",
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getSigilImage(element, face = 1, large = false) {
+      return `pixel art/${element}${face}_px${large ? "_large" : ""}.png`;
+    }
+
+    function renderRequirement(requirement, index) {
+      const element = elementData[requirement.element] || elementData.void;
+      const face = requirement.face || 1;
+      const rarity = rarityLabels[face] || `Face ${face}`;
+
+      return `
+        <span class="requirement-symbol" style="--symbol-accent: ${element.accent}" title="${rarity} ${element.name}">
+          <img src="${getSigilImage(requirement.element, face)}" alt="${rarity} ${element.name} sigil">
+          <small>${index + 1}</small>
+        </span>
+      `;
+    }
+
+    function getCooldownLabel(program) {
+      return program.oncePerLevel || program.cooldown === null || program.cooldown === "-"
+        ? "-"
+        : Number.isFinite(program.cooldown)
+          ? program.cooldown
+          : 0;
+    }
+
+    function renderProgram(program) {
+      const requirements = Array.isArray(program.requirement) ? program.requirement : [];
+      const firstRequirement = requirements[0] || { element: "void", face: 1 };
+      const element = elementData[firstRequirement.element] || elementData.void;
+
+      return `
+        <article class="program-card" style="--accent: ${element.accent}">
+          <h2>${escapeHtml(program.name)}</h2>
+          <span class="program-kind">Required Symbols</span>
+
+          <div class="program-meta">
+            <div class="requirement-list" aria-label="${escapeHtml(program.name)} requirements">
+              ${requirements.map(renderRequirement).join("")}
+            </div>
+            <div class="cooldown">
+              Cooldown
+              <strong>${getCooldownLabel(program)}</strong>
+            </div>
+          </div>
+
+          <p class="summary">${escapeHtml(program.summary || "")}</p>
+          <p class="details">${escapeHtml(program.details || "")}</p>
+        </article>
+      `;
+    }
+
+    const programs = Object.values(window.arcaneMetadata?.programs || {});
+    const grid = document.querySelector("#program-grid");
+    const count = document.querySelector("#program-count");
+    const emptyState = document.querySelector("#empty-state");
+
+    count.textContent = programs.length;
+    grid.innerHTML = programs.map(renderProgram).join("");
+    emptyState.hidden = programs.length > 0;
+  </script>
+</body>
+</html>
