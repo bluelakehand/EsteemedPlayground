@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arcane Glitch How to Play</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020406;
+      --panel: rgba(9, 14, 17, 0.92);
+      --line: rgba(151, 255, 190, 0.42);
+      --text: #f4f7ff;
+      --muted: #aeb9c4;
+      --green: #6dff9d;
+      --cyan: #6fd8ff;
+      --gold: #f8c04f;
+      font-family: "Courier New", Consolas, monospace;
+      background: var(--bg);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        linear-gradient(rgba(67, 255, 188, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 255, 188, 0.055) 1px, transparent 1px),
+        radial-gradient(circle at 18% 10%, rgba(95, 255, 166, 0.14), transparent 24rem),
+        radial-gradient(circle at 86% 20%, rgba(120, 80, 255, 0.16), transparent 26rem),
+        #020406;
+      background-size: 64px 64px, 64px 64px, auto, auto, auto;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: var(--cyan);
+    }
+
+    .page-shell {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 56px;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .nav-link,
+    .program-link {
+      display: inline-grid;
+      min-height: 42px;
+      place-items: center;
+      border: 1px solid rgba(246, 248, 255, 0.34);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      padding: 0 18px;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible,
+    .program-link:hover,
+    .program-link:focus-visible {
+      border-color: var(--cyan);
+      outline: none;
+    }
+
+    header {
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(151, 255, 190, 0.28);
+    }
+
+    .signal {
+      margin: 0 0 10px;
+      color: var(--green);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.6rem, 7vw, 5.8rem);
+      line-height: 0.95;
+      text-transform: uppercase;
+    }
+
+    .intro {
+      max-width: 760px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .guide-card,
+    .wide-card {
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(111, 216, 255, 0.08), transparent 48%),
+        var(--panel);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035), 0 16px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .guide-card {
+      padding: 18px;
+    }
+
+    .wide-card {
+      margin-top: 14px;
+      padding: 20px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      color: var(--text);
+      font-size: 1.1rem;
+      text-transform: uppercase;
+    }
+
+    p,
+    li {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 7px;
+    }
+
+    strong {
+      color: var(--text);
+    }
+
+    .quick-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .quick-list li {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.035);
+      padding: 12px;
+    }
+
+    .program-callout {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 14px;
+      border-color: rgba(248, 192, 79, 0.5);
+    }
+
+    .program-callout p {
+      max-width: 640px;
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        width: min(100% - 20px, 1040px);
+        padding-top: 22px;
+      }
+
+      .top-nav {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <nav class="top-nav" aria-label="Guide navigation">
+      <a class="nav-link" href="index.html">Main Menu</a>
+      <a class="nav-link" href="program-reference.html">Program List</a>
+    </nav>
+
+    <header>
+      <p class="signal">Q-Dara Field Manual</p>
+      <h1>How to Play</h1>
+      <p class="intro">Arcane Glitch is a tactical dice-crafting run. Explore realm maps, gather Sigils, build dice faces, cast Programs, collect Rift Threads, and close the Rift before the room drains too many turns from your Cycle reward.</p>
+    </header>
+
+    <section class="guide-grid" aria-label="Core rules">
+      <article class="guide-card">
+        <h2>Goal</h2>
+        <p>Each combat level has Rift Threads hidden across the hex map. Collect every Rift Thread, then move onto the Rift Hex to close the level. Enemies do not have to be defeated, but clearing them makes the room safer.</p>
+      </article>
+
+      <article class="guide-card">
+        <h2>Turns</h2>
+        <p>Your turn uses a shared Actions pool. Movement, Sigil-Casting, changing Programs, and Crafting all spend Actions. Ending the turn lets Glitchspawn move, attack, spawn, or lose stun effects.</p>
+      </article>
+
+      <article class="guide-card">
+        <h2>Movement</h2>
+        <p>Move along connected hexes. Walls block movement and most attacks unless a Program says otherwise. Enemy hexes cannot be entered unless a special Program destroys or bypasses the enemy.</p>
+      </article>
+
+      <article class="guide-card">
+        <h2>Sigil-Casting</h2>
+        <p>Sigil-Cast rolls your equipped dice during one Action phase. Executions are the number of roll attempts inside that Sigil-Cast. Spend rolled Sigils to activate Programs, or reroll unspent dice while Executions remain.</p>
+      </article>
+
+      <article class="guide-card">
+        <h2>Dice Crafting</h2>
+        <p>Dice faces hold Sigils. Blank faces roll blank. Pips can be crafted onto faces for extra effects, such as gaining Cycles or making a face more likely to roll.</p>
+      </article>
+
+      <article class="guide-card">
+        <h2>Programs</h2>
+        <p>Programs are not tied to a single element. They are cast by matching their required Sigil symbols. Cooldowns lock used Programs for later turns, and some rare Programs can only be used once per level.</p>
+      </article>
+    </section>
+
+    <section class="wide-card" aria-label="Room flow">
+      <h2>Room Flow</h2>
+      <ol>
+        <li><strong>Enter a level</strong> from the World Map or visit a one-time Market node.</li>
+        <li><strong>Explore</strong> by moving through visible and newly revealed hexes.</li>
+        <li><strong>Collect</strong> Rift Threads, Sigils, Artifacts, Cache rewards, Cycles, Havens, and Power Hubs.</li>
+        <li><strong>Cast Programs</strong> by rolling dice and spending the matching Sigils shown in the Program requirement.</li>
+        <li><strong>Close the Rift</strong> after all Rift Threads are collected.</li>
+      </ol>
+    </section>
+
+    <section class="wide-card" aria-label="Rewards and progression">
+      <h2>Rewards</h2>
+      <ul class="quick-list">
+        <li><strong>Sigils:</strong> New symbols for crafting onto blank die faces.</li>
+        <li><strong>Programs:</strong> Added through Cache rewards and equipped up to your CACHE stat.</li>
+        <li><strong>Artifacts:</strong> Permanent boosts, one-use tools, Sigil-Glyphs, and craftable pips.</li>
+        <li><strong>Cycles:</strong> Currency earned from enemies, pickups, and fast level completion.</li>
+        <li><strong>XP:</strong> Defeating Glitchspawn levels you up and grants new blank dice.</li>
+        <li><strong>Markets:</strong> One-time realm shops where Cycles buy Artifacts and Sigil-Glyphs.</li>
+      </ul>
+    </section>
+
+    <section class="wide-card" aria-label="Combat tips">
+      <h2>Combat Tips</h2>
+      <ul>
+        <li>Physical Damage is reduced by Physical Defense; Arcane Damage is reduced by Arcane Defense.</li>
+        <li>Walls block enemy attacks and most Program damage unless a Program explicitly bypasses walls.</li>
+        <li>BLINK-style movement is important for islands and one-hex gaps in higher-tier rooms.</li>
+        <li>Blank rolls do not end your turn by themselves. Use remaining Actions or Executions deliberately.</li>
+      </ul>
+    </section>
+
+    <section class="wide-card program-callout" aria-label="Program reference">
+      <p>The full Program list shows every current Program, required Sigils, description, and cooldown.</p>
+      <a class="program-link" href="program-reference.html">Open Program List</a>
+    </section>
+  </main>
+</body>
+</html>
