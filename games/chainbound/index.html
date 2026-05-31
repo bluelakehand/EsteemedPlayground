@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chainbound</title>
+    <meta
+      name="description"
+      content="A disc golf deckbuilder about disc cards, modifier cards, and risky lines through the woods."
+    >
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../index.html">Esteemed Arcade</a>
+    <main class="game-shell" id="app">
+      <section class="menu-screen" id="menu-screen" aria-labelledby="game-title">
+        <div class="shade" aria-hidden="true"></div>
+        <div class="menu-copy">
+          <p class="kicker">Disc Golf Deckbuilder</p>
+          <h1 id="game-title">Chainbound</h1>
+          <p class="tagline">
+            Build a bag of discs and modifiers, carve lines through procedurally
+            generated holes, and finish the course in the fewest throws possible.
+          </p>
+          <button class="start-button" id="start-round" type="button">
+            Start Round
+          </button>
+        </div>
+      </section>
+
+      <section class="round-screen" id="round-screen" aria-labelledby="round-title" hidden>
+        <div class="hud-bar">
+          <div>
+            <p class="kicker">Hole 1</p>
+            <h2 id="round-title">Deep Woods</h2>
+          </div>
+          <div class="hole-stats" aria-label="Hole stats">
+            <span>Par 3</span>
+            <span id="stroke-counter">Stroke 1</span>
+          </div>
+          <div class="player-stats" aria-label="Player stats">
+            <span>C1 <strong id="c1-stat">50%</strong></span>
+            <span>C2 <strong id="c2-stat">10%</strong></span>
+            <span>Throw-In <strong id="throw-in-stat">3%</strong></span>
+          </div>
+          <button class="menu-button" id="return-menu" type="button">Main Menu</button>
+        </div>
+
+        <div class="play-layout">
+          <section class="course-area" aria-label="Disc golf hole and hand">
+            <div class="course-panel">
+              <div class="direction-pad" role="group" aria-label="Throw direction">
+                <button class="direction-button" id="direction-up" type="button" data-direction="up" aria-label="Throw up" aria-pressed="true">↑</button>
+                <button class="direction-button" id="direction-right" type="button" data-direction="right" aria-label="Throw right" aria-pressed="false">→</button>
+                <button class="direction-button" id="direction-down" type="button" data-direction="down" aria-label="Throw down" aria-pressed="false">↓</button>
+                <button class="direction-button" id="direction-left" type="button" data-direction="left" aria-label="Throw left" aria-pressed="false">←</button>
+              </div>
+              <div class="course-grid-wrap">
+                <div class="course-grid" id="course-grid"></div>
+              </div>
+            </div>
+
+          </section>
+
+          <aside class="control-panel" aria-label="Throw controls and status">
+            <div class="hand-header">
+              <h3>Controls</h3>
+            </div>
+            <div class="throw-controls" aria-label="Throw controls">
+              <div class="throw-type-toggle" role="group" aria-label="Throw type">
+                <button class="throw-type active" id="backhand-button" type="button" aria-pressed="true">
+                  Backhand
+                </button>
+                <button class="throw-type" id="forehand-button" type="button" aria-pressed="false">
+                  Forehand
+                </button>
+              </div>
+              <button class="throw-button" id="throw-button" type="button">
+                Throw
+              </button>
+              <div class="draw-controls" aria-label="Draw controls">
+                <button class="draw-button" id="draw-disc-button" type="button">Draw Disc</button>
+                <button class="draw-button" id="draw-throw-button" type="button">Draw Throw</button>
+              </div>
+            </div>
+            <p class="lie-note" id="lie-note" aria-live="polite" hidden></p>
+            <div class="selected-card-panel" id="selected-card-panel" aria-label="Selected disc"></div>
+            <div class="selected-throw-card-panel" id="selected-throw-card-panel" aria-label="Selected throw card"></div>
+          </aside>
+
+          <aside class="disc-hand" aria-label="Hand cards">
+            <p class="kicker hand-kicker">Hand</p>
+            <div class="hand-card-list" id="hand-card-list"></div>
+          </aside>
+        </div>
+      </section>
+      <div class="hole-complete-modal" id="hole-complete-modal" role="dialog" aria-modal="true" aria-labelledby="hole-complete-title" hidden>
+        <div class="hole-complete-card">
+          <p class="kicker">Hole Complete</p>
+          <h2 id="hole-complete-title">In the Basket!</h2>
+          <p class="score-result" id="score-result">Even Par</p>
+          <button class="start-button secondary" id="close-hole-modal" type="button">Continue</button>
+        </div>
+      </div>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
