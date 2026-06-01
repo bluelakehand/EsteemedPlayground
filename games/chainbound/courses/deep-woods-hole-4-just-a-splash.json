@@ -1,0 +1,323 @@
+{
+  "name": "Just a Splash",
+  "courseId": "deep-woods",
+  "courseName": "Deep Woods",
+  "holeNumber": 4,
+  "par": 4,
+  "columns": 9,
+  "rows": 16,
+  "tee": {
+    "x": 4,
+    "y": 13
+  },
+  "basket": {
+    "x": 6,
+    "y": 3
+  },
+  "hazards": [
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 9
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 9
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 9
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 9
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 5
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 2,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 5
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 6,
+      "y": 7
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 8,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 8,
+      "y": 5
+    },
+    {
+      "type": "rock",
+      "variant": 2,
+      "height": 1,
+      "x": 2,
+      "y": 10
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 3,
+      "y": 7
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 7,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 6,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 8,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 1,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 0,
+      "y": 2
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 8,
+      "y": 9
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 7,
+      "y": 9
+    },
+    {
+      "type": "rock",
+      "variant": 1,
+      "height": 1,
+      "x": 6,
+      "y": 10
+    }
+  ],
+  "backgrounds": [
+    {
+      "type": "water",
+      "x": 4,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 5,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 5,
+      "y": 8
+    },
+    {
+      "type": "water",
+      "x": 4,
+      "y": 8
+    },
+    {
+      "type": "water",
+      "x": 1,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 0,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 0,
+      "y": 8
+    },
+    {
+      "type": "water",
+      "x": 1,
+      "y": 8
+    },
+    {
+      "type": "water",
+      "x": 8,
+      "y": 8
+    },
+    {
+      "type": "water",
+      "x": 8,
+      "y": 7
+    }
+  ],
+  "outOfBounds": [
+    {
+      "x": 4,
+      "y": 7
+    },
+    {
+      "x": 5,
+      "y": 7
+    },
+    {
+      "x": 5,
+      "y": 8
+    },
+    {
+      "x": 4,
+      "y": 8
+    },
+    {
+      "x": 8,
+      "y": 7
+    },
+    {
+      "x": 8,
+      "y": 8
+    },
+    {
+      "x": 1,
+      "y": 7
+    },
+    {
+      "x": 0,
+      "y": 7
+    },
+    {
+      "x": 0,
+      "y": 8
+    },
+    {
+      "x": 1,
+      "y": 8
+    }
+  ]
+}
