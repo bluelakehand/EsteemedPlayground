@@ -30,6 +30,21 @@ window.CHAINBOUND_COURSE_FILES = [
     "file": "courses/deep-woods-hole-6-stumped.json"
   },
   {
+    "courseId": "pitch-and-putt",
+    "courseName": "Pitch and Putt",
+    "file": "courses/pitch-and-putt-hole-1-easy-peasy.json"
+  },
+  {
+    "courseId": "pitch-and-putt",
+    "courseName": "Pitch and Putt",
+    "file": "courses/pitch-and-putt-hole-2-just-a-toss.json"
+  },
+  {
+    "courseId": "pitch-and-putt",
+    "courseName": "Pitch and Putt",
+    "file": "courses/pitch-and-putt-hole-3-wee-bit-further.json"
+  },
+  {
     "courseId": "sunset-park",
     "courseName": "Sunset Park",
     "file": "courses/sunset-park-hole-1-no-bridge-too-far.json"
@@ -38,6 +53,26 @@ window.CHAINBOUND_COURSE_FILES = [
     "courseId": "sunset-park",
     "courseName": "Sunset Park",
     "file": "courses/sunset-park-hole-2-lakeside-path.json"
+  },
+  {
+    "courseId": "sunset-park",
+    "courseName": "Sunset Park",
+    "file": "courses/sunset-park-hole-3-easy-island.json"
+  },
+  {
+    "courseId": "sunset-park",
+    "courseName": "Sunset Park",
+    "file": "courses/sunset-park-hole-4-puddle-gully.json"
+  },
+  {
+    "courseId": "sunset-park",
+    "courseName": "Sunset Park",
+    "file": "courses/sunset-park-hole-5-hat-in-the-ring.json"
+  },
+  {
+    "courseId": "sunset-park",
+    "courseName": "Sunset Park",
+    "file": "courses/sunset-park-hole-6-straight-shot.json"
   }
 ];
 
@@ -1814,6 +1849,467 @@ window.CHAINBOUND_COURSES = [
     ]
   },
   {
+    "id": "pitch-and-putt",
+    "name": "Pitch and Putt",
+    "holes": [
+      {
+        "name": "Easy Peasy",
+        "courseId": "pitch-and-putt",
+        "courseName": "Pitch and Putt",
+        "holeNumber": 1,
+        "par": 3,
+        "columns": 7,
+        "rows": 10,
+        "tee": {
+          "x": 3,
+          "y": 7
+        },
+        "basket": {
+          "x": 3,
+          "y": 2
+        },
+        "hazards": [
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 1,
+            "y": 4
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 3,
+            "y": 0
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 5
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 8
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 1,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 6,
+            "y": 8
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 6,
+            "y": 7
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 8
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 6,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 4,
+            "y": 4
+          }
+        ],
+        "backgrounds": [],
+        "outOfBounds": []
+      },
+      {
+        "name": "Just a Toss",
+        "courseId": "pitch-and-putt",
+        "courseName": "Pitch and Putt",
+        "holeNumber": 2,
+        "par": 3,
+        "columns": 7,
+        "rows": 10,
+        "tee": {
+          "x": 1,
+          "y": 8
+        },
+        "basket": {
+          "x": 4,
+          "y": 4
+        },
+        "hazards": [
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 3,
+            "y": 0
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 8
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 1,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 9
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 5,
+            "y": 5
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 1,
+            "y": 1
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 2,
+            "y": 0
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 1,
+            "y": 0
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 2,
+            "y": 1
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 1
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 0,
+            "y": 2
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 1,
+            "y": 2
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 6,
+            "y": 4
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 2,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 3,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 2,
+            "y": 6
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 1,
+            "y": 4
+          }
+        ],
+        "backgrounds": [],
+        "outOfBounds": []
+      },
+      {
+        "name": "Wee Bit Further",
+        "courseId": "pitch-and-putt",
+        "courseName": "Pitch and Putt",
+        "holeNumber": 3,
+        "par": 4,
+        "columns": 7,
+        "rows": 10,
+        "tee": {
+          "x": 5,
+          "y": 8
+        },
+        "basket": {
+          "x": 1,
+          "y": 1
+        },
+        "hazards": [
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 2,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 0,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 0,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 0,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 2,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 5,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 6,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 6,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 5,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 3,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 1,
+            "height": 3,
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "rock",
+            "variant": 2,
+            "height": 1,
+            "x": 1,
+            "y": 7
+          },
+          {
+            "type": "rock",
+            "variant": 2,
+            "height": 1,
+            "x": 2,
+            "y": 6
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 4,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 9
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 6,
+            "y": 8
+          }
+        ],
+        "backgrounds": [],
+        "outOfBounds": []
+      }
+    ]
+  },
+  {
     "id": "sunset-park",
     "name": "Sunset Park",
     "holes": [
@@ -3351,6 +3847,1838 @@ window.CHAINBOUND_COURSES = [
           {
             "x": 9,
             "y": 5
+          }
+        ]
+      },
+      {
+        "name": "Easy Island",
+        "courseId": "sunset-park",
+        "courseName": "Sunset Park",
+        "holeNumber": 3,
+        "par": 4,
+        "columns": 9,
+        "rows": 15,
+        "tee": {
+          "x": 4,
+          "y": 13
+        },
+        "basket": {
+          "x": 4,
+          "y": 1
+        },
+        "hazards": [
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 2,
+            "y": 5
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 3,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 1,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 7,
+            "y": 5
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 6,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 5,
+            "y": 8
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 7,
+            "y": 11
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 8,
+            "y": 8
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 8,
+            "y": 9
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 8,
+            "y": 7
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 0,
+            "y": 10
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 0,
+            "y": 8
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 1,
+            "y": 9
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 8,
+            "y": 10
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 7,
+            "y": 10
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 9
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 11
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 1,
+            "y": 11
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 1,
+            "y": 12
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 1,
+            "y": 13
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 12
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 3,
+            "y": 7
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 3,
+            "y": 10
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 6,
+            "y": 6
+          }
+        ],
+        "backgrounds": [
+          {
+            "type": "water",
+            "x": 2,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 1,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 2
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 1
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "type": "water",
+            "x": 1,
+            "y": 2
+          },
+          {
+            "type": "water",
+            "x": 3,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 4,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 0
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 1
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 2
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 2
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 3
+          },
+          {
+            "type": "grass2",
+            "x": 3,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 7,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 6,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 4,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 5,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 2,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 1,
+            "y": 4
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 4
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 8,
+            "y": 5
+          },
+          {
+            "type": "grass2",
+            "x": 7,
+            "y": 5
+          },
+          {
+            "type": "grass2",
+            "x": 0,
+            "y": 5
+          },
+          {
+            "type": "grass2",
+            "x": 1,
+            "y": 5
+          },
+          {
+            "type": "grass2",
+            "x": 3,
+            "y": 2
+          },
+          {
+            "type": "grass2",
+            "x": 4,
+            "y": 2
+          },
+          {
+            "type": "grass2",
+            "x": 2,
+            "y": 1
+          },
+          {
+            "type": "grass2",
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "grass2",
+            "x": 6,
+            "y": 1
+          },
+          {
+            "type": "grass2",
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "grass2",
+            "x": 2,
+            "y": 2
+          },
+          {
+            "type": "grass2",
+            "x": 1,
+            "y": 1
+          },
+          {
+            "type": "grass2",
+            "x": 7,
+            "y": 1
+          }
+        ],
+        "outOfBounds": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 0,
+            "y": 2
+          },
+          {
+            "x": 0,
+            "y": 3
+          },
+          {
+            "x": 1,
+            "y": 3
+          },
+          {
+            "x": 0,
+            "y": 4
+          },
+          {
+            "x": 3,
+            "y": 3
+          },
+          {
+            "x": 2,
+            "y": 3
+          },
+          {
+            "x": 4,
+            "y": 3
+          },
+          {
+            "x": 5,
+            "y": 3
+          },
+          {
+            "x": 6,
+            "y": 3
+          },
+          {
+            "x": 7,
+            "y": 3
+          },
+          {
+            "x": 8,
+            "y": 3
+          },
+          {
+            "x": 8,
+            "y": 4
+          },
+          {
+            "x": 8,
+            "y": 2
+          },
+          {
+            "x": 7,
+            "y": 2
+          },
+          {
+            "x": 8,
+            "y": 1
+          },
+          {
+            "x": 8,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "name": "Puddle Gully",
+        "courseId": "sunset-park",
+        "courseName": "Sunset Park",
+        "holeNumber": 4,
+        "par": 6,
+        "columns": 9,
+        "rows": 15,
+        "tee": {
+          "x": 7,
+          "y": 14
+        },
+        "basket": {
+          "x": 4,
+          "y": 1
+        },
+        "hazards": [
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 4,
+            "y": 2
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 3,
+            "y": 6
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 4,
+            "y": 7
+          },
+          {
+            "type": "shrub",
+            "variant": 1,
+            "height": 2,
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 8,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 7,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 1,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 0,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 8,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 8,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 0,
+            "y": 9
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 1,
+            "y": 9
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 1,
+            "y": 11
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 12
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 11
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 0,
+            "y": 10
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 1,
+            "y": 13
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 7,
+            "y": 10
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 6,
+            "y": 10
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 5,
+            "y": 9
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 2,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 5,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 4,
+            "y": 11
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 3,
+            "y": 14
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 2,
+            "y": 14
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 1,
+            "y": 14
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 0,
+            "y": 13
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 0,
+            "y": 14
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 0,
+            "y": 8
+          }
+        ],
+        "backgrounds": [
+          {
+            "type": "water",
+            "x": 0,
+            "y": 4
+          },
+          {
+            "type": "water",
+            "x": 1,
+            "y": 5
+          },
+          {
+            "type": "water",
+            "x": 1,
+            "y": 4
+          },
+          {
+            "type": "water",
+            "x": 2,
+            "y": 4
+          },
+          {
+            "type": "water",
+            "x": 2,
+            "y": 5
+          },
+          {
+            "type": "water",
+            "x": 2,
+            "y": 6
+          },
+          {
+            "type": "water",
+            "x": 1,
+            "y": 6
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 6
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 5
+          },
+          {
+            "type": "water",
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 7
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 6
+          },
+          {
+            "type": "water",
+            "x": 2,
+            "y": 10
+          },
+          {
+            "type": "water",
+            "x": 3,
+            "y": 11
+          },
+          {
+            "type": "water",
+            "x": 2,
+            "y": 11
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 7
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 3
+          },
+          {
+            "type": "water",
+            "x": 0,
+            "y": 7
+          },
+          {
+            "type": "water",
+            "x": 3,
+            "y": 10
+          }
+        ],
+        "outOfBounds": [
+          {
+            "x": 8,
+            "y": 6
+          },
+          {
+            "x": 8,
+            "y": 7
+          },
+          {
+            "x": 7,
+            "y": 7
+          },
+          {
+            "x": 6,
+            "y": 8
+          },
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          },
+          {
+            "x": 7,
+            "y": 9
+          },
+          {
+            "x": 6,
+            "y": 9
+          },
+          {
+            "x": 3,
+            "y": 10
+          },
+          {
+            "x": 2,
+            "y": 10
+          },
+          {
+            "x": 2,
+            "y": 11
+          },
+          {
+            "x": 3,
+            "y": 11
+          },
+          {
+            "x": 6,
+            "y": 2
+          },
+          {
+            "x": 6,
+            "y": 3
+          },
+          {
+            "x": 5,
+            "y": 3
+          },
+          {
+            "x": 5,
+            "y": 2
+          },
+          {
+            "x": 2,
+            "y": 4
+          },
+          {
+            "x": 1,
+            "y": 4
+          },
+          {
+            "x": 0,
+            "y": 3
+          },
+          {
+            "x": 0,
+            "y": 4
+          },
+          {
+            "x": 0,
+            "y": 5
+          },
+          {
+            "x": 1,
+            "y": 5
+          },
+          {
+            "x": 2,
+            "y": 5
+          },
+          {
+            "x": 1,
+            "y": 6
+          },
+          {
+            "x": 0,
+            "y": 6
+          },
+          {
+            "x": 0,
+            "y": 7
+          },
+          {
+            "x": 2,
+            "y": 6
+          }
+        ]
+      },
+      {
+        "name": "Hat in the Ring",
+        "courseId": "sunset-park",
+        "courseName": "Sunset Park",
+        "holeNumber": 5,
+        "par": 3,
+        "columns": 9,
+        "rows": 10,
+        "tee": {
+          "x": 1,
+          "y": 8
+        },
+        "basket": {
+          "x": 3,
+          "y": 2
+        },
+        "hazards": [
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 1,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 1,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 3,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 4,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 3,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 2,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 1,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 4,
+            "y": 4
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 2,
+            "y": 4
+          },
+          {
+            "type": "rock",
+            "variant": 2,
+            "height": 1,
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "rock",
+            "variant": 2,
+            "height": 1,
+            "x": 0,
+            "y": 5
+          },
+          {
+            "type": "rock",
+            "variant": 2,
+            "height": 1,
+            "x": 0,
+            "y": 6
+          }
+        ],
+        "backgrounds": [
+          {
+            "type": "water",
+            "x": 5,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 7
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 7
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 6
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 6
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 7
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 4,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 5
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 3,
+            "y": 9
+          },
+          {
+            "type": "grass2",
+            "x": 4,
+            "y": 8
+          },
+          {
+            "type": "grass2",
+            "x": 5,
+            "y": 7
+          },
+          {
+            "type": "grass2",
+            "x": 6,
+            "y": 6
+          },
+          {
+            "type": "grass2",
+            "x": 7,
+            "y": 5
+          },
+          {
+            "type": "grass2",
+            "x": 7,
+            "y": 4
+          },
+          {
+            "type": "grass2",
+            "x": 8,
+            "y": 3
+          },
+          {
+            "type": "grass2",
+            "x": 7,
+            "y": 3
+          },
+          {
+            "type": "grass2",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "grass2",
+            "x": 4,
+            "y": 7
+          },
+          {
+            "type": "grass2",
+            "x": 3,
+            "y": 8
+          },
+          {
+            "type": "grass2",
+            "x": 2,
+            "y": 9
+          },
+          {
+            "type": "grass2",
+            "x": 6,
+            "y": 5
+          }
+        ],
+        "outOfBounds": [
+          {
+            "x": 4,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 8
+          },
+          {
+            "x": 6,
+            "y": 8
+          },
+          {
+            "x": 6,
+            "y": 9
+          },
+          {
+            "x": 7,
+            "y": 9
+          },
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          },
+          {
+            "x": 8,
+            "y": 7
+          },
+          {
+            "x": 7,
+            "y": 7
+          },
+          {
+            "x": 6,
+            "y": 7
+          },
+          {
+            "x": 7,
+            "y": 6
+          },
+          {
+            "x": 8,
+            "y": 6
+          },
+          {
+            "x": 8,
+            "y": 5
+          },
+          {
+            "x": 8,
+            "y": 4
+          }
+        ]
+      },
+      {
+        "name": "Straight Shot",
+        "courseId": "sunset-park",
+        "courseName": "Sunset Park",
+        "holeNumber": 6,
+        "par": 4,
+        "columns": 15,
+        "rows": 10,
+        "tee": {
+          "x": 1,
+          "y": 4
+        },
+        "basket": {
+          "x": 13,
+          "y": 4
+        },
+        "hazards": [
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 3,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 4,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 6,
+            "y": 5
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 8,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 10,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 12,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 13,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 14,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 13,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 8,
+            "y": 5
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 10,
+            "y": 5
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 9,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 6,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 7,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 8,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 10,
+            "y": 7
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 9,
+            "y": 7
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 12,
+            "y": 8
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 12,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 11,
+            "y": 0
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 10,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 11,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 14,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 14,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 14,
+            "y": 3
+          },
+          {
+            "type": "tree",
+            "variant": 5,
+            "height": 3,
+            "x": 13,
+            "y": 2
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 6,
+            "y": 7
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 4,
+            "y": 8
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 12,
+            "y": 7
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 13,
+            "y": 8
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 14,
+            "y": 7
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 14,
+            "y": 8
+          },
+          {
+            "type": "tree",
+            "variant": 4,
+            "height": 3,
+            "x": 14,
+            "y": 9
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 2,
+            "y": 1
+          },
+          {
+            "type": "tree",
+            "variant": 2,
+            "height": 3,
+            "x": 4,
+            "y": 2
+          },
+          {
+            "type": "rock",
+            "variant": 1,
+            "height": 1,
+            "x": 13,
+            "y": 5
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 7,
+            "y": 6
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 2,
+            "y": 6
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 1,
+            "y": 7
+          },
+          {
+            "type": "stump",
+            "variant": 1,
+            "height": 1,
+            "x": 0,
+            "y": 1
+          }
+        ],
+        "backgrounds": [
+          {
+            "type": "water",
+            "x": 5,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 8
+          },
+          {
+            "type": "water",
+            "x": 6,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 7,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 8,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 4,
+            "y": 9
+          },
+          {
+            "type": "grass2",
+            "x": 3,
+            "y": 9
+          },
+          {
+            "type": "grass2",
+            "x": 2,
+            "y": 9
+          },
+          {
+            "type": "grass2",
+            "x": 4,
+            "y": 8
+          },
+          {
+            "type": "grass2",
+            "x": 5,
+            "y": 7
+          },
+          {
+            "type": "grass2",
+            "x": 6,
+            "y": 7
+          },
+          {
+            "type": "grass2",
+            "x": 7,
+            "y": 7
+          },
+          {
+            "type": "grass2",
+            "x": 8,
+            "y": 7
+          },
+          {
+            "type": "grass2",
+            "x": 9,
+            "y": 8
+          },
+          {
+            "type": "grass2",
+            "x": 9,
+            "y": 9
+          },
+          {
+            "type": "grass2",
+            "x": 10,
+            "y": 9
+          },
+          {
+            "type": "water",
+            "x": 5,
+            "y": 0
+          },
+          {
+            "type": "water",
+            "x": 4,
+            "y": 1
+          },
+          {
+            "type": "water",
+            "x": 3,
+            "y": 1
+          },
+          {
+            "type": "water",
+            "x": 3,
+            "y": 0
+          },
+          {
+            "type": "water",
+            "x": 4,
+            "y": 0
+          },
+          {
+            "type": "water",
+            "x": 2,
+            "y": 0
+          },
+          {
+            "type": "grass2",
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "grass2",
+            "x": 4,
+            "y": 2
+          },
+          {
+            "type": "grass2",
+            "x": 3,
+            "y": 2
+          },
+          {
+            "type": "grass2",
+            "x": 2,
+            "y": 1
+          },
+          {
+            "type": "grass2",
+            "x": 1,
+            "y": 0
+          }
+        ],
+        "outOfBounds": [
+          {
+            "x": 4,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 8
+          },
+          {
+            "x": 6,
+            "y": 8
+          },
+          {
+            "x": 6,
+            "y": 9
+          },
+          {
+            "x": 7,
+            "y": 9
+          },
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          },
+          {
+            "x": 5,
+            "y": 0
+          },
+          {
+            "x": 4,
+            "y": 0
+          },
+          {
+            "x": 3,
+            "y": 0
+          },
+          {
+            "x": 2,
+            "y": 0
+          },
+          {
+            "x": 3,
+            "y": 1
+          },
+          {
+            "x": 4,
+            "y": 1
           }
         ]
       }

@@ -49,6 +49,8 @@ button {
 }
 
 .round-screen,
+.player-menu-screen,
+.spend-points-screen,
 .course-select-screen,
 .editor-screen {
   position: relative;
@@ -59,11 +61,14 @@ button {
     url("main_menu.png") center / cover no-repeat;
 }
 
+.player-menu-screen,
+.spend-points-screen,
 .course-select-screen {
   display: grid;
   place-items: center;
 }
 
+.player-menu-panel,
 .course-select-panel {
   position: relative;
   z-index: 1;
@@ -75,11 +80,276 @@ button {
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.45);
 }
 
+.player-menu-panel {
+  width: min(62rem, calc(100% - 2rem));
+}
+
+.spend-points-panel {
+  width: min(68rem, calc(100% - 2rem));
+}
+
+.spend-points-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.points-bank {
+  border: 2px solid rgba(244, 230, 189, 0.3);
+  border-radius: 0.3rem;
+  padding: 0.55rem 0.75rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.36);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.points-bank strong {
+  color: var(--chain);
+}
+
+.point-value,
+.point-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+}
+
+.point-value img,
+.point-price img {
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+}
+
+.player-menu-panel h2,
 .course-select-panel h2 {
   max-width: none;
   margin-bottom: 1rem;
   font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   text-transform: uppercase;
+}
+
+.player-menu-grid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.85fr) minmax(18rem, 1.15fr);
+  gap: 1rem;
+}
+
+.spend-points-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.player-summary,
+.player-deck-panel {
+  border: 2px solid rgba(244, 230, 189, 0.18);
+  border-radius: 0.35rem;
+  padding: 0.85rem;
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.player-summary h3,
+.player-deck-panel h3 {
+  margin: 0 0 0.85rem;
+  color: var(--paper);
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 1.55rem;
+  text-transform: uppercase;
+}
+
+.player-summary-list,
+.player-deck-list,
+.shop-list,
+.training-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.player-deck-list {
+  max-height: min(28rem, 54vh);
+  overflow-y: auto;
+  padding-right: 0.2rem;
+  scrollbar-color: rgba(244, 230, 189, 0.48) rgba(0, 0, 0, 0.24);
+  scrollbar-width: thin;
+}
+
+.player-summary-list span,
+.player-deck-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid rgba(122, 184, 218, 0.45);
+  border-radius: 0.25rem;
+  padding: 0.62rem 0.7rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.38);
+  font-weight: 900;
+}
+
+.player-summary-list strong,
+.player-deck-card strong {
+  color: var(--chain);
+}
+
+.player-deck-card {
+  display: grid;
+  grid-template-columns: 2.35rem 1fr;
+  align-items: center;
+}
+
+.player-deck-card.throw-card-preview {
+  grid-template-columns: 1fr;
+  border-color: rgba(244, 230, 189, 0.48);
+  background: rgba(49, 39, 17, 0.52);
+}
+
+.player-deck-card img {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  object-fit: contain;
+  background: rgba(244, 230, 189, 0.16);
+  box-shadow: 0 0.22rem 0.5rem rgba(0, 0, 0, 0.35);
+}
+
+.player-deck-card span {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+}
+
+.player-deck-card span span {
+  display: block;
+}
+
+.player-deck-card .card-attributes,
+.card-attributes {
+  display: inline-block;
+  margin-left: 0.5rem;
+  color: #00f030;
+  font-family: Arial, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: none;
+}
+
+.disc-card .card-attributes {
+  justify-self: center;
+  margin-left: 0;
+  font-size: 0.72rem;
+}
+
+.player-deck-card small {
+  grid-column: 2;
+  color: rgba(244, 230, 189, 0.76);
+  font-weight: 800;
+}
+
+.player-deck-card.throw-card-preview small {
+  grid-column: 1;
+}
+
+.player-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.player-menu-actions .start-button {
+  margin-top: 1.1rem;
+}
+
+.shop-list + .shop-list,
+.training-list + .shop-list {
+  margin-top: 0.85rem;
+}
+
+.shop-card {
+  display: grid;
+  grid-template-columns: 2.35rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(122, 184, 218, 0.45);
+  border-radius: 0.25rem;
+  padding: 0.62rem 0.7rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.38);
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.shop-card.throw-shop-card {
+  border-color: rgba(244, 230, 189, 0.48);
+  background: rgba(49, 39, 17, 0.52);
+}
+
+.shop-card.training-card {
+  grid-template-columns: 1fr auto;
+  border-color: rgba(166, 227, 109, 0.45);
+}
+
+.shop-card img {
+  width: 2.35rem;
+  height: 2.35rem;
+  object-fit: contain;
+}
+
+.shop-card span {
+  display: grid;
+  gap: 0.16rem;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 1.16rem;
+  text-transform: uppercase;
+}
+
+.shop-card small {
+  color: rgba(244, 230, 189, 0.76);
+  font-family: Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.shop-card strong {
+  color: var(--chain);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.shop-card:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+  opacity: 0.48;
+}
+
+.shop-card.sold {
+  border-color: rgba(244, 230, 189, 0.18);
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.purchase-confirm-card h2 {
+  font-size: clamp(2.2rem, 6vw, 4rem);
+}
+
+.purchase-confirm-copy {
+  color: var(--paper);
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.purchase-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
 .course-list {
@@ -667,10 +937,17 @@ h2 {
 }
 
 .disc-token {
-  z-index: 3;
+  position: absolute;
+  z-index: 6;
   width: 46%;
   height: 46%;
+  max-width: 46%;
+  max-height: 46%;
+  inset: 27%;
   animation: disc-pop 180ms ease-out;
+  filter:
+    drop-shadow(0 0 0.18rem rgba(255, 255, 255, 0.85))
+    drop-shadow(0 0.35rem 0.35rem rgba(0, 0, 0, 0.55));
 }
 
 .control-panel {
@@ -698,6 +975,19 @@ h2 {
 
 .hand-kicker {
   margin: 0 0 -0.25rem;
+}
+
+.hand-count {
+  margin: 0;
+  color: rgba(244, 230, 189, 0.9);
+}
+
+.hand-count strong {
+  color: var(--chain);
+}
+
+.discard-count {
+  margin-top: -0.25rem;
 }
 
 .hand-card-list {
@@ -850,6 +1140,13 @@ h2 {
   text-transform: uppercase;
 }
 
+.course-points-result {
+  margin: 0.8rem 0 0;
+  color: var(--paper);
+  font-weight: 900;
+  line-height: 1.35;
+}
+
 .score-under {
   color: #62b7ff;
 }
@@ -970,6 +1267,29 @@ h2 {
   aspect-ratio: 1;
   object-fit: contain;
   filter: drop-shadow(0 0.35rem 0.45rem rgba(0, 0, 0, 0.28));
+}
+
+.selected-card-attributes {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: end;
+  margin-top: 0.25rem;
+  color: #00c82f;
+  font-weight: 900;
+  text-align: right;
+}
+
+.selected-card-attributes span {
+  border-bottom: 2px solid currentColor;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.selected-card-attributes small {
+  max-width: 9rem;
+  color: #00c82f;
+  font-size: 0.85rem;
+  line-height: 1.25;
 }
 
 .disc-name {
@@ -1125,8 +1445,14 @@ h2 {
 
   .hud-bar,
   .play-layout,
+  .player-menu-grid,
+  .spend-points-grid,
   .editor-layout {
     grid-template-columns: 1fr;
+  }
+
+  .spend-points-header {
+    display: grid;
   }
 
   .hole-stats,
