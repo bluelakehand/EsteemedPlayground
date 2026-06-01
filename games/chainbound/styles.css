@@ -48,13 +48,68 @@ button {
     url("main_menu.png") center / cover no-repeat;
 }
 
-.round-screen {
+.round-screen,
+.course-select-screen,
+.editor-screen {
   position: relative;
   min-height: 100vh;
   padding: 0.65rem;
   background:
     linear-gradient(180deg, rgba(10, 18, 8, 0.88), rgba(19, 45, 18, 0.94)),
     url("main_menu.png") center / cover no-repeat;
+}
+
+.course-select-screen {
+  display: grid;
+  place-items: center;
+}
+
+.course-select-panel {
+  position: relative;
+  z-index: 1;
+  width: min(34rem, calc(100% - 2rem));
+  border: 2px solid rgba(244, 230, 189, 0.28);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: rgba(10, 18, 8, 0.86);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.45);
+}
+
+.course-select-panel h2 {
+  max-width: none;
+  margin-bottom: 1rem;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  text-transform: uppercase;
+}
+
+.course-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.course-option {
+  display: grid;
+  gap: 0.2rem;
+  border: 2px solid rgba(122, 184, 218, 0.55);
+  border-radius: 0.35rem;
+  padding: 0.8rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.36);
+  text-align: left;
+  cursor: pointer;
+}
+
+.course-option span {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 1.65rem;
+  text-transform: uppercase;
+}
+
+.course-option small {
+  color: rgba(244, 230, 189, 0.78);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .shade {
@@ -154,6 +209,10 @@ h2 {
     0 0.9rem 1.5rem rgba(0, 0, 0, 0.34);
 }
 
+.menu-copy .start-button.secondary {
+  margin-left: 0.7rem;
+}
+
 .hud-bar {
   display: grid;
   grid-template-columns: 1fr auto auto auto;
@@ -218,6 +277,49 @@ h2 {
   color: #a6e36d;
 }
 
+.editor-hud {
+  width: min(1180px, 100%);
+}
+
+.editor-fields {
+  display: flex;
+  align-items: end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.editor-fields label {
+  display: grid;
+  gap: 0.18rem;
+  color: var(--chain);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.editor-fields input,
+.editor-fields select {
+  min-height: 2.2rem;
+  border: 2px solid rgba(244, 230, 189, 0.34);
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.36);
+  font: inherit;
+  font-weight: 900;
+}
+
+.editor-fields input[type="text"],
+.editor-fields select {
+  width: min(18rem, 30vw);
+}
+
+.editor-fields input[type="number"] {
+  width: 4.7rem;
+}
+
 .menu-button {
   border: 2px solid rgba(244, 230, 189, 0.5);
   border-radius: 0.35rem;
@@ -240,9 +342,19 @@ h2 {
   margin: 0 auto;
 }
 
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(20rem, 1fr) minmax(15rem, 18rem);
+  gap: 1rem;
+  align-items: start;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
 .course-area,
 .course-panel,
-.control-panel {
+.control-panel,
+.editor-panel {
   border: 2px solid rgba(244, 230, 189, 0.24);
   border-radius: 0.5rem;
   background: rgba(10, 18, 8, 0.76);
@@ -259,9 +371,9 @@ h2 {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.55rem;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  overflow: auto;
+  overflow: hidden;
   border: 0;
   border-radius: 0;
   padding: 0;
@@ -269,9 +381,30 @@ h2 {
   box-shadow: none;
 }
 
+.editor-course-panel {
+  display: block;
+  min-height: calc(100vh - 7.4rem);
+}
+
 .course-grid-wrap {
-  display: grid;
-  justify-content: center;
+  display: block;
+  width: min(100%, 42rem);
+  max-height: calc(100vh - 13rem);
+  overflow: auto;
+  cursor: grab;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(244, 230, 189, 0.48) rgba(0, 0, 0, 0.24);
+  scrollbar-width: thin;
+}
+
+.editor-grid-wrap {
+  width: 100%;
+  max-height: calc(100vh - 8.8rem);
+}
+
+.course-grid-wrap.dragging {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .direction-pad {
@@ -305,8 +438,10 @@ h2 {
   display: grid;
   grid-template-columns: repeat(var(--columns), var(--cell-size));
   grid-template-rows: repeat(var(--rows), var(--cell-size));
-  --cell-size: min(5.7vh, 4.35rem);
+  --cell-size: min(5.2vh, 3.9rem);
   gap: 0.12rem;
+  width: max-content;
+  margin: 0 auto;
 }
 
 .course-cell {
@@ -326,6 +461,35 @@ h2 {
   font-weight: 900;
   text-transform: uppercase;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.editor-cell {
+  cursor: crosshair;
+}
+
+.editor-cell:hover {
+  box-shadow: inset 0 0 0 3px rgba(215, 179, 91, 0.9);
+}
+
+.ob-cell {
+  outline: 2px dashed rgba(255, 96, 88, 0.95);
+  outline-offset: -0.35rem;
+}
+
+.ob-cell::before {
+  content: "OB";
+  position: absolute;
+  z-index: 5;
+  right: 0.18rem;
+  bottom: 0.16rem;
+  border: 1px solid rgba(255, 96, 88, 0.78);
+  border-radius: 0.2rem;
+  padding: 0.08rem 0.2rem;
+  color: #ffd9d6;
+  background: rgba(0, 0, 0, 0.62);
+  font-size: 0.58rem;
+  line-height: 1;
+  text-shadow: none;
 }
 
 .flight-cell {
@@ -479,9 +643,9 @@ h2 {
   right: clamp(0.65rem, 2vw, 1.4rem);
   display: grid;
   align-content: start;
-  gap: 1rem;
+  gap: 0.9rem;
   width: min(15rem, 16vw);
-  padding-top: 2.4rem;
+  padding-top: 0.25rem;
 }
 
 .hand-kicker {
@@ -531,6 +695,20 @@ h2 {
   line-height: 0.9;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.disc-preview-title {
+  display: inline-grid;
+  grid-template-columns: 1.65rem max-content;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.disc-preview-title img {
+  width: 1.65rem;
+  height: 1.65rem;
+  object-fit: contain;
 }
 
 .disc-preview-stats {
@@ -640,17 +818,23 @@ h2 {
   display: grid;
   gap: 0.22rem;
   min-height: 3.55rem;
-  border: 2px solid rgba(244, 230, 189, 0.45);
+  border: 2px solid rgba(122, 184, 218, 0.72);
   border-radius: 0;
   padding: 0.55rem 0.8rem;
   color: var(--paper);
-  background: #000;
+  background:
+    linear-gradient(135deg, rgba(35, 78, 98, 0.92), rgba(8, 18, 23, 0.98)),
+    #102733;
+  box-shadow: inset 0 0 0 1px rgba(244, 230, 189, 0.12), 0 0.55rem 1.2rem rgba(0, 0, 0, 0.34);
   cursor: pointer;
-  transition: transform 140ms ease, border-color 140ms ease;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
 }
 
 .throw-card[aria-pressed="true"] {
-  border-color: var(--blue);
+  border-color: var(--chain);
+  background:
+    linear-gradient(135deg, rgba(75, 89, 44, 0.96), rgba(18, 26, 12, 0.98)),
+    #273015;
   box-shadow: 0 0 0 2px rgba(122, 184, 218, 0.35);
   transform: translateX(-0.4rem);
 }
@@ -659,6 +843,64 @@ h2 {
   cursor: wait;
   filter: grayscale(0.55);
   opacity: 0.72;
+}
+
+.editor-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.85rem;
+}
+
+.asset-library {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.asset-button {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3.4rem;
+  border: 2px solid rgba(244, 230, 189, 0.45);
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.34);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.asset-button img {
+  width: 2.25rem;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.asset-button[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: var(--chain);
+  background: linear-gradient(180deg, #ffe38d, var(--chain));
+  box-shadow: 0 0 0 2px rgba(122, 184, 218, 0.5);
+}
+
+.asset-button.erase {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  border-color: rgba(255, 96, 88, 0.7);
+}
+
+.editor-actions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.2rem;
+}
+
+.editor-note {
+  margin-top: 0;
 }
 
 
@@ -740,7 +982,6 @@ h2 {
 
 .draw-controls {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 0.45rem;
 }
 
@@ -832,7 +1073,8 @@ h2 {
   }
 
   .hud-bar,
-  .play-layout {
+  .play-layout,
+  .editor-layout {
     grid-template-columns: 1fr;
   }
 
@@ -847,6 +1089,18 @@ h2 {
 
   .course-panel {
     grid-template-columns: 1fr;
+  }
+
+  .editor-fields {
+    justify-content: flex-start;
+  }
+
+  .editor-fields input[type="text"] {
+    width: 100%;
+  }
+
+  .editor-grid-wrap {
+    max-height: 62vh;
   }
 
   .direction-pad {

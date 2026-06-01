@@ -26,17 +26,30 @@
           <button class="start-button" id="start-round" type="button">
             Start Round
           </button>
+          <button class="start-button secondary" id="open-editor" type="button">
+            Level Editor
+          </button>
+        </div>
+      </section>
+
+      <section class="course-select-screen" id="course-select-screen" aria-labelledby="course-select-title" hidden>
+        <div class="shade" aria-hidden="true"></div>
+        <div class="course-select-panel">
+          <p class="kicker">Choose Course</p>
+          <h2 id="course-select-title">Level Selector</h2>
+          <div class="course-list" id="course-list" aria-label="Available courses"></div>
+          <button class="start-button secondary" id="course-select-back" type="button">Main Menu</button>
         </div>
       </section>
 
       <section class="round-screen" id="round-screen" aria-labelledby="round-title" hidden>
         <div class="hud-bar">
           <div>
-            <p class="kicker">Hole 1</p>
+            <p class="kicker" id="round-hole-label">Hole 1</p>
             <h2 id="round-title">Deep Woods</h2>
           </div>
           <div class="hole-stats" aria-label="Hole stats">
-            <span>Par 3</span>
+            <span id="round-par-label">Par 4</span>
             <span id="stroke-counter">Stroke 1</span>
           </div>
           <div class="player-stats" aria-label="Player stats">
@@ -56,7 +69,7 @@
                 <button class="direction-button" id="direction-down" type="button" data-direction="down" aria-label="Throw down" aria-pressed="false">↓</button>
                 <button class="direction-button" id="direction-left" type="button" data-direction="left" aria-label="Throw left" aria-pressed="false">←</button>
               </div>
-              <div class="course-grid-wrap">
+              <div class="course-grid-wrap" id="course-viewport">
                 <div class="course-grid" id="course-grid"></div>
               </div>
             </div>
@@ -79,10 +92,6 @@
               <button class="throw-button" id="throw-button" type="button">
                 Throw
               </button>
-              <div class="draw-controls" aria-label="Draw controls">
-                <button class="draw-button" id="draw-disc-button" type="button">Draw Disc</button>
-                <button class="draw-button" id="draw-throw-button" type="button">Draw Throw</button>
-              </div>
             </div>
             <p class="lie-note" id="lie-note" aria-live="polite" hidden></p>
             <div class="selected-card-panel" id="selected-card-panel" aria-label="Selected disc"></div>
@@ -90,11 +99,131 @@
           </aside>
 
           <aside class="disc-hand" aria-label="Hand cards">
+            <div class="draw-controls" aria-label="Draw controls">
+              <button class="draw-button" id="draw-card-button" type="button">Draw</button>
+            </div>
             <p class="kicker hand-kicker">Hand</p>
             <div class="hand-card-list" id="hand-card-list"></div>
           </aside>
         </div>
       </section>
+
+      <section class="editor-screen" id="editor-screen" aria-labelledby="editor-title" hidden>
+        <div class="hud-bar editor-hud">
+          <div>
+            <p class="kicker">Course Builder</p>
+            <h2 id="editor-title">Level Editor</h2>
+          </div>
+          <div class="editor-fields" aria-label="Hole settings">
+            <label>
+              Name
+              <input id="editor-hole-name" type="text" value="New Hole">
+            </label>
+            <label>
+              Course
+              <select id="editor-course-select"></select>
+            </label>
+            <label>
+              New Course
+              <input id="editor-new-course" type="text" placeholder="Optional">
+            </label>
+            <label>
+              Hole #
+              <input id="editor-hole-number" type="number" min="1" max="36" value="1">
+            </label>
+            <label>
+              Par
+              <input id="editor-hole-par" type="number" min="1" max="9" value="4">
+            </label>
+            <label>
+              Width
+              <input id="editor-hole-columns" type="number" min="5" max="24" value="9">
+            </label>
+            <label>
+              Height
+              <input id="editor-hole-rows" type="number" min="5" max="30" value="18">
+            </label>
+          </div>
+          <button class="menu-button" id="return-editor-menu" type="button">Main Menu</button>
+        </div>
+
+        <div class="editor-layout">
+          <section class="course-area editor-course-area" aria-label="Editable hole grid">
+            <div class="course-panel editor-course-panel">
+              <div class="course-grid-wrap editor-grid-wrap" id="editor-viewport">
+                <div class="course-grid editor-grid" id="editor-grid"></div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="editor-panel" aria-label="Asset library">
+            <div class="hand-header">
+              <h3>Assets</h3>
+            </div>
+            <div class="asset-library" id="asset-library">
+              <button class="asset-button active" type="button" data-editor-asset="tee" aria-pressed="true">
+                <img src="course assets/teepad.png" alt="">
+                Tee
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="basket" aria-pressed="false">
+                <img src="basket_icon.png" alt="">
+                Basket
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="grass" aria-pressed="false">
+                <img src="course assets/grass1_bg.png" alt="">
+                Grass
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="water" aria-pressed="false">
+                <img src="course assets/water1_bg.png" alt="">
+                Water
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="ob" aria-pressed="false">
+                <img src="course assets/OB.png" alt="">
+                OB
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="tree1" aria-pressed="false">
+                <img src="course assets/tree1.png" alt="">
+                Tree 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="tree2" aria-pressed="false">
+                <img src="course assets/tree2.png" alt="">
+                Tree 2
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="tree3" aria-pressed="false">
+                <img src="course assets/tree3.png" alt="">
+                Tree 3
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="rock1" aria-pressed="false">
+                <img src="course assets/rock1.png" alt="">
+                Rock 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="rock2" aria-pressed="false">
+                <img src="course assets/rock2.png" alt="">
+                Rock 2
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="stump1" aria-pressed="false">
+                <img src="course assets/stump1.png" alt="">
+                Stump
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="shrub1" aria-pressed="false">
+                <img src="course assets/shrub1.png" alt="">
+                Shrub
+              </button>
+              <button class="asset-button erase" type="button" data-editor-asset="erase" aria-pressed="false">
+                Erase
+              </button>
+            </div>
+            <div class="editor-actions">
+              <button class="draw-button" id="save-hole-button" type="button">Save JSON</button>
+              <button class="draw-button" id="load-hole-button" type="button">Load JSON</button>
+              <button class="draw-button" id="refresh-courses-button" type="button">Refresh Courses</button>
+              <input id="load-hole-input" type="file" accept="application/json,.json" hidden>
+            </div>
+            <p class="lie-note editor-note" id="editor-note" aria-live="polite" hidden></p>
+          </aside>
+        </div>
+      </section>
+
       <div class="hole-complete-modal" id="hole-complete-modal" role="dialog" aria-modal="true" aria-labelledby="hole-complete-title" hidden>
         <div class="hole-complete-card">
           <p class="kicker">Hole Complete</p>
@@ -105,6 +234,7 @@
       </div>
     </main>
 
+    <script src="courses/course-library.js"></script>
     <script src="game.js"></script>
   </body>
 </html>

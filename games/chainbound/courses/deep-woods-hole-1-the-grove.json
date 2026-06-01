@@ -1,0 +1,164 @@
+{
+  "name": "The Grove",
+  "courseId": "deep-woods",
+  "courseName": "Deep Woods",
+  "holeNumber": 1,
+  "par": 3,
+  "columns": 7,
+  "rows": 13,
+  "tee": {
+    "x": 3,
+    "y": 10
+  },
+  "basket": {
+    "x": 3,
+    "y": 4
+  },
+  "hazards": [
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 2,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 5
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 2,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 4,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 2,
+      "y": 6
+    },
+    {
+      "type": "rock",
+      "height": 1,
+      "x": 5,
+      "y": 8
+    },
+    {
+      "type": "rock",
+      "height": 1,
+      "x": 1,
+      "y": 10
+    }
+  ]
+}
