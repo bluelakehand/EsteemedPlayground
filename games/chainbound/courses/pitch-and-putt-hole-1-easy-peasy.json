@@ -1,0 +1,119 @@
+{
+  "name": "Easy Peasy",
+  "courseId": "pitch-and-putt",
+  "courseName": "Pitch and Putt",
+  "holeNumber": 1,
+  "par": 3,
+  "columns": 7,
+  "rows": 10,
+  "tee": {
+    "x": 3,
+    "y": 7
+  },
+  "basket": {
+    "x": 3,
+    "y": 2
+  },
+  "hazards": [
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 1,
+      "y": 4
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 3,
+      "y": 0
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 0,
+      "y": 8
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 1,
+      "y": 9
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 0,
+      "y": 9
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 6,
+      "y": 8
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 6,
+      "y": 7
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 5,
+      "y": 8
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 5,
+      "y": 9
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 6,
+      "y": 9
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 4,
+      "y": 4
+    }
+  ],
+  "backgrounds": [],
+  "outOfBounds": []
+}

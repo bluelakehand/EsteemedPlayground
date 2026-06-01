@@ -6,9 +6,12 @@ This guide is the handoff document for future work on Chainbound. Keep it update
 
 Chainbound is a grid-based disc golf deckbuilder. The player completes a hole by playing one disc card per throw, optionally applying one throw modifier card, and trying to finish in as few strokes as possible.
 
-The game currently has two main modes:
+The game currently has three main modes:
 
-- `Start Round`: opens a level selector for built-in preset courses.
+- `New Game`: opens the player menu.
+- `Player Menu`: shows player stats, Player Points, the current deck, and buttons for `Play a Round` and `Spend Points`.
+- The Player Menu deck list shows individual cards, ordered by card type, because cards may become unique over time.
+- `Spend Points`: opens a store/training screen where points buy cards or stat upgrades.
 - `Level Editor`: builds and saves hole JSON files for future preset courses.
 
 ## Core Rules
@@ -18,12 +21,17 @@ The game currently has two main modes:
 - A throw uses one selected disc card.
 - A throw may also use one selected throw modifier card.
 - Used disc and throw modifier cards are discarded after the throw.
+- Individual cards can have attributes. Attributes are stored on the card object, not the base card id.
 - Putts also use and discard a selected disc card.
+- The stroke counter tracks completed strokes and starts each hole at `0`.
+- The hand area shows remaining draw deck count above the hand and discard pile count below it.
 - The hand limit is `5`.
 - The opening hand always starts with `3` disc cards, then fills the rest from the shuffled deck.
 - All cards are in one shuffled deck.
+- If the draw deck is empty and the player must draw, `Shuffle Discard (1 Stroke)` shuffles the discard pile into the deck and adds one stroke.
 - If the player has no disc card in hand, they may draw the next disc card from the deck. This only costs a penalty stroke when the hand is already full.
 - The player cannot act while the hand is below the hand limit if normal draw cards remain.
+- `Lucky Disc` is a disc attribute. When that specific disc is used for a throw, the player gets `+1` hand size for the next refill only.
 
 ## Throw Model
 
@@ -54,7 +62,8 @@ Height matters for obstacles:
 - Rocks and stumps have `100%` obstruction, so they cannot currently be fought through.
 - Shrubs currently have `100%` obstruction.
 - On collision, the lie randomly kicks to the obstacle square or one adjacent square.
-- If the next throw starts on an obstacle, effective disc speed is reduced by `2`.
+- If the next throw starts on an obstacle, effective disc speed is reduced by `1`.
+- Obstacle lies also roll against the player's Scramble stat. Failing the roll kicks the disc one square in a random cardinal direction.
 
 Glide `2` currently uses a fixed height profile by speed in `flightHeight()`.
 
@@ -63,8 +72,9 @@ Glide `2` currently uses a fixed height profile by speed in `flightHeight()`.
 Player putting stats:
 
 - C1: `50%`
-- C2: `10%`
-- Throw-in: `3%`
+- C2: `20%`
+- Throw-in: `10%`
+- Scramble: `55%`
 
 Putting rules:
 
@@ -74,6 +84,37 @@ Putting rules:
 - Putt chance is base player stat plus the selected disc's `putt` modifier.
 - Missing a C2 putt moves the lie to the basket and creates a C1 putt.
 - Completing the hole opens the "In the Basket!" modal with score relative to par.
+
+## Course Rewards
+
+The player starts with `5` Player Points.
+
+Completing the final hole of a course awards Player Points based on total course score:
+
+| Course Score | Player Points |
+| --- | ---: |
+| Below par | 30 |
+| Even through +3 | 20 |
+| +4 through +6 | 15 |
+| +7 through +9 | 10 |
+| +10 or worse | 5 |
+
+`Pitch and Putt` is an easier 3-hole course and uses scaled rewards:
+
+| Course Score | Player Points |
+| --- | ---: |
+| Below par | 15 |
+| Even through +3 | 10 |
+| +4 through +6 | 8 |
+| +7 through +9 | 5 |
+| +10 or worse | 3 |
+
+The Spend Points screen keeps the same random offers until another course is completed:
+
+- Store: 2 random disc cards, priced at `5` and `10` Player Points.
+- Train: C1, C2, Throw-In, or Scramble can each be increased by `1%` for `5` Player Points.
+- Throw card offers: 2 random throw cards, priced at `5` and `10` Player Points.
+- Store/throw offers require a Buy/Cancel confirmation and can only be purchased once before the offers reroll.
 
 ## Current Cards
 
@@ -95,6 +136,7 @@ Throw modifier cards live in `throwCardEffects`.
 | --- | --- |
 | Power Down | Speed -1 this throw |
 | Hyzer Throw | Fade +1 this throw |
+| Clutch Up | Putt chance +20% |
 | Pitch Out | Set disc Speed to 2 |
 | Overhand | Height 4 for the first 3 squares, Speed -2 |
 | Turnover | Fade -2 this throw |
@@ -103,18 +145,13 @@ Throw modifier cards live in `throwCardEffects`.
 The starting deck lives in `startingDeck` and currently has:
 
 - 2 COMB
-- 2 PALM
-- 2 KRAKEN
+- One starting COMB has `Lucky Disc`.
 - 2 CACTI
-- 2 TROPICAL
-- 2 GALACTIC
-- 2 TUNDRA
+- 1 PALM
+- 1 TROPICAL
+- 1 Clutch Up
 - 2 Power Down
-- 2 Hyzer Throw
-- 2 Pitch Out
-- 2 Overhand
-- 2 Turnover
-- 2 Roller
+- 1 Hyzer Throw
 
 ## Level Editor
 
@@ -227,12 +264,13 @@ games/chainbound/
 - `discs`: disc card definitions.
 - `throwCardEffects`: throw modifier card definitions.
 - `editorAssetTypes`: editor palette definitions.
-- `startingDeck`: starting card pool.
+- `startingDeck`: starting card pool copied into `playerDeck`.
+- `playerDeck` and `playerPoints`: current player progression state for the session.
 - Deck/hand helpers: `resetDecksAndHand`, `drawFromDeck`, `drawNextDiscForNoDisc`.
 - Flight logic: `getThrowPath`, `rotateStep`, `flightHeight`, `resolveCollision`.
 - Course renderer: `renderCourse`.
 - Editor renderer and JSON: `renderEditorGrid`, `placeEditorAsset`, `saveEditorHole`, `loadEditorHole`.
-- Level selector: `renderCourseSelector`, `showCourseSelect`.
+- Player and level menus: `renderPlayerMenu`, `showPlayerMenu`, `renderCourseSelector`, `showCourseSelect`.
 - UI state: `showRound`, `showMenu`, `showEditor`, `updateThrowControls`.
 
 ## Maintenance Notes

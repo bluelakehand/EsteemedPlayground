@@ -25,11 +25,66 @@
             your bag of tricks and unlock new courses.
           </p>
           <button class="start-button" id="start-round" type="button">
-            Start Round
+            New Game
           </button>
           <button class="start-button secondary" id="open-editor" type="button">
             Level Editor
           </button>
+        </div>
+      </section>
+
+      <section class="player-menu-screen" id="player-menu-screen" aria-labelledby="player-menu-title" hidden>
+        <div class="shade" aria-hidden="true"></div>
+        <div class="player-menu-panel">
+          <div>
+            <p class="kicker">Player Menu</p>
+            <h2 id="player-menu-title">Your Bag</h2>
+          </div>
+          <div class="player-menu-grid">
+            <section class="player-summary" aria-label="Player stats">
+              <h3>Stats</h3>
+              <div class="player-summary-list">
+                <span>Player Points <span class="point-value"><img src="player_points.png" alt=""> <strong id="player-points">5</strong></span></span>
+                <span>C1 <strong id="player-c1">50%</strong></span>
+                <span>C2 <strong id="player-c2">20%</strong></span>
+                <span>Throw-In <strong id="player-throw-in">10%</strong></span>
+                <span>Scramble <strong id="player-scramble">55%</strong></span>
+              </div>
+              <div class="player-menu-actions">
+                <button class="start-button" id="play-round-button" type="button">Play a Round</button>
+                <button class="start-button secondary" id="spend-points-button" type="button">Spend Points</button>
+              </div>
+            </section>
+            <section class="player-deck-panel" aria-label="Deck of cards">
+              <h3>Deck</h3>
+              <div class="player-deck-list" id="player-deck-list"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="spend-points-screen" id="spend-points-screen" aria-labelledby="spend-points-title" hidden>
+        <div class="shade" aria-hidden="true"></div>
+        <div class="player-menu-panel spend-points-panel">
+          <div class="spend-points-header">
+            <div>
+              <p class="kicker">Spend Points</p>
+              <h2 id="spend-points-title">Store & Train</h2>
+            </div>
+            <div class="points-bank">Player Points <span class="point-value"><img src="player_points.png" alt=""> <strong id="spend-player-points">5</strong></span></div>
+          </div>
+          <div class="spend-points-grid">
+            <section class="player-deck-panel" aria-label="Disc store">
+              <h3>Store</h3>
+              <div class="shop-list" id="disc-shop-list"></div>
+            </section>
+            <section class="player-deck-panel" aria-label="Training options">
+              <h3>Train</h3>
+              <div class="training-list" id="training-list"></div>
+              <div class="shop-list" id="throw-shop-list"></div>
+            </section>
+          </div>
+          <button class="start-button secondary" id="spend-back-button" type="button">Player Menu</button>
         </div>
       </section>
 
@@ -54,14 +109,15 @@
           </div>
           <div class="hole-stats" aria-label="Hole stats">
             <span id="round-par-label">Par 4</span>
-            <span id="stroke-counter">Stroke 1</span>
+            <span id="stroke-counter">Strokes 0</span>
           </div>
           <div class="player-stats" aria-label="Player stats">
             <span>C1 <strong id="c1-stat">50%</strong></span>
             <span>C2 <strong id="c2-stat">10%</strong></span>
-            <span>Throw-In <strong id="throw-in-stat">3%</strong></span>
+            <span>Throw-In <strong id="throw-in-stat">10%</strong></span>
+            <span>Scramble <strong id="scramble-stat">55%</strong></span>
           </div>
-          <button class="menu-button" id="return-menu" type="button">Main Menu</button>
+          <button class="menu-button" id="return-menu" type="button">Player Menu</button>
         </div>
 
         <div class="play-layout">
@@ -106,8 +162,10 @@
             <div class="draw-controls" aria-label="Draw controls">
               <button class="draw-button" id="draw-card-button" type="button">Draw</button>
             </div>
+            <p class="kicker hand-count">Deck: <strong id="deck-count">0</strong></p>
             <p class="kicker hand-kicker">Hand</p>
             <div class="hand-card-list" id="hand-card-list"></div>
+            <p class="kicker hand-count discard-count">Discard: <strong id="discard-count">0</strong></p>
           </aside>
         </div>
       </section>
@@ -245,7 +303,20 @@
           <p class="kicker">Hole Complete</p>
           <h2 id="hole-complete-title">In the Basket!</h2>
           <p class="score-result" id="score-result">Even Par</p>
+          <p class="course-points-result" id="course-points-result" hidden></p>
           <button class="start-button secondary" id="close-hole-modal" type="button">Continue</button>
+        </div>
+      </div>
+
+      <div class="hole-complete-modal" id="purchase-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="purchase-confirm-title" hidden>
+        <div class="hole-complete-card purchase-confirm-card">
+          <p class="kicker">Confirm Purchase</p>
+          <h2 id="purchase-confirm-title">Buy Card?</h2>
+          <p class="purchase-confirm-copy" id="purchase-confirm-copy"></p>
+          <div class="purchase-confirm-actions">
+            <button class="start-button" id="confirm-purchase-button" type="button">Buy</button>
+            <button class="start-button secondary" id="cancel-purchase-button" type="button">Cancel</button>
+          </div>
         </div>
       </div>
     </main>

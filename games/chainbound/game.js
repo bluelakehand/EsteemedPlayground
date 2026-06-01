@@ -1,8 +1,23 @@
 const menuScreen = document.querySelector("#menu-screen");
+const playerMenuScreen = document.querySelector("#player-menu-screen");
+const spendPointsScreen = document.querySelector("#spend-points-screen");
 const courseSelectScreen = document.querySelector("#course-select-screen");
 const roundScreen = document.querySelector("#round-screen");
 const editorScreen = document.querySelector("#editor-screen");
 const startRoundButton = document.querySelector("#start-round");
+const playRoundButton = document.querySelector("#play-round-button");
+const spendPointsButton = document.querySelector("#spend-points-button");
+const playerPointsLabel = document.querySelector("#player-points");
+const playerC1Label = document.querySelector("#player-c1");
+const playerC2Label = document.querySelector("#player-c2");
+const playerThrowInLabel = document.querySelector("#player-throw-in");
+const playerScrambleLabel = document.querySelector("#player-scramble");
+const playerDeckList = document.querySelector("#player-deck-list");
+const spendPlayerPointsLabel = document.querySelector("#spend-player-points");
+const discShopList = document.querySelector("#disc-shop-list");
+const throwShopList = document.querySelector("#throw-shop-list");
+const trainingList = document.querySelector("#training-list");
+const spendBackButton = document.querySelector("#spend-back-button");
 const courseSelectBackButton = document.querySelector("#course-select-back");
 const courseList = document.querySelector("#course-list");
 const openEditorButton = document.querySelector("#open-editor");
@@ -26,6 +41,8 @@ const refreshCoursesButton = document.querySelector("#refresh-courses-button");
 const loadHoleInput = document.querySelector("#load-hole-input");
 const editorNote = document.querySelector("#editor-note");
 const handCardList = document.querySelector("#hand-card-list");
+const deckCountLabel = document.querySelector("#deck-count");
+const discardCountLabel = document.querySelector("#discard-count");
 const directionButtons = document.querySelectorAll(".direction-button");
 const backhandButton = document.querySelector("#backhand-button");
 const forehandButton = document.querySelector("#forehand-button");
@@ -39,12 +56,19 @@ const roundParLabel = document.querySelector("#round-par-label");
 const c1Stat = document.querySelector("#c1-stat");
 const c2Stat = document.querySelector("#c2-stat");
 const throwInStat = document.querySelector("#throw-in-stat");
+const scrambleStat = document.querySelector("#scramble-stat");
 const lieNote = document.querySelector("#lie-note");
 const selectedCardPanel = document.querySelector("#selected-card-panel");
 const selectedThrowCardPanel = document.querySelector("#selected-throw-card-panel");
 const holeCompleteModal = document.querySelector("#hole-complete-modal");
 const scoreResult = document.querySelector("#score-result");
+const coursePointsResult = document.querySelector("#course-points-result");
 const closeHoleModalButton = document.querySelector("#close-hole-modal");
+const purchaseConfirmModal = document.querySelector("#purchase-confirm-modal");
+const purchaseConfirmTitle = document.querySelector("#purchase-confirm-title");
+const purchaseConfirmCopy = document.querySelector("#purchase-confirm-copy");
+const confirmPurchaseButton = document.querySelector("#confirm-purchase-button");
+const cancelPurchaseButton = document.querySelector("#cancel-purchase-button");
 
 let courseLibrary = window.CHAINBOUND_COURSES ?? [];
 let courseLibraryLoaded = false;
@@ -184,13 +208,20 @@ const throwCardEffects = {
     turn: -1,
     fade: -1,
     heightOverride: "roller"
+  },
+  "clutch-up": {
+    name: "Clutch Up",
+    text: "+20% putting.",
+    putt: 20,
+    puttOnly: true
   }
 };
 
 const playerStats = {
   c1: 50,
-  c2: 10,
-  throwIn: 3
+  c2: 20,
+  throwIn: 10,
+  scramble: 55
 };
 
 const editorAssetTypes = {
@@ -213,34 +244,28 @@ const editorAssetTypes = {
 };
 
 const maxHandSize = 5;
+const cardAttributes = {
+  "lucky-disc": {
+    name: "Lucky Disc",
+    text: "+1 hand size next turn."
+  }
+};
 const startingDeck = [
+  { cardType: "disc", cardId: "comb", attributes: ["lucky-disc"] },
   { cardType: "disc", cardId: "comb" },
-  { cardType: "disc", cardId: "comb" },
-  { cardType: "disc", cardId: "palm" },
-  { cardType: "disc", cardId: "palm" },
-  { cardType: "disc", cardId: "kraken" },
-  { cardType: "disc", cardId: "kraken" },
   { cardType: "disc", cardId: "cacti" },
   { cardType: "disc", cardId: "cacti" },
+  { cardType: "disc", cardId: "palm" },
   { cardType: "disc", cardId: "tropical" },
-  { cardType: "disc", cardId: "tropical" },
-  { cardType: "disc", cardId: "galactic" },
-  { cardType: "disc", cardId: "galactic" },
-  { cardType: "disc", cardId: "tundra" },
-  { cardType: "disc", cardId: "tundra" },
+  { cardType: "throw", cardId: "clutch-up" },
   { cardType: "throw", cardId: "power-down" },
   { cardType: "throw", cardId: "power-down" },
-  { cardType: "throw", cardId: "hyzer-throw" },
-  { cardType: "throw", cardId: "hyzer-throw" },
-  { cardType: "throw", cardId: "pitch-out" },
-  { cardType: "throw", cardId: "pitch-out" },
-  { cardType: "throw", cardId: "overhand" },
-  { cardType: "throw", cardId: "overhand" },
-  { cardType: "throw", cardId: "turnover" },
-  { cardType: "throw", cardId: "turnover" },
-  { cardType: "throw", cardId: "roller" },
-  { cardType: "throw", cardId: "roller" }
+  { cardType: "throw", cardId: "hyzer-throw" }
 ];
+let playerPoints = 5;
+let playerDeck = startingDeck.map(cloneCard);
+let spendOffers = null;
+let pendingPurchase = null;
 
 let selectedThrow = "backhand";
 let selectedDiscId = null;
@@ -249,16 +274,20 @@ let selectedThrowCardId = null;
 let selectedThrowCardInstanceId = null;
 let selectedDirection = "up";
 let drawDeck = [];
+let discardPile = [];
 let hand = [];
+let nextTurnHandBonus = 0;
 let hole = cloneHole(courseLibrary[0]?.holes?.[0] ?? fallbackHole);
 let selectedCourse = courseLibrary[0] ?? { id: "fallback", name: "Fallback Course", holes: [fallbackHole] };
 let selectedCourseHoleIndex = 0;
 let courseScoreToPar = 0;
 let isHoleScoreRecorded = false;
+let isCourseRewardRecorded = false;
+let pendingCoursePoints = 0;
 let currentDiscCell = { ...hole.tee };
 let currentDiscImage = null;
 let currentDiscName = "Disc";
-let strokeNumber = 1;
+let strokeNumber = 0;
 let isThrowing = false;
 let pendingPutt = null;
 let isHoledOut = false;
@@ -360,22 +389,63 @@ function selectedDisc() {
   return discs[selectedDiscId];
 }
 
+function selectedDiscCard() {
+  return hand.find((card) => card.cardType === "disc" && card.instanceId === selectedDiscInstanceId) ?? null;
+}
+
+function cloneCard(card) {
+  return {
+    ...card,
+    attributes: card.attributes ? [...card.attributes] : []
+  };
+}
+
+function cardAttributeList(card) {
+  return (card?.attributes ?? []).map((attributeId) => cardAttributes[attributeId]).filter(Boolean);
+}
+
+function cardAttributeMarkup(card) {
+  const attributes = cardAttributeList(card);
+  if (!attributes.length) {
+    return "";
+  }
+
+  return `<span class="card-attributes">${attributes.map((attribute) => attribute.name).join(", ")}</span>`;
+}
+
+function cardAttributeDetailMarkup(card) {
+  const attributes = cardAttributeList(card);
+  if (!attributes.length) {
+    return "";
+  }
+
+  return `
+    <div class="selected-card-attributes">
+      ${attributes.map((attribute) => `
+        <span>${attribute.name}</span>
+        <small>${attribute.text}</small>
+      `).join("")}
+    </div>
+  `;
+}
+
 function modifiedDisc() {
   const disc = selectedDisc();
   const effect = selectedThrowCardId ? throwCardEffects[selectedThrowCardId] : {};
-  const modifiedSpeed = Math.max(1, effect.speedSet ?? (disc.speed + (effect.speed ?? 0)));
+  const throwEffect = effect.puttOnly ? {} : effect;
+  const modifiedSpeed = Math.max(1, throwEffect.speedSet ?? (disc.speed + (throwEffect.speed ?? 0)));
 
   return {
     ...disc,
     speed: modifiedSpeed,
-    turn: disc.turn + (effect.turn ?? 0),
-    fade: Math.max(0, disc.fade + (effect.fade ?? 0)),
-    heightOverride: effect.heightOverride ?? null
+    turn: disc.turn + (throwEffect.turn ?? 0),
+    fade: Math.max(0, disc.fade + (throwEffect.fade ?? 0)),
+    heightOverride: throwEffect.heightOverride ?? null
   };
 }
 
 function shuffledDeck(cards) {
-  const deck = cards.map((card) => ({ ...card }));
+  const deck = cards.map(cloneCard);
 
   for (let index = deck.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
@@ -385,9 +455,28 @@ function shuffledDeck(cards) {
   return deck;
 }
 
+function randomSample(items, count) {
+  return shuffledDeck(items.map((item) => ({ value: item }))).slice(0, count).map((item) => item.value);
+}
+
+function generateSpendOffers() {
+  spendOffers = {
+    discs: randomSample(Object.keys(discs), 2).map((cardId, index) => ({ cardId, price: index === 0 ? 5 : 10, sold: false })),
+    throws: randomSample(Object.keys(throwCardEffects), 2).map((cardId, index) => ({ cardId, price: index === 0 ? 5 : 10, sold: false }))
+  };
+}
+
+function ensureSpendOffers() {
+  if (!spendOffers) {
+    generateSpendOffers();
+  }
+}
+
 function resetDecksAndHand() {
-  drawDeck = shuffledDeck(startingDeck);
+  drawDeck = shuffledDeck(playerDeck);
+  discardPile = [];
   hand = [];
+  nextTurnHandBonus = 0;
   selectedDiscId = null;
   selectedDiscInstanceId = null;
   selectedThrowCardId = null;
@@ -397,23 +486,35 @@ function resetDecksAndHand() {
     drawCardOfType("disc");
   }
 
-  while (hand.length < maxHandSize && drawDeck.length > 0) {
+  while (hand.length < currentHandLimit() && drawDeck.length > 0) {
     drawFromDeck();
   }
   selectFirstPlayableCards();
+}
+
+function currentHandLimit() {
+  return maxHandSize + nextTurnHandBonus;
+}
+
+function clearHandBonusIfFilled() {
+  if (nextTurnHandBonus > 0 && hand.length >= currentHandLimit()) {
+    nextTurnHandBonus = 0;
+  }
 }
 
 function addCardToHand(card) {
   hand.push({
     instanceId: `${card.cardType}-${card.cardId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     cardType: card.cardType,
-    cardId: card.cardId
+    cardId: card.cardId,
+    attributes: card.attributes ? [...card.attributes] : []
   });
   selectFirstPlayableCards();
+  clearHandBonusIfFilled();
 }
 
 function drawFromDeck() {
-  if (hand.length >= maxHandSize) {
+  if (hand.length >= currentHandLimit()) {
     return false;
   }
 
@@ -426,7 +527,7 @@ function drawFromDeck() {
 }
 
 function drawCardOfType(cardType) {
-  if (hand.length >= maxHandSize) {
+  if (hand.length >= currentHandLimit()) {
     return false;
   }
 
@@ -447,7 +548,7 @@ function drawNextDiscForNoDisc() {
   }
 
   const [card] = drawDeck.splice(cardIndex, 1);
-  const takesPenalty = hand.length >= maxHandSize;
+  const takesPenalty = hand.length >= currentHandLimit();
   addCardToHand(card);
 
   if (takesPenalty) {
@@ -457,6 +558,18 @@ function drawNextDiscForNoDisc() {
     setLieNote(`No disc in hand. Drew ${discs[card.cardId].name} from the deck.`);
   }
 
+  return true;
+}
+
+function shuffleDiscardIntoDeck() {
+  if (drawDeck.length > 0 || discardPile.length === 0) {
+    return false;
+  }
+
+  drawDeck = shuffledDeck(discardPile);
+  discardPile = [];
+  strokeNumber += 1;
+  setLieNote("Discard pile shuffled into the deck. Penalty stroke taken.");
   return true;
 }
 
@@ -483,7 +596,8 @@ function discardCard(instanceId) {
   const index = hand.findIndex((card) => card.instanceId === instanceId);
 
   if (index >= 0) {
-    hand.splice(index, 1);
+    const [card] = hand.splice(index, 1);
+    discardPile.push(cloneCard(card));
   }
 }
 
@@ -493,15 +607,23 @@ function discardSelectedDisc() {
 }
 
 function needsDraw() {
-  return Boolean(selectedDiscId) && hand.length < maxHandSize && drawDeck.length > 0;
+  return Boolean(selectedDiscId) && hand.length < currentHandLimit() && (drawDeck.length > 0 || discardPile.length > 0);
+}
+
+function needsShuffleDiscard() {
+  return !isHoledOut && drawDeck.length === 0 && discardPile.length > 0 && (hand.length < currentHandLimit() || !selectedDiscId);
 }
 
 function canAct() {
-  return !needsDraw() && Boolean(selectedDiscId);
+  return !needsDraw() && !needsShuffleDiscard() && Boolean(selectedDiscId);
 }
 
 function hasDiscInDeck() {
   return drawDeck.some((card) => card.cardType === "disc");
+}
+
+function hasDiscInDiscard() {
+  return discardPile.some((card) => card.cardType === "disc");
 }
 
 function discCountInDeck() {
@@ -651,7 +773,7 @@ function getThrowPath(type, origin = currentDiscCell) {
 }
 
 function effectiveSpeed(disc, origin = currentDiscCell) {
-  return Math.max(1, disc.speed - (hazardForCell(origin.x, origin.y) ? 2 : 0));
+  return Math.max(1, disc.speed - (hazardForCell(origin.x, origin.y) ? 1 : 0));
 }
 
 function projectCell(origin, forward, lateral) {
@@ -794,6 +916,16 @@ function randomCollisionLie(obstacleCell) {
     { x: obstacleCell.x, y: obstacleCell.y + 1 },
     { x: obstacleCell.x - 1, y: obstacleCell.y },
     { x: obstacleCell.x + 1, y: obstacleCell.y }
+  ].map(clampCell);
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function randomScrambleKick(origin) {
+  const candidates = [
+    { x: origin.x, y: origin.y - 1 },
+    { x: origin.x, y: origin.y + 1 },
+    { x: origin.x - 1, y: origin.y },
+    { x: origin.x + 1, y: origin.y }
   ].map(clampCell);
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
@@ -1230,9 +1362,10 @@ function updateThrowControls() {
   renderHand();
   renderSelectedCard();
   renderSelectedThrowCard();
-  strokeCounter.textContent = `Stroke ${strokeNumber}`;
+  strokeCounter.textContent = `Strokes ${strokeNumber}`;
   updatePlayerStats();
   throwInStat.textContent = `${playerStats.throwIn}%`;
+  scrambleStat.textContent = `${playerStats.scramble}%`;
   updateActionButton();
   updateDrawControls();
 }
@@ -1248,6 +1381,7 @@ function updateThrowCardControls() {
 
 function renderSelectedCard() {
   const disc = selectedDisc();
+  const card = selectedDiscCard();
   if (!disc) {
     selectedCardPanel.innerHTML = "";
     return;
@@ -1257,6 +1391,7 @@ function renderSelectedCard() {
   selectedCardPanel.innerHTML = `
     <div class="selected-disc-card">
       <img src="${disc.image}" alt="${disc.name} ${disc.type}">
+      ${cardAttributeDetailMarkup(card)}
       <span class="disc-name">${disc.name}</span>
       <span class="disc-type">${disc.type}</span>
       <span class="disc-ratings" aria-label="Speed ${disc.speed}, glide ${disc.glide}, turn ${disc.turn}, fade ${disc.fade}, putt ${puttLabel} percent">
@@ -1297,6 +1432,8 @@ function renderSelectedThrowCard() {
 
 function renderHand() {
   handCardList.innerHTML = "";
+  deckCountLabel.textContent = drawDeck.length;
+  discardCountLabel.textContent = discardPile.length;
 
   hand.forEach((card) => {
     const button = document.createElement("button");
@@ -1315,11 +1452,14 @@ function renderHand() {
           <img src="${disc.image}" alt="">
           <span class="disc-preview-name">${disc.name}</span>
         </span>
+        ${cardAttributeMarkup(card)}
         <span class="disc-preview-stats">${disc.speed} / ${disc.glide} / ${disc.turn} / ${disc.fade} / ${puttLabel}</span>
       `;
       button.addEventListener("click", () => selectDisc(card.instanceId));
     } else {
       const throwCard = throwCardEffects[card.cardId];
+      const isPlayablePuttCard = Boolean(pendingPutt && throwCard.putt);
+      const isDisabledThrowCard = isThrowing || needsDraw() || needsShuffleDiscard() || isHoledOut || (Boolean(pendingPutt) && !isPlayablePuttCard) || (throwCard.puttOnly && !pendingPutt);
       button.className = "throw-card";
       button.classList.toggle("selected", card.instanceId === selectedThrowCardInstanceId);
       button.dataset.throwCardId = card.cardId;
@@ -1329,9 +1469,12 @@ function renderHand() {
         <span class="disc-preview-stats">${throwCard.text.replace(" this throw.", "")}</span>
       `;
       button.addEventListener("click", () => selectThrowCard(card.instanceId));
+      button.disabled = isDisabledThrowCard;
     }
 
-    button.disabled = isThrowing || (needsDraw() && !isHoledOut);
+    if (card.cardType === "disc") {
+      button.disabled = isThrowing || ((needsDraw() || needsShuffleDiscard()) && !isHoledOut);
+    }
     handCardList.append(button);
   });
 }
@@ -1341,7 +1484,7 @@ function updateDirectionControls() {
     const isSelected = button.dataset.direction === selectedDirection;
     button.classList.toggle("active", isSelected);
     button.setAttribute("aria-pressed", String(isSelected));
-    button.disabled = isThrowing || needsDraw() || Boolean(pendingPutt) || isHoledOut;
+    button.disabled = isThrowing || needsDraw() || needsShuffleDiscard() || Boolean(pendingPutt) || isHoledOut;
   });
 }
 
@@ -1353,17 +1496,25 @@ function updatePlayerStats() {
   c2Stat.textContent = pendingPutt?.circle === "c2" ? `${c2Total}%` : `${playerStats.c2}%`;
   c1Stat.parentElement.classList.toggle("modified-stat", pendingPutt?.circle === "c1");
   c2Stat.parentElement.classList.toggle("modified-stat", pendingPutt?.circle === "c2");
-  c1Stat.parentElement.title = pendingPutt?.circle === "c1" && selectedDisc() ? `Includes ${selectedDisc().name} Putt +${selectedDisc().putt}%` : "";
-  c2Stat.parentElement.title = pendingPutt?.circle === "c2" && selectedDisc() ? `Includes ${selectedDisc().name} Putt +${selectedDisc().putt}%` : "";
+  c1Stat.parentElement.title = pendingPutt?.circle === "c1" && selectedDisc() ? puttModifierText() : "";
+  c2Stat.parentElement.title = pendingPutt?.circle === "c2" && selectedDisc() ? puttModifierText() : "";
 }
 
 function updateDrawControls() {
-  const missingDisc = !selectedDiscId && hasDiscInDeck();
-  const drawRequired = !isHoledOut && (needsDraw() || missingDisc);
-  const noDiscPenalty = missingDisc && hand.length >= maxHandSize;
+  const shuffleRequired = needsShuffleDiscard();
+  const missingDisc = !selectedDiscId && (hasDiscInDeck() || hasDiscInDiscard());
+  const drawRequired = !isHoledOut && (needsDraw() || missingDisc || shuffleRequired);
+  const noDiscPenalty = missingDisc && hand.length >= currentHandLimit();
   drawCardButton.hidden = !drawRequired;
-  drawCardButton.disabled = isThrowing || (!missingDisc && (hand.length >= maxHandSize || drawDeck.length === 0));
-  drawCardButton.textContent = missingDisc ? `${noDiscPenalty ? "No Disc - Take 1 Stoke" : "Draw Disc"} (${discCountInDeck()})` : `Draw (${drawDeck.length})`;
+  drawCardButton.disabled = isThrowing || (!shuffleRequired && !missingDisc && (hand.length >= currentHandLimit() || drawDeck.length === 0));
+
+  if (shuffleRequired) {
+    drawCardButton.textContent = "Shuffle Discard (1 Stroke)";
+  } else if (missingDisc) {
+    drawCardButton.textContent = `${noDiscPenalty ? "No Disc - Take 1 Stoke" : "Draw Disc"} (${discCountInDeck()})`;
+  } else {
+    drawCardButton.textContent = `Draw (${drawDeck.length})`;
+  }
 }
 
 function courseScoreText(scoreToPar) {
@@ -1381,7 +1532,7 @@ function updateCourseScoreDisplay() {
 }
 
 function selectThrow(type) {
-  if (isThrowing || needsDraw() || selectedThrow === type) {
+  if (isThrowing || needsDraw() || needsShuffleDiscard() || selectedThrow === type) {
     return;
   }
 
@@ -1391,7 +1542,7 @@ function selectThrow(type) {
 }
 
 function selectDisc(instanceId) {
-  if (isThrowing || needsDraw() || selectedDiscInstanceId === instanceId) {
+  if (isThrowing || needsDraw() || needsShuffleDiscard() || selectedDiscInstanceId === instanceId) {
     return;
   }
 
@@ -1407,7 +1558,7 @@ function selectDisc(instanceId) {
 }
 
 function selectThrowCard(instanceId) {
-  if (isThrowing || needsDraw() || pendingPutt) {
+  if (isThrowing || needsDraw() || needsShuffleDiscard()) {
     return;
   }
 
@@ -1420,6 +1571,14 @@ function selectThrowCard(instanceId) {
       return;
     }
 
+    const throwCard = throwCardEffects[card.cardId];
+    if (pendingPutt && !throwCard.putt) {
+      return;
+    }
+    if (!pendingPutt && throwCard.puttOnly) {
+      return;
+    }
+
     selectedThrowCardInstanceId = card.instanceId;
     selectedThrowCardId = card.cardId;
   }
@@ -1428,7 +1587,7 @@ function selectThrowCard(instanceId) {
 }
 
 function selectDirection(direction) {
-  if (isThrowing || needsDraw() || pendingPutt || selectedDirection === direction) {
+  if (isThrowing || needsDraw() || needsShuffleDiscard() || pendingPutt || selectedDirection === direction) {
     return;
   }
 
@@ -1444,8 +1603,14 @@ function updateActionButton() {
     return;
   }
 
+  if (needsShuffleDiscard()) {
+    throwButton.textContent = "Shuffle Discard";
+    throwButton.disabled = true;
+    return;
+  }
+
   if (needsDraw()) {
-    throwButton.textContent = `Draw to ${maxHandSize}`;
+    throwButton.textContent = `Draw to ${currentHandLimit()}`;
     throwButton.disabled = true;
     return;
   }
@@ -1479,7 +1644,40 @@ function completeHole() {
     isHoleScoreRecorded = true;
     updateCourseScoreDisplay();
   }
+
+  const hasNextHole = selectedCourseHoleIndex < (selectedCourse.holes?.length ?? 0) - 1;
+  if (!hasNextHole && !isCourseRewardRecorded) {
+    pendingCoursePoints = courseRewardPoints(courseScoreToPar);
+    playerPoints += pendingCoursePoints;
+    generateSpendOffers();
+    isCourseRewardRecorded = true;
+  }
+
   showHoleCompleteModal();
+}
+
+function courseRewardPoints(scoreToPar, courseId = selectedCourse.id) {
+  const rewards = courseId === "pitch-and-putt"
+    ? { under: 15, even: 10, mid: 8, high: 5, rough: 3 }
+    : { under: 30, even: 20, mid: 15, high: 10, rough: 5 };
+
+  if (scoreToPar < 0) {
+    return rewards.under;
+  }
+
+  if (scoreToPar <= 3) {
+    return rewards.even;
+  }
+
+  if (scoreToPar <= 6) {
+    return rewards.mid;
+  }
+
+  if (scoreToPar <= 9) {
+    return rewards.high;
+  }
+
+  return rewards.rough;
 }
 
 function scoreLabel(scoreToPar) {
@@ -1496,6 +1694,8 @@ function showHoleCompleteModal() {
   scoreResult.textContent = scoreLabel(scoreToPar);
   scoreResult.classList.remove("score-under", "score-even", "score-over");
   scoreResult.classList.add(scoreToPar < 0 ? "score-under" : scoreToPar === 0 ? "score-even" : "score-over");
+  coursePointsResult.hidden = hasNextHole;
+  coursePointsResult.innerHTML = hasNextHole ? "" : `${courseScoreText(courseScoreToPar)}. Earned <span class="point-value"><img src="player_points.png" alt=""> <strong>${pendingCoursePoints}</strong></span> Player Points.`;
   closeHoleModalButton.textContent = hasNextHole ? "Next Hole" : "Finish Course";
   holeCompleteModal.hidden = false;
   closeHoleModalButton.focus();
@@ -1509,7 +1709,7 @@ function closeHoleCompleteModal() {
     return;
   }
 
-  showCourseSelect();
+  showPlayerMenu();
 }
 
 function renderCourseSelector() {
@@ -1539,14 +1739,200 @@ function renderCourseSelector() {
   }
 }
 
+function cardNameForDeck(card) {
+  if (card.cardType === "disc") {
+    return discs[card.cardId]?.name ?? card.cardId;
+  }
+
+  return throwCardEffects[card.cardId]?.name ?? card.cardId;
+}
+
+function cardStatsForDeck(card) {
+  if (card.cardType === "disc") {
+    const disc = discs[card.cardId];
+    const puttLabel = disc.putt > 0 ? `+${disc.putt}` : `${disc.putt}`;
+    return `${disc.type} · ${disc.speed} / ${disc.glide} / ${disc.turn} / ${disc.fade} / ${puttLabel}`;
+  }
+
+  return throwCardEffects[card.cardId]?.text ?? "";
+}
+
+function sortedPlayerDeck() {
+  const typeOrder = { disc: 0, throw: 1 };
+  return [...playerDeck].sort((a, b) => {
+    const typeSort = typeOrder[a.cardType] - typeOrder[b.cardType];
+    if (typeSort !== 0) {
+      return typeSort;
+    }
+
+    return cardNameForDeck(a).localeCompare(cardNameForDeck(b));
+  });
+}
+
+function renderPlayerMenu() {
+  playerPointsLabel.textContent = playerPoints;
+  playerC1Label.textContent = `${playerStats.c1}%`;
+  playerC2Label.textContent = `${playerStats.c2}%`;
+  playerThrowInLabel.textContent = `${playerStats.throwIn}%`;
+  playerScrambleLabel.textContent = `${playerStats.scramble}%`;
+  playerDeckList.innerHTML = "";
+
+  sortedPlayerDeck().forEach((card) => {
+    const item = document.createElement("div");
+    item.className = `player-deck-card ${card.cardType === "throw" ? "throw-card-preview" : ""}`;
+    const imageMarkup = card.cardType === "disc" ? `<img src="${discs[card.cardId].image}" alt="">` : "";
+    item.innerHTML = `
+      ${imageMarkup}
+      <span>
+        <span>${cardNameForDeck(card)} ${cardAttributeMarkup(card)}</span>
+        <strong>${card.cardType === "disc" ? "Disc" : "Throw"}</strong>
+      </span>
+      <small>${cardStatsForDeck(card)}</small>
+    `;
+    playerDeckList.append(item);
+  });
+}
+
+function buyOffer(offer) {
+  if (!offer || offer.sold || playerPoints < offer.price) {
+    return;
+  }
+
+  playerPoints -= offer.price;
+  playerDeck.push({ cardType: offer.cardType, cardId: offer.cardId });
+  offer.sold = true;
+  closePurchaseConfirm();
+  renderSpendPoints();
+  renderPlayerMenu();
+}
+
+function openPurchaseConfirm(offer) {
+  if (offer.sold || playerPoints < offer.price) {
+    return;
+  }
+
+  pendingPurchase = offer;
+  purchaseConfirmTitle.textContent = `Buy ${cardNameForDeck(offer)}?`;
+  purchaseConfirmCopy.innerHTML = `Spend <span class="point-value"><img src="player_points.png" alt=""> <strong>${offer.price}</strong></span> on ${cardNameForDeck(offer)}.`;
+  purchaseConfirmModal.hidden = false;
+  confirmPurchaseButton.focus();
+}
+
+function closePurchaseConfirm() {
+  pendingPurchase = null;
+  purchaseConfirmModal.hidden = true;
+}
+
+function trainStat(stat, price = 5) {
+  if (playerPoints < price) {
+    return;
+  }
+
+  playerPoints -= price;
+  playerStats[stat] += 1;
+  renderSpendPoints();
+  renderPlayerMenu();
+}
+
+function makeShopButton(offer) {
+  const button = document.createElement("button");
+  const { cardType, cardId, price, sold } = offer;
+  const isDisc = cardType === "disc";
+  const disc = isDisc ? discs[cardId] : null;
+  const cardName = isDisc ? disc.name : throwCardEffects[cardId].name;
+  const cardStats = isDisc ? cardStatsForDeck({ cardType, cardId }) : throwCardEffects[cardId].text;
+  button.type = "button";
+  button.className = `shop-card ${isDisc ? "" : "throw-shop-card"}`;
+  button.classList.toggle("sold", Boolean(sold));
+  button.disabled = sold || playerPoints < price;
+  button.innerHTML = `
+    ${isDisc ? `<img src="${disc.image}" alt="">` : `<img src="basket_icon.png" alt="">`}
+    <span>
+      <span>${cardName}</span>
+      <small>${cardStats}</small>
+    </span>
+    <strong class="point-price">${sold ? "Sold" : `<img src="player_points.png" alt=""> ${price}`}</strong>
+  `;
+  button.addEventListener("click", () => openPurchaseConfirm(offer));
+  return button;
+}
+
+function makeTrainingButton(stat, label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "shop-card training-card";
+  button.disabled = playerPoints < 5;
+  button.innerHTML = `
+    <span>
+      <span>${label}</span>
+      <small>Increase by 1%</small>
+    </span>
+    <strong class="point-price"><img src="player_points.png" alt=""> 5</strong>
+  `;
+  button.addEventListener("click", () => trainStat(stat));
+  return button;
+}
+
+function renderSpendPoints() {
+  ensureSpendOffers();
+  spendPlayerPointsLabel.textContent = playerPoints;
+  discShopList.innerHTML = "";
+  throwShopList.innerHTML = "";
+  trainingList.innerHTML = "";
+
+  spendOffers.discs.forEach((offer) => {
+    offer.cardType = "disc";
+    discShopList.append(makeShopButton(offer));
+  });
+
+  [
+    ["c1", `C1 ${playerStats.c1}%`],
+    ["c2", `C2 ${playerStats.c2}%`],
+    ["throwIn", `Throw-In ${playerStats.throwIn}%`],
+    ["scramble", `Scramble ${playerStats.scramble}%`]
+  ].forEach(([stat, label]) => {
+    trainingList.append(makeTrainingButton(stat, label));
+  });
+
+  spendOffers.throws.forEach((offer) => {
+    offer.cardType = "throw";
+    throwShopList.append(makeShopButton(offer));
+  });
+}
+
 async function showCourseSelect() {
   await loadCourseLibrary();
   renderCourseSelector();
   menuScreen.hidden = true;
+  playerMenuScreen.hidden = true;
+  spendPointsScreen.hidden = true;
   roundScreen.hidden = true;
   editorScreen.hidden = true;
   courseSelectScreen.hidden = false;
   courseList.querySelector("button")?.focus();
+}
+
+function showPlayerMenu() {
+  renderPlayerMenu();
+  menuScreen.hidden = true;
+  courseSelectScreen.hidden = true;
+  roundScreen.hidden = true;
+  editorScreen.hidden = true;
+  spendPointsScreen.hidden = true;
+  playerMenuScreen.hidden = false;
+  playRoundButton.focus();
+}
+
+function showSpendPoints() {
+  renderSpendPoints();
+  menuScreen.hidden = true;
+  playerMenuScreen.hidden = true;
+  spendPointsScreen.hidden = true;
+  courseSelectScreen.hidden = true;
+  roundScreen.hidden = true;
+  editorScreen.hidden = true;
+  spendPointsScreen.hidden = false;
+  spendBackButton.focus();
 }
 
 function wait(ms) {
@@ -1561,7 +1947,20 @@ function percentRoll(chance) {
 
 function puttChance(circle) {
   const baseChance = circle === "c1" ? playerStats.c1 : playerStats.c2;
-  return Math.min(baseChance + (selectedDisc()?.putt ?? 0), 100);
+  const throwPuttBonus = selectedThrowCardId ? (throwCardEffects[selectedThrowCardId]?.putt ?? 0) : 0;
+  return Math.min(baseChance + (selectedDisc()?.putt ?? 0) + throwPuttBonus, 100);
+}
+
+function puttModifierText() {
+  const disc = selectedDisc();
+  const throwPuttBonus = selectedThrowCardId ? (throwCardEffects[selectedThrowCardId]?.putt ?? 0) : 0;
+  const modifiers = [`Includes ${disc.name} Putt ${disc.putt > 0 ? "+" : ""}${disc.putt}%`];
+
+  if (throwPuttBonus) {
+    modifiers.push(`${throwCardEffects[selectedThrowCardId].name} +${throwPuttBonus}%`);
+  }
+
+  return modifiers.join(" and ");
 }
 
 function resolveLanding(cell) {
@@ -1604,8 +2003,13 @@ function attemptPutt() {
 
   if (percentRoll(chance)) {
     pendingPutt = null;
-    setLieNote(`${circle.toUpperCase()} putt made at ${chance}% with ${discName}.`);
+    setLieNote(`${circle.toUpperCase()} putt made at ${chance}% with ${discName}${selectedThrowCardId ? ` and ${throwCardEffects[selectedThrowCardId].name}` : ""}.`);
     discardSelectedDisc();
+    if (selectedThrowCardId) {
+      discardCard(selectedThrowCardInstanceId);
+      selectedThrowCardInstanceId = null;
+      selectedThrowCardId = null;
+    }
     completeHole();
   } else {
     if (circle === "c2") {
@@ -1616,6 +2020,11 @@ function attemptPutt() {
       setLieNote(`C1 putt missed at ${chance}% with ${discName}. Try again from the same lie.`);
     }
     discardSelectedDisc();
+    if (selectedThrowCardId) {
+      discardCard(selectedThrowCardInstanceId);
+      selectedThrowCardInstanceId = null;
+      selectedThrowCardId = null;
+    }
   }
 
   updateThrowControls();
@@ -1650,15 +2059,19 @@ async function animateThrow() {
   forehandButton.disabled = true;
   renderHand();
 
+  const thrownCard = selectedDiscCard();
   const thrownDisc = selectedDisc();
+  const luckyDraw = Boolean(thrownCard?.attributes?.includes("lucky-disc"));
   currentDiscImage = thrownDisc.image;
   currentDiscName = thrownDisc.name;
+  const startingHazard = hazardForCell(currentDiscCell.x, currentDiscCell.y);
+  const scrambleMiss = Boolean(startingHazard && !percentRoll(playerStats.scramble));
   const path = getThrowPath(selectedThrow);
-  const collisionResult = resolveCollision(path);
-  const collision = collisionResult.collision;
+  const collisionResult = scrambleMiss ? { collision: null, hazard: null, fights: [] } : resolveCollision(path);
+  const collision = scrambleMiss ? null : collisionResult.collision;
   const collisionIndex = collision ? path.indexOf(collision) : Infinity;
   const hitCollision = Boolean(collision);
-  const terminalIndex = Math.min(collisionIndex, path.length - 1);
+  const terminalIndex = scrambleMiss ? -1 : Math.min(collisionIndex, path.length - 1);
   const animationPath = path.slice(0, terminalIndex + 1);
   const visibleAnimationPath = animationPath.filter((step) => !isOutOfBoundsCell(step.x, step.y));
   renderCourse(path);
@@ -1670,7 +2083,9 @@ async function animateThrow() {
     await wait(260);
   }
 
-  if (hitCollision && collision) {
+  if (scrambleMiss) {
+    currentDiscCell = randomScrambleKick(currentDiscCell);
+  } else if (hitCollision && collision) {
     currentDiscCell = randomCollisionLie(collision);
   } else if (path.length > 0) {
     currentDiscCell = { ...path[path.length - 1] };
@@ -1682,6 +2097,9 @@ async function animateThrow() {
   }
 
   strokeNumber += 1;
+  if (luckyDraw) {
+    nextTurnHandBonus = 1;
+  }
   if (wentOutOfBounds) {
     strokeNumber += 1;
     setLieNote("Out of bounds. Take a penalty stroke and play from the last valid square.");
@@ -1689,14 +2107,23 @@ async function animateThrow() {
     if (lieNote.textContent) {
       setLieNote(`Out of bounds. Take a penalty stroke and play from the last valid square. ${lieNote.textContent}`);
     }
+  } else if (scrambleMiss) {
+    setLieNote(`Scramble failed from ${hazardLabel(startingHazard).toLowerCase()}. The disc kicked to a random nearby lie.`);
+    resolveLanding(currentDiscCell);
+    if (lieNote.textContent) {
+      setLieNote(`Scramble failed from ${hazardLabel(startingHazard).toLowerCase()}. The disc kicked to a random nearby lie. ${lieNote.textContent}`);
+    }
   } else if (hitCollision && collision) {
     const hazard = hazardForCell(currentDiscCell.x, currentDiscCell.y);
-    const penaltyText = hazard ? " The next throw is from an obstacle, so disc speed is reduced by 2." : "";
+    const penaltyText = hazard ? " The next throw is from an obstacle, so disc speed is reduced by 1 and must pass a scramble check." : "";
     const fightText = collisionResult.fights.length ? ` Fought through ${collisionResult.fights.length} obstruction${collisionResult.fights.length === 1 ? "" : "s"} before stopping.` : "";
     setLieNote(`Hit an obstacle and kicked to a new lie.${fightText}${penaltyText}`);
     pendingPutt = null;
   } else {
     resolveLanding(currentDiscCell);
+  }
+  if (luckyDraw && !isHoledOut) {
+    setLieNote(`${lieNote.textContent} Lucky Disc: +1 hand size next turn.`);
   }
   isThrowing = false;
   throwButton.disabled = false;
@@ -1718,6 +2145,8 @@ function showRound(courseIndex = 0, holeIndex = 0) {
   selectedCourseHoleIndex = holeIndex;
   if (selectedCourseHoleIndex === 0) {
     courseScoreToPar = 0;
+    isCourseRewardRecorded = false;
+    pendingCoursePoints = 0;
   }
   isHoleScoreRecorded = false;
   hole = cloneHole(selectedCourse.holes?.[selectedCourseHoleIndex] ?? fallbackHole);
@@ -1729,7 +2158,7 @@ function showRound(courseIndex = 0, holeIndex = 0) {
   currentDiscCell = { ...hole.tee };
   currentDiscImage = selectedDisc()?.image ?? null;
   currentDiscName = selectedDisc()?.name ?? "Disc";
-  strokeNumber = 1;
+  strokeNumber = 0;
   pendingPutt = null;
   isHoledOut = false;
   holeCompleteModal.hidden = true;
@@ -1737,6 +2166,7 @@ function showRound(courseIndex = 0, holeIndex = 0) {
   updateThrowControls();
   renderCourse();
   menuScreen.hidden = true;
+  playerMenuScreen.hidden = true;
   courseSelectScreen.hidden = true;
   editorScreen.hidden = true;
   roundScreen.hidden = false;
@@ -1746,13 +2176,15 @@ function showRound(courseIndex = 0, holeIndex = 0) {
 
 function showMenu() {
   roundScreen.hidden = true;
+  playerMenuScreen.hidden = true;
+  spendPointsScreen.hidden = true;
   courseSelectScreen.hidden = true;
   editorScreen.hidden = true;
   menuScreen.hidden = false;
   currentDiscCell = { ...hole.tee };
   currentDiscImage = selectedDisc()?.image ?? null;
   currentDiscName = selectedDisc()?.name ?? "Disc";
-  strokeNumber = 1;
+  strokeNumber = 0;
   pendingPutt = null;
   isHoledOut = false;
   holeCompleteModal.hidden = true;
@@ -1765,6 +2197,8 @@ function showMenu() {
 async function showEditor() {
   await loadCourseLibrary();
   menuScreen.hidden = true;
+  playerMenuScreen.hidden = true;
+  spendPointsScreen.hidden = true;
   courseSelectScreen.hidden = true;
   roundScreen.hidden = true;
   editorScreen.hidden = false;
@@ -1779,6 +2213,14 @@ async function showEditor() {
 }
 
 function handleDraw() {
+  if (needsShuffleDiscard()) {
+    if (shuffleDiscardIntoDeck()) {
+      updateThrowControls();
+      renderCourse();
+    }
+    return;
+  }
+
   if (!selectedDiscId) {
     if (drawNextDiscForNoDisc()) {
       updateThrowControls();
@@ -1804,18 +2246,25 @@ renderEditorGrid();
 loadCourseLibrary().then(() => {
   populateEditorCourseSelect();
   renderCourseSelector();
+  ensureSpendOffers();
+  renderPlayerMenu();
 });
 startRoundButton.addEventListener("click", () => {
-  showCourseSelect();
+  showPlayerMenu();
 });
+playRoundButton.addEventListener("click", showCourseSelect);
+spendPointsButton.addEventListener("click", showSpendPoints);
+spendBackButton.addEventListener("click", showPlayerMenu);
 courseSelectBackButton.addEventListener("click", showMenu);
 openEditorButton.addEventListener("click", showEditor);
-returnMenuButton.addEventListener("click", showMenu);
+returnMenuButton.addEventListener("click", showPlayerMenu);
 returnEditorMenuButton.addEventListener("click", showMenu);
 backhandButton.addEventListener("click", () => selectThrow("backhand"));
 forehandButton.addEventListener("click", () => selectThrow("forehand"));
 throwButton.addEventListener("click", animateThrow);
 closeHoleModalButton.addEventListener("click", closeHoleCompleteModal);
+confirmPurchaseButton.addEventListener("click", () => buyOffer(pendingPurchase));
+cancelPurchaseButton.addEventListener("click", closePurchaseConfirm);
 drawCardButton.addEventListener("click", handleDraw);
 saveHoleButton.addEventListener("click", saveEditorHole);
 loadHoleButton.addEventListener("click", () => loadHoleInput.click());
