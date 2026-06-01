@@ -196,12 +196,15 @@ const playerStats = {
 const editorAssetTypes = {
   tee: { label: "Tee", asset: "course assets/teepad.png" },
   basket: { label: "Basket", asset: "basket_icon.png" },
-  grass: { label: "Grass", asset: "course assets/grass1_bg.png", background: { type: "grass" } },
+  grass: { label: "Grass 1", asset: "course assets/grass1_bg.png", background: { type: "grass" } },
+  grass2: { label: "Grass 2", asset: "course assets/grass2_bg.png", background: { type: "grass2" } },
   water: { label: "Water", asset: "course assets/water1_bg.png", background: { type: "water" } },
   ob: { label: "OB", asset: "course assets/OB.png", outOfBounds: true },
   tree1: { label: "Tree", asset: "course assets/tree1.png", hazard: { type: "tree", variant: 1, height: 3 } },
   tree2: { label: "Tree", asset: "course assets/tree2.png", hazard: { type: "tree", variant: 2, height: 3 } },
   tree3: { label: "Tree", asset: "course assets/tree3.png", hazard: { type: "tree", variant: 3, height: 3 } },
+  tree4: { label: "Tree", asset: "course assets/tree4.png", hazard: { type: "tree", variant: 4, height: 3 } },
+  tree5: { label: "Tree", asset: "course assets/tree5.png", hazard: { type: "tree", variant: 5, height: 3 } },
   rock1: { label: "Rock", asset: "course assets/rock1.png", hazard: { type: "rock", variant: 1, height: 1 } },
   rock2: { label: "Rock", asset: "course assets/rock2.png", hazard: { type: "rock", variant: 2, height: 1 } },
   stump1: { label: "Stump", asset: "course assets/stump1.png", hazard: { type: "stump", variant: 1, height: 1 } },
@@ -591,7 +594,15 @@ function backgroundForCell(x, y, holeData = hole) {
 
 function backgroundImageForCell(x, y, holeData = hole) {
   const tile = backgroundForCell(x, y, holeData);
-  return tile?.type === "water" ? 'url("course assets/water1_bg.png")' : 'url("course assets/grass1_bg.png")';
+  if (tile?.type === "water") {
+    return 'url("course assets/water1_bg.png")';
+  }
+
+  if (tile?.type === "grass2") {
+    return 'url("course assets/grass2_bg.png")';
+  }
+
+  return 'url("course assets/grass1_bg.png")';
 }
 
 function isOutOfBoundsCell(x, y, holeData = hole) {
@@ -765,21 +776,15 @@ function resolveCollision(path) {
   return { collision: null, hazard: null, fights };
 }
 
-function firstOutOfBounds(path) {
-  return path.find((step) => isOutOfBoundsCell(step.x, step.y));
-}
-
-function lastValidBeforeOutOfBounds(path, outOfBoundsStep) {
-  const outOfBoundsIndex = path.indexOf(outOfBoundsStep);
-
-  for (let index = outOfBoundsIndex - 1; index >= 0; index -= 1) {
+function lastValidInPath(path, fallback = currentDiscCell) {
+  for (let index = path.length - 1; index >= 0; index -= 1) {
     const step = path[index];
     if (!isOutOfBoundsCell(step.x, step.y)) {
       return { ...step };
     }
   }
 
-  return { ...currentDiscCell };
+  return { ...fallback };
 }
 
 function randomCollisionLie(obstacleCell) {
@@ -1176,7 +1181,7 @@ function normalizeLoadedHole(data) {
       : [],
     backgrounds: [
       ...(Array.isArray(data.backgrounds)
-        ? data.backgrounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y) && ["water"].includes(tile.type))
+        ? data.backgrounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y) && ["water", "grass2"].includes(tile.type))
         : []),
       ...(Array.isArray(data.hazards)
         ? data.hazards.filter((hazard) => hazard.type === "water" && Number.isInteger(hazard.x) && Number.isInteger(hazard.y)).map((hazard) => ({ type: "water", x: hazard.x, y: hazard.y }))
@@ -1651,12 +1656,9 @@ async function animateThrow() {
   const path = getThrowPath(selectedThrow);
   const collisionResult = resolveCollision(path);
   const collision = collisionResult.collision;
-  const outOfBoundsStep = firstOutOfBounds(path);
   const collisionIndex = collision ? path.indexOf(collision) : Infinity;
-  const outOfBoundsIndex = outOfBoundsStep ? path.indexOf(outOfBoundsStep) : Infinity;
-  const hitCollision = collisionIndex <= outOfBoundsIndex;
-  const wentOutOfBounds = outOfBoundsIndex < collisionIndex;
-  const terminalIndex = Math.min(collisionIndex, outOfBoundsIndex, path.length - 1);
+  const hitCollision = Boolean(collision);
+  const terminalIndex = Math.min(collisionIndex, path.length - 1);
   const animationPath = path.slice(0, terminalIndex + 1);
   const visibleAnimationPath = animationPath.filter((step) => !isOutOfBoundsCell(step.x, step.y));
   renderCourse(path);
@@ -1670,24 +1672,29 @@ async function animateThrow() {
 
   if (hitCollision && collision) {
     currentDiscCell = randomCollisionLie(collision);
-  } else if (wentOutOfBounds && outOfBoundsStep) {
-    currentDiscCell = lastValidBeforeOutOfBounds(path, outOfBoundsStep);
+  } else if (path.length > 0) {
+    currentDiscCell = { ...path[path.length - 1] };
+  }
+
+  const wentOutOfBounds = isOutOfBoundsCell(currentDiscCell.x, currentDiscCell.y);
+  if (wentOutOfBounds) {
+    currentDiscCell = lastValidInPath(animationPath);
   }
 
   strokeNumber += 1;
-  if (hitCollision && collision) {
-    const hazard = hazardForCell(currentDiscCell.x, currentDiscCell.y);
-    const penaltyText = hazard ? " The next throw is from an obstacle, so disc speed is reduced by 2." : "";
-    const fightText = collisionResult.fights.length ? ` Fought through ${collisionResult.fights.length} obstruction${collisionResult.fights.length === 1 ? "" : "s"} before stopping.` : "";
-    setLieNote(`Hit an obstacle and kicked to a new lie.${fightText}${penaltyText}`);
-    pendingPutt = null;
-  } else if (wentOutOfBounds && outOfBoundsStep) {
+  if (wentOutOfBounds) {
     strokeNumber += 1;
     setLieNote("Out of bounds. Take a penalty stroke and play from the last valid square.");
     resolveLanding(currentDiscCell);
     if (lieNote.textContent) {
       setLieNote(`Out of bounds. Take a penalty stroke and play from the last valid square. ${lieNote.textContent}`);
     }
+  } else if (hitCollision && collision) {
+    const hazard = hazardForCell(currentDiscCell.x, currentDiscCell.y);
+    const penaltyText = hazard ? " The next throw is from an obstacle, so disc speed is reduced by 2." : "";
+    const fightText = collisionResult.fights.length ? ` Fought through ${collisionResult.fights.length} obstruction${collisionResult.fights.length === 1 ? "" : "s"} before stopping.` : "";
+    setLieNote(`Hit an obstacle and kicked to a new lie.${fightText}${penaltyText}`);
+    pendingPutt = null;
   } else {
     resolveLanding(currentDiscCell);
   }

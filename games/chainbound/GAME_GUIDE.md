@@ -129,11 +129,11 @@ Editor controls:
 - `Par`: saved par value.
 - `Width`: grid columns, currently clamped from `5` to `24`.
 - `Height`: grid rows, currently clamped from `5` to `30`.
-- Asset palette: Tee, Basket, Grass, Water, OB, Trees, Rocks, Stump, Shrub, Erase.
+- Asset palette: Tee, Basket, Grass variants, Water, OB, Trees, Rocks, Stump, Shrub, Erase.
 - Click an asset, then click a grid cell to place it.
 - Tee and Basket are unique; placing a new one moves the existing one.
-- Grass and Water are background tiles, not obstacles.
-- OB marks out-of-bounds cells in the editor. OB is invisible during play.
+- Grass and Water are background tiles, not obstacles. Grass 1 is the default tile; Grass 2 is saved as a background override.
+- OB marks out-of-bounds cells in the editor. OB is invisible during play, and only matters if the disc's final lie is OB after the throw or after an obstacle kick.
 - Erase removes hazards, backgrounds, OB, tee, or basket from a cell.
 - The editor grid starts blank, with no tee and no basket.
 - Drag-scroll is enabled from the area outside the grid. Grid cell clicks are reserved for placement.
@@ -167,7 +167,8 @@ Current saved hole JSON shape:
     { "type": "shrub", "variant": 1, "height": 2, "x": 6, "y": 7 }
   ],
   "backgrounds": [
-    { "type": "water", "x": 5, "y": 8 }
+    { "type": "water", "x": 5, "y": 8 },
+    { "type": "grass2", "x": 6, "y": 8 }
   ],
   "outOfBounds": [
     { "x": 0, "y": 0 }
@@ -198,8 +199,10 @@ games/chainbound/
     palm_mid.png
     Kraken_driver.png
     Tropical_mid.png
+    Tundra_mid.png
   course assets/
     grass1_bg.png
+    grass2_bg.png
     rock1.png
     rock2.png
     shrub1.png
@@ -208,6 +211,8 @@ games/chainbound/
     tree1.png
     tree2.png
     tree3.png
+    tree4.png
+    tree5.png
     OB.png
     water1_bg.png
 ```
