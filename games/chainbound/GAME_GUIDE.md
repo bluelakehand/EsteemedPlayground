@@ -22,7 +22,7 @@ The game currently has two main modes:
 - The hand limit is `5`.
 - The opening hand always starts with `3` disc cards, then fills the rest from the shuffled deck.
 - All cards are in one shuffled deck.
-- If the player has no disc card in hand, they may take a stroke penalty to draw the next disc card from the deck.
+- If the player has no disc card in hand, they may draw the next disc card from the deck. This only costs a penalty stroke when the hand is already full.
 - The player cannot act while the hand is below the hand limit if normal draw cards remain.
 
 ## Throw Model
@@ -49,6 +49,10 @@ Height matters for obstacles:
 - Stumps are height `1`.
 - Water is available in the editor, but currently behaves as a height `0` hazard unless rules are expanded.
 - A disc collides if its flight height is less than or equal to the obstacle height.
+- Obstruction controls whether the disc stops when it collides.
+- Trees have `70%` obstruction, so a disc has a `30%` fight-through chance.
+- Rocks and stumps have `100%` obstruction, so they cannot currently be fought through.
+- Shrubs currently have `100%` obstruction.
 - On collision, the lie randomly kicks to the obstacle square or one adjacent square.
 - If the next throw starts on an obstacle, effective disc speed is reduced by `2`.
 
@@ -83,6 +87,7 @@ Disc cards live in the `discs` object in `game.js`.
 | CACTI | Putter | 2 | 1 | 0 | 1 | +10 |
 | TROPICAL | Midrange | 6 | 2 | -2 | 1 | +5 |
 | GALACTIC | Driver | 9 | 2 | -1 | 1 | -10 |
+| TUNDRA | Midrange | 7 | 3 | 0 | 0 | 0 |
 
 Throw modifier cards live in `throwCardEffects`.
 
@@ -90,6 +95,10 @@ Throw modifier cards live in `throwCardEffects`.
 | --- | --- |
 | Power Down | Speed -1 this throw |
 | Hyzer Throw | Fade +1 this throw |
+| Pitch Out | Set disc Speed to 2 |
+| Overhand | Height 4 for the first 3 squares, Speed -2 |
+| Turnover | Fade -2 this throw |
+| Roller | Fade -1, Turn -1, Speed +1, Height 1 for the full flight |
 
 The starting deck lives in `startingDeck` and currently has:
 
@@ -99,8 +108,13 @@ The starting deck lives in `startingDeck` and currently has:
 - 2 CACTI
 - 2 TROPICAL
 - 2 GALACTIC
+- 2 TUNDRA
 - 2 Power Down
 - 2 Hyzer Throw
+- 2 Pitch Out
+- 2 Overhand
+- 2 Turnover
+- 2 Roller
 
 ## Level Editor
 
@@ -209,8 +223,8 @@ games/chainbound/
 - `throwCardEffects`: throw modifier card definitions.
 - `editorAssetTypes`: editor palette definitions.
 - `startingDeck`: starting card pool.
-- Deck/hand helpers: `resetDecksAndHand`, `drawFromDeck`, `drawNextDiscWithPenalty`.
-- Flight logic: `getThrowPath`, `rotateStep`, `flightHeight`, `firstCollision`.
+- Deck/hand helpers: `resetDecksAndHand`, `drawFromDeck`, `drawNextDiscForNoDisc`.
+- Flight logic: `getThrowPath`, `rotateStep`, `flightHeight`, `resolveCollision`.
 - Course renderer: `renderCourse`.
 - Editor renderer and JSON: `renderEditorGrid`, `placeEditorAsset`, `saveEditorHole`, `loadEditorHole`.
 - Level selector: `renderCourseSelector`, `showCourseSelect`.

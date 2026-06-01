@@ -34,6 +34,7 @@ const drawCardButton = document.querySelector("#draw-card-button");
 const strokeCounter = document.querySelector("#stroke-counter");
 const roundHoleLabel = document.querySelector("#round-hole-label");
 const roundTitle = document.querySelector("#round-title");
+const courseScoreLabel = document.querySelector("#course-score-label");
 const roundParLabel = document.querySelector("#round-par-label");
 const c1Stat = document.querySelector("#c1-stat");
 const c2Stat = document.querySelector("#c2-stat");
@@ -136,6 +137,16 @@ const discs = {
     turn: -1,
     fade: 1,
     putt: -10
+  },
+  tundra: {
+    name: "TUNDRA",
+    type: "Midrange",
+    image: "discs/Tundra_mid.png",
+    speed: 7,
+    glide: 3,
+    turn: 0,
+    fade: 0,
+    putt: 0
   }
 };
 
@@ -149,6 +160,30 @@ const throwCardEffects = {
     name: "Hyzer Throw",
     text: "Fade +1 this throw.",
     fade: 1
+  },
+  "pitch-out": {
+    name: "Pitch Out",
+    text: "Set Speed to 2.",
+    speedSet: 2
+  },
+  overhand: {
+    name: "Overhand",
+    text: "Height 4 for 3 squares. -2 Speed.",
+    speed: -2,
+    heightOverride: "overhand"
+  },
+  turnover: {
+    name: "Turnover",
+    text: "-2 Fade this throw.",
+    fade: -2
+  },
+  roller: {
+    name: "Roller",
+    text: "-1 Fade, -1 Turn, +1 Speed. Height 1.",
+    speed: 1,
+    turn: -1,
+    fade: -1,
+    heightOverride: "roller"
   }
 };
 
@@ -188,10 +223,20 @@ const startingDeck = [
   { cardType: "disc", cardId: "tropical" },
   { cardType: "disc", cardId: "galactic" },
   { cardType: "disc", cardId: "galactic" },
+  { cardType: "disc", cardId: "tundra" },
+  { cardType: "disc", cardId: "tundra" },
   { cardType: "throw", cardId: "power-down" },
   { cardType: "throw", cardId: "power-down" },
   { cardType: "throw", cardId: "hyzer-throw" },
-  { cardType: "throw", cardId: "hyzer-throw" }
+  { cardType: "throw", cardId: "hyzer-throw" },
+  { cardType: "throw", cardId: "pitch-out" },
+  { cardType: "throw", cardId: "pitch-out" },
+  { cardType: "throw", cardId: "overhand" },
+  { cardType: "throw", cardId: "overhand" },
+  { cardType: "throw", cardId: "turnover" },
+  { cardType: "throw", cardId: "turnover" },
+  { cardType: "throw", cardId: "roller" },
+  { cardType: "throw", cardId: "roller" }
 ];
 
 let selectedThrow = "backhand";
@@ -205,6 +250,8 @@ let hand = [];
 let hole = cloneHole(courseLibrary[0]?.holes?.[0] ?? fallbackHole);
 let selectedCourse = courseLibrary[0] ?? { id: "fallback", name: "Fallback Course", holes: [fallbackHole] };
 let selectedCourseHoleIndex = 0;
+let courseScoreToPar = 0;
+let isHoleScoreRecorded = false;
 let currentDiscCell = { ...hole.tee };
 let currentDiscImage = null;
 let currentDiscName = "Disc";
@@ -313,11 +360,14 @@ function selectedDisc() {
 function modifiedDisc() {
   const disc = selectedDisc();
   const effect = selectedThrowCardId ? throwCardEffects[selectedThrowCardId] : {};
+  const modifiedSpeed = Math.max(1, effect.speedSet ?? (disc.speed + (effect.speed ?? 0)));
 
   return {
     ...disc,
-    speed: Math.max(1, disc.speed + (effect.speed ?? 0)),
-    fade: Math.max(0, disc.fade + (effect.fade ?? 0))
+    speed: modifiedSpeed,
+    turn: disc.turn + (effect.turn ?? 0),
+    fade: Math.max(0, disc.fade + (effect.fade ?? 0)),
+    heightOverride: effect.heightOverride ?? null
   };
 }
 
@@ -387,16 +437,23 @@ function drawCardOfType(cardType) {
   return true;
 }
 
-function drawNextDiscWithPenalty() {
+function drawNextDiscForNoDisc() {
   const cardIndex = drawDeck.findIndex((card) => card.cardType === "disc");
   if (cardIndex < 0) {
     return false;
   }
 
   const [card] = drawDeck.splice(cardIndex, 1);
+  const takesPenalty = hand.length >= maxHandSize;
   addCardToHand(card);
-  strokeNumber += 1;
-  setLieNote(`Penalty stroke taken. Drew ${discs[card.cardId].name} from the deck.`);
+
+  if (takesPenalty) {
+    strokeNumber += 1;
+    setLieNote(`No disc in a full hand. Penalty stroke taken to draw ${discs[card.cardId].name}.`);
+  } else {
+    setLieNote(`No disc in hand. Drew ${discs[card.cardId].name} from the deck.`);
+  }
+
   return true;
 }
 
@@ -538,6 +595,10 @@ function backgroundImageForCell(x, y, holeData = hole) {
 }
 
 function isOutOfBoundsCell(x, y, holeData = hole) {
+  if (x < 0 || x >= holeData.columns || y < 0 || y >= holeData.rows) {
+    return true;
+  }
+
   return Boolean(holeData.outOfBounds?.some((tile) => tile.x === x && tile.y === y));
 }
 
@@ -571,14 +632,11 @@ function getThrowPath(type, origin = currentDiscCell) {
     path.push({
       x: projectedCell.x,
       y: projectedCell.y,
-      height: flightHeight(step, speed, disc.glide)
+      height: flightHeight(step, speed, disc.glide, disc.heightOverride)
     });
   }
 
-  return path.map((step) => ({
-    ...clampCell(step),
-    height: step.height
-  }));
+  return path;
 }
 
 function effectiveSpeed(disc, origin = currentDiscCell) {
@@ -600,7 +658,15 @@ function projectCell(origin, forward, lateral) {
   };
 }
 
-function flightHeight(step, speed, glide) {
+function flightHeight(step, speed, glide, heightOverride = null) {
+  if (heightOverride === "roller") {
+    return 1;
+  }
+
+  if (heightOverride === "overhand" && step <= 3) {
+    return 4;
+  }
+
   const glideTwoProfiles = {
     1: [1],
     2: [2, 1],
@@ -651,8 +717,52 @@ function isCollision(step, hazard) {
   return Boolean(step && hazard && step.height <= hazard.height);
 }
 
-function firstCollision(path) {
+function obstructionForHazard(hazard) {
+  if (!hazard) {
+    return 0;
+  }
+
+  if (hazard.type === "tree") {
+    return 70;
+  }
+
+  if (hazard.type === "rock" || hazard.type === "stump" || hazard.type === "shrub") {
+    return 100;
+  }
+
+  if (hazard.type === "shrub") {
+    return 50;
+  }
+
+  return 100;
+}
+
+function fightThroughChance(hazard) {
+  return Math.max(0, 100 - obstructionForHazard(hazard));
+}
+
+function firstPotentialCollision(path) {
   return path.find((step) => isCollision(step, hazardForCell(step.x, step.y)));
+}
+
+function resolveCollision(path) {
+  const fights = [];
+
+  for (const step of path) {
+    const hazard = hazardForCell(step.x, step.y);
+    if (!isCollision(step, hazard)) {
+      continue;
+    }
+
+    const obstruction = obstructionForHazard(hazard);
+    if (percentRoll(obstruction)) {
+      return { collision: step, hazard, fights };
+    }
+
+    fights.push({ step, hazard });
+  }
+
+  return { collision: null, hazard: null, fights };
 }
 
 function firstOutOfBounds(path) {
@@ -661,11 +771,15 @@ function firstOutOfBounds(path) {
 
 function lastValidBeforeOutOfBounds(path, outOfBoundsStep) {
   const outOfBoundsIndex = path.indexOf(outOfBoundsStep);
-  if (outOfBoundsIndex <= 0) {
-    return { ...currentDiscCell };
+
+  for (let index = outOfBoundsIndex - 1; index >= 0; index -= 1) {
+    const step = path[index];
+    if (!isOutOfBoundsCell(step.x, step.y)) {
+      return { ...step };
+    }
   }
 
-  return { ...path[outOfBoundsIndex - 1] };
+  return { ...currentDiscCell };
 }
 
 function randomCollisionLie(obstacleCell) {
@@ -725,7 +839,7 @@ function renderCourse(lockedFlightPath = null) {
       const isBasket = Boolean(hole.basket && sameCell(hole.basket, { x, y }));
       const flightStep = flightStepForCell(flightPath, x, y);
       const isFlight = Boolean(flightStep);
-      const collision = isCollision(flightStep, hazard);
+      const collision = Boolean(flightStep && firstPotentialCollision([flightStep]));
       const hasDisc = sameCell(currentDiscCell, { x, y });
 
       cell.className = "course-cell";
@@ -752,6 +866,9 @@ function renderCourse(lockedFlightPath = null) {
         const assetPath = hazardAssetPath(hazard);
         cell.classList.add("hazard-cell");
         cell.dataset.obstacleHeight = hazard.height;
+        cell.dataset.obstruction = obstructionForHazard(hazard);
+        cell.dataset.tooltip = `${hazardLabel(hazard)} | Height ${hazard.height} | ${fightThroughChance(hazard)}% through`;
+        cell.title = `${hazardLabel(hazard)}. Height ${hazard.height}. ${fightThroughChance(hazard)}% fight through chance.`;
         if (assetPath) {
           cell.append(makeAsset(assetPath, hazardLabel(hazard)));
         }
@@ -899,6 +1016,9 @@ function renderEditorGrid() {
         const assetPath = hazardAssetPath(hazard);
         cell.classList.add("hazard-cell");
         cell.dataset.obstacleHeight = hazard.height;
+        cell.dataset.obstruction = obstructionForHazard(hazard);
+        cell.dataset.tooltip = `${hazardLabel(hazard)} | Height ${hazard.height} | ${fightThroughChance(hazard)}% through`;
+        cell.title = `${hazardLabel(hazard)}. Height ${hazard.height}. ${fightThroughChance(hazard)}% fight through chance.`;
         if (assetPath) {
           cell.append(makeAsset(assetPath, hazardLabel(hazard)));
         }
@@ -1235,9 +1355,24 @@ function updatePlayerStats() {
 function updateDrawControls() {
   const missingDisc = !selectedDiscId && hasDiscInDeck();
   const drawRequired = !isHoledOut && (needsDraw() || missingDisc);
+  const noDiscPenalty = missingDisc && hand.length >= maxHandSize;
   drawCardButton.hidden = !drawRequired;
   drawCardButton.disabled = isThrowing || (!missingDisc && (hand.length >= maxHandSize || drawDeck.length === 0));
-  drawCardButton.textContent = missingDisc ? `Penalty Draw Disc (${discCountInDeck()})` : `Draw (${drawDeck.length})`;
+  drawCardButton.textContent = missingDisc ? `${noDiscPenalty ? "No Disc - Take 1 Stoke" : "Draw Disc"} (${discCountInDeck()})` : `Draw (${drawDeck.length})`;
+}
+
+function courseScoreText(scoreToPar) {
+  if (scoreToPar === 0) {
+    return "Course E";
+  }
+
+  return `Course ${scoreToPar > 0 ? "+" : ""}${scoreToPar}`;
+}
+
+function updateCourseScoreDisplay() {
+  courseScoreLabel.textContent = courseScoreText(courseScoreToPar);
+  courseScoreLabel.classList.remove("score-under", "score-even", "score-over");
+  courseScoreLabel.classList.add(courseScoreToPar < 0 ? "score-under" : courseScoreToPar === 0 ? "score-even" : "score-over");
 }
 
 function selectThrow(type) {
@@ -1305,7 +1440,7 @@ function updateActionButton() {
   }
 
   if (needsDraw()) {
-    throwButton.textContent = "Draw to 4";
+    throwButton.textContent = `Draw to ${maxHandSize}`;
     throwButton.disabled = true;
     return;
   }
@@ -1334,6 +1469,11 @@ function updateActionButton() {
 
 function completeHole() {
   isHoledOut = true;
+  if (!isHoleScoreRecorded) {
+    courseScoreToPar += strokeNumber - hole.par;
+    isHoleScoreRecorded = true;
+    updateCourseScoreDisplay();
+  }
   showHoleCompleteModal();
 }
 
@@ -1373,11 +1513,12 @@ function renderCourseSelector() {
   courseLibrary.forEach((course, courseIndex) => {
     const button = document.createElement("button");
     const holeCount = course.holes?.length ?? 0;
+    const coursePar = (course.holes ?? []).reduce((total, courseHole) => total + (Number(courseHole.par) || 0), 0);
     button.type = "button";
     button.className = "course-option";
     button.innerHTML = `
       <span>${course.name}</span>
-      <small>${holeCount} ${holeCount === 1 ? "hole" : "holes"}</small>
+      <small>${holeCount} ${holeCount === 1 ? "hole" : "holes"} · Par ${coursePar}</small>
     `;
     button.addEventListener("click", () => showRound(courseIndex));
     courseList.append(button);
@@ -1508,7 +1649,8 @@ async function animateThrow() {
   currentDiscImage = thrownDisc.image;
   currentDiscName = thrownDisc.name;
   const path = getThrowPath(selectedThrow);
-  const collision = firstCollision(path);
+  const collisionResult = resolveCollision(path);
+  const collision = collisionResult.collision;
   const outOfBoundsStep = firstOutOfBounds(path);
   const collisionIndex = collision ? path.indexOf(collision) : Infinity;
   const outOfBoundsIndex = outOfBoundsStep ? path.indexOf(outOfBoundsStep) : Infinity;
@@ -1516,10 +1658,11 @@ async function animateThrow() {
   const wentOutOfBounds = outOfBoundsIndex < collisionIndex;
   const terminalIndex = Math.min(collisionIndex, outOfBoundsIndex, path.length - 1);
   const animationPath = path.slice(0, terminalIndex + 1);
+  const visibleAnimationPath = animationPath.filter((step) => !isOutOfBoundsCell(step.x, step.y));
   renderCourse(path);
   await wait(140);
 
-  for (const step of animationPath) {
+  for (const step of visibleAnimationPath) {
     currentDiscCell = { ...step };
     renderCourse(path);
     await wait(260);
@@ -1535,12 +1678,16 @@ async function animateThrow() {
   if (hitCollision && collision) {
     const hazard = hazardForCell(currentDiscCell.x, currentDiscCell.y);
     const penaltyText = hazard ? " The next throw is from an obstacle, so disc speed is reduced by 2." : "";
-    setLieNote(`Hit an obstacle and kicked to a new lie.${penaltyText}`);
+    const fightText = collisionResult.fights.length ? ` Fought through ${collisionResult.fights.length} obstruction${collisionResult.fights.length === 1 ? "" : "s"} before stopping.` : "";
+    setLieNote(`Hit an obstacle and kicked to a new lie.${fightText}${penaltyText}`);
     pendingPutt = null;
   } else if (wentOutOfBounds && outOfBoundsStep) {
     strokeNumber += 1;
     setLieNote("Out of bounds. Take a penalty stroke and play from the last valid square.");
-    pendingPutt = null;
+    resolveLanding(currentDiscCell);
+    if (lieNote.textContent) {
+      setLieNote(`Out of bounds. Take a penalty stroke and play from the last valid square. ${lieNote.textContent}`);
+    }
   } else {
     resolveLanding(currentDiscCell);
   }
@@ -1562,10 +1709,15 @@ async function animateThrow() {
 function showRound(courseIndex = 0, holeIndex = 0) {
   selectedCourse = courseLibrary[courseIndex] ?? selectedCourse;
   selectedCourseHoleIndex = holeIndex;
+  if (selectedCourseHoleIndex === 0) {
+    courseScoreToPar = 0;
+  }
+  isHoleScoreRecorded = false;
   hole = cloneHole(selectedCourse.holes?.[selectedCourseHoleIndex] ?? fallbackHole);
   roundHoleLabel.textContent = `Hole ${hole.holeNumber ?? selectedCourseHoleIndex + 1}`;
   roundTitle.textContent = hole.name;
   roundParLabel.textContent = `Par ${hole.par}`;
+  updateCourseScoreDisplay();
   resetDecksAndHand();
   currentDiscCell = { ...hole.tee };
   currentDiscImage = selectedDisc()?.image ?? null;
@@ -1621,7 +1773,7 @@ async function showEditor() {
 
 function handleDraw() {
   if (!selectedDiscId) {
-    if (drawNextDiscWithPenalty()) {
+    if (drawNextDiscForNoDisc()) {
       updateThrowControls();
       renderCourse();
     }

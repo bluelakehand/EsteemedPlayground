@@ -1,0 +1,505 @@
+{
+  "name": "Boulder Field",
+  "courseId": "deep-woods",
+  "courseName": "Deep Woods",
+  "holeNumber": 5,
+  "par": 4,
+  "columns": 12,
+  "rows": 13,
+  "tee": {
+    "x": 1,
+    "y": 9
+  },
+  "basket": {
+    "x": 10,
+    "y": 1
+  },
+  "hazards": [
+    {
+      "type": "rock",
+      "variant": 1,
+      "height": 1,
+      "x": 1,
+      "y": 7
+    },
+    {
+      "type": "rock",
+      "variant": 1,
+      "height": 1,
+      "x": 4,
+      "y": 7
+    },
+    {
+      "type": "rock",
+      "variant": 1,
+      "height": 1,
+      "x": 4,
+      "y": 5
+    },
+    {
+      "type": "rock",
+      "variant": 1,
+      "height": 1,
+      "x": 3,
+      "y": 3
+    },
+    {
+      "type": "rock",
+      "variant": 2,
+      "height": 1,
+      "x": 1,
+      "y": 3
+    },
+    {
+      "type": "rock",
+      "variant": 2,
+      "height": 1,
+      "x": 5,
+      "y": 3
+    },
+    {
+      "type": "rock",
+      "variant": 2,
+      "height": 1,
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 2,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 5
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 7
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 8
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 9
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 6,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 7,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 6,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 7,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 7,
+      "y": 4
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "rock",
+      "variant": 2,
+      "height": 1,
+      "x": 3,
+      "y": 6
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 1,
+      "y": 1
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 3,
+      "y": 10
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 2,
+      "y": 10
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 3,
+      "y": 11
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 1,
+      "y": 11
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 1,
+      "y": 10
+    },
+    {
+      "type": "shrub",
+      "variant": 1,
+      "height": 2,
+      "x": 0,
+      "y": 10
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 8
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 9
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 8
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 9
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 8,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 9,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 11,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 10,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 10,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 8,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 9,
+      "y": 3
+    },
+    {
+      "type": "rock",
+      "variant": 2,
+      "height": 1,
+      "x": 7,
+      "y": 0
+    }
+  ],
+  "backgrounds": [
+    {
+      "type": "water",
+      "x": 8,
+      "y": 5
+    },
+    {
+      "type": "water",
+      "x": 8,
+      "y": 6
+    },
+    {
+      "type": "water",
+      "x": 8,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 9,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 9,
+      "y": 6
+    },
+    {
+      "type": "water",
+      "x": 9,
+      "y": 5
+    },
+    {
+      "type": "water",
+      "x": 10,
+      "y": 5
+    },
+    {
+      "type": "water",
+      "x": 11,
+      "y": 5
+    },
+    {
+      "type": "water",
+      "x": 11,
+      "y": 6
+    },
+    {
+      "type": "water",
+      "x": 10,
+      "y": 6
+    },
+    {
+      "type": "water",
+      "x": 7,
+      "y": 6
+    },
+    {
+      "type": "water",
+      "x": 7,
+      "y": 5
+    },
+    {
+      "type": "water",
+      "x": 10,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 11,
+      "y": 7
+    },
+    {
+      "type": "water",
+      "x": 9,
+      "y": 8
+    },
+    {
+      "type": "water",
+      "x": 10,
+      "y": 8
+    },
+    {
+      "type": "water",
+      "x": 11,
+      "y": 8
+    }
+  ],
+  "outOfBounds": [
+    {
+      "x": 7,
+      "y": 5
+    },
+    {
+      "x": 7,
+      "y": 6
+    },
+    {
+      "x": 8,
+      "y": 5
+    },
+    {
+      "x": 8,
+      "y": 6
+    },
+    {
+      "x": 9,
+      "y": 5
+    },
+    {
+      "x": 9,
+      "y": 6
+    },
+    {
+      "x": 8,
+      "y": 7
+    },
+    {
+      "x": 9,
+      "y": 7
+    },
+    {
+      "x": 10,
+      "y": 5
+    },
+    {
+      "x": 11,
+      "y": 5
+    },
+    {
+      "x": 11,
+      "y": 6
+    },
+    {
+      "x": 10,
+      "y": 6
+    },
+    {
+      "x": 11,
+      "y": 7
+    },
+    {
+      "x": 10,
+      "y": 7
+    },
+    {
+      "x": 9,
+      "y": 8
+    },
+    {
+      "x": 10,
+      "y": 8
+    },
+    {
+      "x": 11,
+      "y": 8
+    }
+  ]
+}

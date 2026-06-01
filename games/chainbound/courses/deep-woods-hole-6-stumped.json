@@ -1,0 +1,238 @@
+{
+  "name": "Stumped",
+  "courseId": "deep-woods",
+  "courseName": "Deep Woods",
+  "holeNumber": 6,
+  "par": 3,
+  "columns": 7,
+  "rows": 12,
+  "tee": {
+    "x": 3,
+    "y": 9
+  },
+  "basket": {
+    "x": 1,
+    "y": 2
+  },
+  "hazards": [
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 5
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 7
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 8
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 9
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 3,
+      "y": 8
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 4,
+      "y": 8
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 4,
+      "y": 9
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 2,
+      "y": 8
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 2,
+      "y": 9
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 4,
+      "y": 5
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 2,
+      "y": 4
+    },
+    {
+      "type": "stump",
+      "variant": 1,
+      "height": 1,
+      "x": 4,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 2,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 2,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 0
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 4,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 5,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 2,
+      "height": 3,
+      "x": 3,
+      "y": 6
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 6,
+      "y": 3
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 6,
+      "y": 4
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 6,
+      "y": 2
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 6,
+      "y": 1
+    },
+    {
+      "type": "tree",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 1
+    }
+  ],
+  "backgrounds": [],
+  "outOfBounds": []
+}
