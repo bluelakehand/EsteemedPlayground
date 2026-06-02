@@ -49,6 +49,7 @@
                 <span>C2 <strong id="player-c2">20%</strong></span>
                 <span>Throw-In <strong id="player-throw-in">10%</strong></span>
                 <span>Scramble <strong id="player-scramble">55%</strong></span>
+                <span>Control <strong id="player-control">3</strong></span>
               </div>
               <div class="player-menu-actions">
                 <button class="start-button" id="play-round-button" type="button">Play a Round</button>
@@ -75,13 +76,12 @@
           </div>
           <div class="spend-points-grid">
             <section class="player-deck-panel" aria-label="Disc store">
-              <h3>Store</h3>
+              <h3>Card Store</h3>
               <div class="shop-list" id="disc-shop-list"></div>
             </section>
             <section class="player-deck-panel" aria-label="Training options">
               <h3>Train</h3>
               <div class="training-list" id="training-list"></div>
-              <div class="shop-list" id="throw-shop-list"></div>
             </section>
           </div>
           <button class="start-button secondary" id="spend-back-button" type="button">Player Menu</button>
@@ -116,6 +116,7 @@
             <span>C2 <strong id="c2-stat">10%</strong></span>
             <span>Throw-In <strong id="throw-in-stat">10%</strong></span>
             <span>Scramble <strong id="scramble-stat">55%</strong></span>
+            <span>Control <strong id="control-stat">3</strong></span>
           </div>
           <button class="menu-button" id="return-menu" type="button">Player Menu</button>
         </div>
@@ -148,6 +149,9 @@
                 <button class="throw-type" id="forehand-button" type="button" aria-pressed="false">
                   Forehand
                 </button>
+                <button class="throw-type" id="pitch-button" type="button" aria-pressed="false">
+                  Pitch
+                </button>
               </div>
               <button class="throw-button" id="throw-button" type="button">
                 Throw
@@ -159,9 +163,6 @@
           </aside>
 
           <aside class="disc-hand" aria-label="Hand cards">
-            <div class="draw-controls" aria-label="Draw controls">
-              <button class="draw-button" id="draw-card-button" type="button">Draw</button>
-            </div>
             <p class="kicker hand-count">Deck: <strong id="deck-count">0</strong></p>
             <p class="kicker hand-kicker">Hand</p>
             <div class="hand-card-list" id="hand-card-list"></div>
@@ -319,6 +320,7 @@
           </div>
         </div>
       </div>
+      <div class="obstacle-tooltip" id="obstacle-tooltip" hidden></div>
     </main>
 
     <script src="courses/course-library.js"></script>
