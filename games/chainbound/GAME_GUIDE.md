@@ -86,6 +86,7 @@ Putting rules:
 - Landing one square away, including diagonals, gives a C2 putt.
 - Putt chance is base player stat plus the selected disc's `putt` modifier.
 - Missing a C2 putt moves the lie to the basket and creates a C1 putt.
+- The player can never miss more than two C1 putts in a row. After two consecutive C1 misses, the third C1 attempt becomes an automatic `Tap In`.
 - Completing the hole opens the "In the Basket!" modal with score relative to par.
 
 ## Course Rewards
@@ -122,7 +123,23 @@ The Spend Points screen keeps the same random offers until another course is com
 Course unlocks:
 
 - `Pitch and Putt` appears first and is always available.
-- Other courses are locked until Pitch and Putt is completed at even par or better.
+- Deep Woods and Sunset Park are locked until Pitch and Putt is completed at even par or better.
+- Skull Island is locked until Sunset Park or Deep Woods is completed at `+5` or better.
+- Best course scores are stored per `courseId` in browser `localStorage` under `chainbound.bestScores.v1`.
+- The course selector shows each course's best saved score on the right side of the course row.
+
+Manual save/load:
+
+- Main menu has `Load Game`.
+- Main menu has `Test Level`, which lists every individual hole regardless of unlock status.
+- Test Level starts the selected hole with a temporary randomized test bag: one card for every disc in `discs`, each paired with a random modifier from `throwCardEffects`.
+- Test rounds do not award Player Points, record best scores, save game progress, or continue to the next hole.
+- Player menu and the in-round HUD both have `Save Game`.
+- Manual saves are stored in browser `localStorage` under `chainbound.manualSave.v1`.
+- A manual save includes Player Points, player stats, deck, store offers, course unlock state, best course scores, and active round progress.
+- Active round progress includes course id, hole index, course score, current lie, stroke count, selected direction/throw, hand, draw deck, discard pile, selected cards, putt state, and current status text.
+- Active round saves also include the current C1 miss streak for Tap In logic.
+- `New Game` resets the current session but does not erase the manual save or best course scores.
 
 ## Current Cards
 
@@ -136,6 +153,7 @@ Cards combine a disc from the `discs` object with a modifier from `throwCardEffe
 | CACTI | Putter | 2 | 1 | 0 | 1 | +10 |
 | TROPICAL | Midrange | 6 | 2 | -2 | 1 | +5 |
 | GALACTIC | Driver | 9 | 2 | -1 | 1 | -10 |
+| EXPANSE | Driver | 7 | 1 | 0 | 3 | -5 |
 | TUNDRA | Midrange | 7 | 3 | 0 | 0 | 0 |
 | SHELL | Putter | 4 | 2 | 0 | 2 | +5 |
 
@@ -177,12 +195,14 @@ Editor controls:
 - `Par`: saved par value.
 - `Width`: grid columns, currently clamped from `5` to `24`.
 - `Height`: grid rows, currently clamped from `5` to `30`.
-- Asset palette: Tee, Basket, Grass variants, Water, OB, Trees, Rocks, Stump, Shrub, Erase.
+- Asset palette: Tee, Basket, Grass/Sand/Water background variants, OB, Trees, Rocks, Stump, Shrubs, Obstacles, Decor, Erase.
 - Click an asset, then click a grid cell to place it.
 - Tee and Basket are unique; placing a new one moves the existing one.
-- Grass and Water are background tiles, not obstacles. Grass 1 is the default tile; Grass 2 is saved as a background override.
+- Grass, Sand, and Water are background tiles, not obstacles. Grass 1 is the default tile; other variants are saved as background overrides.
+- Decor tiles are visual-only foreground assets saved in `decorations`; they do not block disc flight.
+- Rock 1x2 is saved as a height 1 rock hazard with `width: 2`, anchored on its left tile and occupying that tile plus the tile to its right.
 - OB marks out-of-bounds cells in the editor. OB is invisible during play, and only matters if the disc's final lie is OB after the throw or after an obstacle kick.
-- Erase removes hazards, backgrounds, OB, tee, or basket from a cell.
+- Erase removes hazards, decorations, backgrounds, OB, tee, or basket from a cell.
 - The editor grid starts blank, with no tee and no basket.
 - Drag-scroll is enabled from the area outside the grid. Grid cell clicks are reserved for placement.
 
@@ -211,12 +231,19 @@ Current saved hole JSON shape:
   "hazards": [
     { "type": "tree", "variant": 1, "height": 3, "x": 2, "y": 3 },
     { "type": "rock", "variant": 1, "height": 1, "x": 4, "y": 5 },
+    { "type": "rock", "variant": 4, "height": 1, "width": 2, "x": 1, "y": 6 },
+    { "type": "obstacle", "variant": 1, "height": 1, "x": 5, "y": 6 },
     { "type": "stump", "variant": 1, "height": 1, "x": 3, "y": 6 },
     { "type": "shrub", "variant": 1, "height": 2, "x": 6, "y": 7 }
   ],
   "backgrounds": [
     { "type": "water", "x": 5, "y": 8 },
-    { "type": "grass2", "x": 6, "y": 8 }
+    { "type": "water2", "x": 5, "y": 9 },
+    { "type": "grass2", "x": 6, "y": 8 },
+    { "type": "sand1", "x": 7, "y": 8 }
+  ],
+  "decorations": [
+    { "type": "decor", "variant": 1, "x": 4, "y": 9 }
   ],
   "outOfBounds": [
     { "x": 0, "y": 0 }
@@ -251,18 +278,30 @@ games/chainbound/
   course assets/
     grass1_bg.png
     grass2_bg.png
+    sand1_bg.png
+    decor1.png
+    obstacle1.png
+    obstacle2.png
     rock1.png
     rock2.png
+    rock3.png
+    rock4_1x2.png
     shrub1.png
+    shrub2.png
     stump1.png
+    stump2.png
     teepad.png
     tree1.png
     tree2.png
     tree3.png
     tree4.png
     tree5.png
+    tree6.png
+    tree7.png
     OB.png
     water1_bg.png
+    water2_bg.png
+    water3_bg.png
 ```
 
 ## Important Code Sections
@@ -277,11 +316,13 @@ games/chainbound/
 - `editorAssetTypes`: editor palette definitions.
 - `startingDiscIds`, `startingThrowIds`, and `startingDeck`: starting combined-card pool copied into `playerDeck`.
 - `playerDeck` and `playerPoints`: current player progression state for the session.
+- `bestCourseScores`: course best scores loaded from localStorage.
 - Deck/hand helpers: `resetDecksAndHand`, `drawFromDeck`, `autoRefillHand`.
 - Flight logic: `getThrowPath`, `rotateStep`, `flightHeight`, `resolveCollision`.
 - Course renderer: `renderCourse`.
 - Editor renderer and JSON: `renderEditorGrid`, `placeEditorAsset`, `saveEditorHole`, `loadEditorHole`.
 - Player and level menus: `renderPlayerMenu`, `showPlayerMenu`, `renderCourseSelector`, `showCourseSelect`.
+- Save/load: `saveGame`, `loadGame`, `gameSaveData`, `restoreRoundState`, `recordBestCourseScore`.
 - UI state: `showRound`, `showMenu`, `showEditor`, `updateThrowControls`.
 
 ## Maintenance Notes

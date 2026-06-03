@@ -353,6 +353,8 @@ button {
 .course-option {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 0.2rem;
   border: 2px solid rgba(122, 184, 218, 0.55);
   border-radius: 0.35rem;
@@ -379,17 +381,39 @@ button {
   filter: drop-shadow(0 0.25rem 0.35rem rgba(0, 0, 0, 0.5));
 }
 
-.course-option span {
+.course-option-main {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.course-option-main > span {
   font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   font-size: 1.65rem;
   text-transform: uppercase;
 }
 
-.course-option small {
+.course-option-main small {
   color: rgba(244, 230, 189, 0.78);
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.course-best-score {
+  justify-self: end;
+  border: 2px solid rgba(215, 179, 91, 0.58);
+  border-radius: 0.32rem;
+  padding: 0.35rem 0.55rem;
+  color: var(--chain);
+  background: rgba(0, 0, 0, 0.34);
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.course-option.locked .course-best-score {
+  margin-right: 2.4rem;
 }
 
 .shade {
@@ -906,6 +930,15 @@ h2 {
   background-color: #557735;
 }
 
+.decor-cell {
+  background-color: #587f39;
+}
+
+.wide-hazard-anchor {
+  overflow: visible;
+  z-index: 3;
+}
+
 .hazard-cell::after {
   content: "O" attr(data-obstacle-height);
   position: absolute;
@@ -979,6 +1012,16 @@ h2 {
   max-height: 88%;
   object-fit: contain;
   filter: drop-shadow(0 0.35rem 0.35rem rgba(0, 0, 0, 0.45));
+}
+
+.wide-cell-asset {
+  position: absolute;
+  left: 8%;
+  z-index: 2;
+  width: calc(200% + 0.12rem);
+  max-width: none;
+  max-height: 90%;
+  pointer-events: none;
 }
 
 .basket-cell .cell-asset {

@@ -47,10 +47,17 @@ Hole JSON shape:
   "basket": { "x": 3, "y": 4 },
   "hazards": [
     { "type": "tree", "variant": 1, "height": 3, "x": 2, "y": 2 },
-    { "type": "shrub", "variant": 1, "height": 2, "x": 4, "y": 4 }
+    { "type": "shrub", "variant": 1, "height": 2, "x": 4, "y": 4 },
+    { "type": "rock", "variant": 4, "height": 1, "width": 2, "x": 1, "y": 6 },
+    { "type": "obstacle", "variant": 1, "height": 1, "x": 5, "y": 6 }
   ],
   "backgrounds": [
-    { "type": "water", "x": 1, "y": 8 }
+    { "type": "water", "x": 1, "y": 8 },
+    { "type": "water2", "x": 2, "y": 8 },
+    { "type": "sand1", "x": 3, "y": 8 }
+  ],
+  "decorations": [
+    { "type": "decor", "variant": 1, "x": 4, "y": 8 }
   ],
   "outOfBounds": [
     { "x": 0, "y": 0 }
@@ -60,6 +67,6 @@ Hole JSON shape:
 
 The game groups holes by `courseId`, sorts them by `holeNumber`, and plays them in that order. To add more holes to a course, add another manifest entry with the same `courseId` and `courseName`.
 
-Water is stored in `backgrounds`, not `hazards`. OB is stored in `outOfBounds`; it displays in the editor only and is invisible during play.
+Water and sand are stored in `backgrounds`, not `hazards`. Decor is stored in `decorations` and is visual-only. OB is stored in `outOfBounds`; it displays in the editor only and is invisible during play. Wide assets such as `rock4_1x2.png` are saved as a hazard with `width: 2`, anchored on the left tile.
 
 Note: if the game is run through a local server, the manifest JSON fetch path can work. If the game is opened directly from disk, the embedded `CHAINBOUND_COURSES` data is used.
