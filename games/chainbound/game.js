@@ -5,8 +5,11 @@ const courseSelectScreen = document.querySelector("#course-select-screen");
 const roundScreen = document.querySelector("#round-screen");
 const editorScreen = document.querySelector("#editor-screen");
 const startRoundButton = document.querySelector("#start-round");
+const loadGameButton = document.querySelector("#load-game-button");
+const testLevelButton = document.querySelector("#test-level-button");
 const playRoundButton = document.querySelector("#play-round-button");
 const spendPointsButton = document.querySelector("#spend-points-button");
+const savePlayerButton = document.querySelector("#save-player-button");
 const playerPointsLabel = document.querySelector("#player-points");
 const playerC1Label = document.querySelector("#player-c1");
 const playerC2Label = document.querySelector("#player-c2");
@@ -20,9 +23,11 @@ const trainingList = document.querySelector("#training-list");
 const spendBackButton = document.querySelector("#spend-back-button");
 const courseSelectBackButton = document.querySelector("#course-select-back");
 const courseList = document.querySelector("#course-list");
+const courseSelectTitle = document.querySelector("#course-select-title");
 const openEditorButton = document.querySelector("#open-editor");
 const returnMenuButton = document.querySelector("#return-menu");
 const returnEditorMenuButton = document.querySelector("#return-editor-menu");
+const saveRoundButton = document.querySelector("#save-round-button");
 const courseGrid = document.querySelector("#course-grid");
 const courseViewport = document.querySelector("#course-viewport");
 const editorGrid = document.querySelector("#editor-grid");
@@ -75,6 +80,8 @@ const obstacleTooltip = document.querySelector("#obstacle-tooltip");
 let courseLibrary = window.CHAINBOUND_COURSES ?? [];
 let courseLibraryLoaded = false;
 let courseLibraryError = null;
+const bestScoresStorageKey = "chainbound.bestScores.v1";
+const manualSaveStorageKey = "chainbound.manualSave.v1";
 
 const fallbackHole = {
   id: "fallback-hole",
@@ -89,6 +96,7 @@ const fallbackHole = {
   basket: { x: 4, y: 2 },
   hazards: [],
   backgrounds: [],
+  decorations: [],
   outOfBounds: []
 };
 
@@ -163,6 +171,16 @@ const discs = {
     turn: -1,
     fade: 1,
     putt: -10
+  },
+  expanse: {
+    name: "EXPANSE",
+    type: "Driver",
+    image: "discs/expanse_driver.png",
+    speed: 7,
+    glide: 1,
+    turn: 0,
+    fade: 3,
+    putt: -5
   },
   tundra: {
     name: "TUNDRA",
@@ -269,22 +287,36 @@ const playerStats = {
   control: 3
 };
 
+let bestCourseScores = loadBestCourseScores();
+
 const editorAssetTypes = {
   tee: { label: "Tee", asset: "course assets/teepad.png" },
   basket: { label: "Basket", asset: "basket_icon.png" },
   grass: { label: "Grass 1", asset: "course assets/grass1_bg.png", background: { type: "grass" } },
   grass2: { label: "Grass 2", asset: "course assets/grass2_bg.png", background: { type: "grass2" } },
-  water: { label: "Water", asset: "course assets/water1_bg.png", background: { type: "water" } },
+  sand1: { label: "Sand", asset: "course assets/sand1_bg.png", background: { type: "sand1" } },
+  water: { label: "Water 1", asset: "course assets/water1_bg.png", background: { type: "water" } },
+  water2: { label: "Water 2", asset: "course assets/water2_bg.png", background: { type: "water2" } },
+  water3: { label: "Water 3", asset: "course assets/water3_bg.png", background: { type: "water3" } },
   ob: { label: "OB", asset: "course assets/OB.png", outOfBounds: true },
   tree1: { label: "Tree", asset: "course assets/tree1.png", hazard: { type: "tree", variant: 1, height: 3 } },
   tree2: { label: "Tree", asset: "course assets/tree2.png", hazard: { type: "tree", variant: 2, height: 3 } },
   tree3: { label: "Tree", asset: "course assets/tree3.png", hazard: { type: "tree", variant: 3, height: 3 } },
   tree4: { label: "Tree", asset: "course assets/tree4.png", hazard: { type: "tree", variant: 4, height: 3 } },
   tree5: { label: "Tree", asset: "course assets/tree5.png", hazard: { type: "tree", variant: 5, height: 3 } },
+  tree6: { label: "Tree", asset: "course assets/tree6.png", hazard: { type: "tree", variant: 6, height: 3 } },
+  tree7: { label: "Tree", asset: "course assets/tree7.png", hazard: { type: "tree", variant: 7, height: 3 } },
   rock1: { label: "Rock", asset: "course assets/rock1.png", hazard: { type: "rock", variant: 1, height: 1 } },
   rock2: { label: "Rock", asset: "course assets/rock2.png", hazard: { type: "rock", variant: 2, height: 1 } },
+  rock3: { label: "Rock", asset: "course assets/rock3.png", hazard: { type: "rock", variant: 3, height: 1 } },
+  rock4: { label: "Rock 1x2", asset: "course assets/rock4_1x2.png", hazard: { type: "rock", variant: 4, height: 1, width: 2 } },
+  obstacle1: { label: "Obstacle", asset: "course assets/obstacle1.png", hazard: { type: "obstacle", variant: 1, height: 1 } },
+  obstacle2: { label: "Obstacle", asset: "course assets/obstacle2.png", hazard: { type: "obstacle", variant: 2, height: 1 } },
   stump1: { label: "Stump", asset: "course assets/stump1.png", hazard: { type: "stump", variant: 1, height: 1 } },
+  stump2: { label: "Stump", asset: "course assets/stump2.png", hazard: { type: "stump", variant: 2, height: 1 } },
   shrub1: { label: "Shrub", asset: "course assets/shrub1.png", hazard: { type: "shrub", variant: 1, height: 2 } },
+  shrub2: { label: "Shrub", asset: "course assets/shrub2.png", hazard: { type: "shrub", variant: 2, height: 2 } },
+  decor1: { label: "Decor", asset: "course assets/decor1.png", decoration: { type: "decor", variant: 1 } },
   erase: { label: "Erase" }
 };
 
@@ -312,7 +344,7 @@ let courseScoreToPar = 0;
 let isHoleScoreRecorded = false;
 let isCourseRewardRecorded = false;
 let pendingCoursePoints = 0;
-let advancedCoursesUnlocked = false;
+let advancedCoursesUnlocked = hasParOrBetter("pitch-and-putt");
 let currentDiscCell = { ...hole.tee };
 let currentDiscImage = null;
 let currentDiscName = "Disc";
@@ -320,6 +352,10 @@ let strokeNumber = 0;
 let isThrowing = false;
 let pendingPutt = null;
 let isHoledOut = false;
+let hasActiveRound = false;
+let c1MissStreak = 0;
+let isTestRound = false;
+let testDeckOverride = null;
 let selectedEditorAsset = "tee";
 let editorHole = {
   name: "New Hole",
@@ -333,6 +369,7 @@ let editorHole = {
   basket: null,
   hazards: [],
   backgrounds: [],
+  decorations: [],
   outOfBounds: []
 };
 
@@ -343,8 +380,91 @@ function cloneHole(holeData) {
     basket: holeData.basket ? { ...holeData.basket } : null,
     hazards: (holeData.hazards ?? []).map((hazard) => ({ ...hazard })),
     backgrounds: (holeData.backgrounds ?? []).map((tile) => ({ ...tile })),
+    decorations: (holeData.decorations ?? []).map((decoration) => ({ ...decoration })),
     outOfBounds: (holeData.outOfBounds ?? []).map((tile) => ({ ...tile }))
   };
+}
+
+function readJsonStorage(key, fallback) {
+  try {
+    const rawValue = window.localStorage.getItem(key);
+    return rawValue ? JSON.parse(rawValue) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJsonStorage(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function loadBestCourseScores() {
+  const scores = readJsonStorage(bestScoresStorageKey, {});
+  return scores && typeof scores === "object" ? scores : {};
+}
+
+function saveBestCourseScores() {
+  writeJsonStorage(bestScoresStorageKey, bestCourseScores);
+}
+
+function bestScoreForCourse(courseId) {
+  const score = bestCourseScores[courseId];
+  return Number.isFinite(score) ? score : null;
+}
+
+function scoreShortText(scoreToPar) {
+  if (scoreToPar === 0) {
+    return "E";
+  }
+
+  return scoreToPar > 0 ? `+${scoreToPar}` : `${scoreToPar}`;
+}
+
+function recordBestCourseScore(courseId, scoreToPar) {
+  const currentBest = bestScoreForCourse(courseId);
+  if (currentBest !== null && scoreToPar >= currentBest) {
+    return false;
+  }
+
+  bestCourseScores = {
+    ...bestCourseScores,
+    [courseId]: scoreToPar
+  };
+  saveBestCourseScores();
+  return true;
+}
+
+function hasParOrBetter(courseId) {
+  return Number(bestCourseScores[courseId]) <= 0;
+}
+
+function hasScoreOrBetter(courseId, scoreToPar) {
+  return Number(bestCourseScores[courseId]) <= scoreToPar;
+}
+
+function areAdvancedCoursesUnlocked() {
+  return advancedCoursesUnlocked || hasParOrBetter("pitch-and-putt");
+}
+
+function isSkullIslandUnlocked() {
+  return hasScoreOrBetter("sunset-park", 5) || hasScoreOrBetter("deep-woods", 5);
+}
+
+function courseLockReason(courseId) {
+  if (courseId === "pitch-and-putt") {
+    return "";
+  }
+
+  if (courseId === "skull-island") {
+    return isSkullIslandUnlocked() ? "" : "Locked until Sunset Park or Deep Woods +5";
+  }
+
+  return areAdvancedCoursesUnlocked() ? "" : "Locked until Pitch and Putt par";
 }
 
 function courseIdFromName(name) {
@@ -456,6 +576,11 @@ function randomCardOffer(index) {
   };
 }
 
+function buildTestDeck() {
+  const throwIds = Object.keys(throwCardEffects);
+  return Object.keys(discs).map((discId) => buildCard(discId, randomSample(throwIds, 1)[0]));
+}
+
 function modifiedDisc() {
   const disc = selectedDisc();
   const effect = selectedThrowCardId ? throwCardEffects[selectedThrowCardId] : {};
@@ -499,7 +624,7 @@ function ensureSpendOffers() {
 }
 
 function resetDecksAndHand() {
-  drawDeck = shuffledDeck(playerDeck);
+  drawDeck = shuffledDeck(testDeckOverride ?? playerDeck);
   discardPile = [];
   hand = [];
   selectedDiscId = null;
@@ -752,11 +877,15 @@ function isPitchTargetCell(x, y) {
 }
 
 function hazardForCell(x, y) {
-  return hole.hazards.find((hazard) => hazard.x === x && hazard.y === y);
+  return hole.hazards.find((hazard) => isHazardOccupyingCell(hazard, x, y));
 }
 
 function backgroundForCell(x, y, holeData = hole) {
   return holeData.backgrounds?.find((tile) => tile.x === x && tile.y === y);
+}
+
+function decorationForCell(x, y, holeData = hole) {
+  return holeData.decorations?.find((decoration) => decoration.x === x && decoration.y === y);
 }
 
 function backgroundImageForCell(x, y, holeData = hole) {
@@ -765,11 +894,39 @@ function backgroundImageForCell(x, y, holeData = hole) {
     return 'url("course assets/water1_bg.png")';
   }
 
+  if (tile?.type === "water2") {
+    return 'url("course assets/water2_bg.png")';
+  }
+
+  if (tile?.type === "water3") {
+    return 'url("course assets/water3_bg.png")';
+  }
+
   if (tile?.type === "grass2") {
     return 'url("course assets/grass2_bg.png")';
   }
 
+  if (tile?.type === "sand1") {
+    return 'url("course assets/sand1_bg.png")';
+  }
+
   return 'url("course assets/grass1_bg.png")';
+}
+
+function hazardWidth(hazard) {
+  return Math.max(1, Number(hazard?.width) || 1);
+}
+
+function hazardHeight(hazard) {
+  return Math.max(1, Number(hazard?.height) || 1);
+}
+
+function isHazardOccupyingCell(hazard, x, y) {
+  return Boolean(hazard && y === hazard.y && x >= hazard.x && x < hazard.x + hazardWidth(hazard));
+}
+
+function isHazardAnchorCell(hazard, x, y) {
+  return Boolean(hazard && hazard.x === x && hazard.y === y);
 }
 
 function isOutOfBoundsCell(x, y, holeData = hole) {
@@ -892,7 +1049,7 @@ function flightStepForCell(path, x, y) {
 }
 
 function isCollision(step, hazard) {
-  return Boolean(step && hazard && step.height <= hazard.height);
+  return Boolean(step && hazard && step.height <= hazardHeight(hazard));
 }
 
 function obstructionForHazard(hazard) {
@@ -904,7 +1061,7 @@ function obstructionForHazard(hazard) {
     return 70;
   }
 
-  if (hazard.type === "rock" || hazard.type === "stump" || hazard.type === "shrub") {
+  if (hazard.type === "rock" || hazard.type === "stump" || hazard.type === "obstacle") {
     return 100;
   }
 
@@ -1028,7 +1185,13 @@ function hazardAssetPath(hazard) {
   }
 
   if (hazard?.type === "rock") {
-    return `course assets/rock${hazard.variant ?? 1}.png`;
+    return hazardWidth(hazard) > 1
+      ? `course assets/rock${hazard.variant ?? 1}_1x2.png`
+      : `course assets/rock${hazard.variant ?? 1}.png`;
+  }
+
+  if (hazard?.type === "obstacle") {
+    return `course assets/obstacle${hazard.variant ?? 1}.png`;
   }
 
   if (hazard?.type === "stump") {
@@ -1046,6 +1209,18 @@ function hazardLabel(hazard) {
   return hazard?.type ? hazard.type.charAt(0).toUpperCase() + hazard.type.slice(1) : "Obstacle";
 }
 
+function decorationAssetPath(decoration) {
+  if (decoration?.type === "decor") {
+    return `course assets/decor${decoration.variant ?? 1}.png`;
+  }
+
+  return null;
+}
+
+function decorationLabel(decoration) {
+  return decoration?.type ? decoration.type.charAt(0).toUpperCase() + decoration.type.slice(1) : "Decor";
+}
+
 function renderCourse(lockedFlightPath = null) {
   courseGrid.style.setProperty("--columns", hole.columns);
   courseGrid.style.setProperty("--rows", hole.rows);
@@ -1056,6 +1231,7 @@ function renderCourse(lockedFlightPath = null) {
     for (let x = 0; x < hole.columns; x += 1) {
       const cell = document.createElement("div");
       const hazard = hazardForCell(x, y);
+      const decoration = decorationForCell(x, y);
       const isTee = Boolean(hole.tee && sameCell(hole.tee, { x, y }));
       const isBasket = Boolean(hole.basket && sameCell(hole.basket, { x, y }));
       const flightStep = flightStepForCell(flightPath, x, y);
@@ -1083,14 +1259,27 @@ function renderCourse(lockedFlightPath = null) {
         cell.append(makeAsset("course assets/teepad.png", "Teepad"));
       }
 
+      if (decoration) {
+        const assetPath = decorationAssetPath(decoration);
+        cell.classList.add("decor-cell");
+        if (assetPath) {
+          cell.append(makeAsset(assetPath, decorationLabel(decoration)));
+        }
+      }
+
       if (hazard) {
         const assetPath = hazardAssetPath(hazard);
         cell.classList.add("hazard-cell");
-        cell.dataset.obstacleHeight = hazard.height;
+        cell.classList.toggle("wide-hazard-anchor", isHazardAnchorCell(hazard, x, y) && hazardWidth(hazard) > 1);
+        cell.dataset.obstacleHeight = hazardHeight(hazard);
         cell.dataset.obstruction = obstructionForHazard(hazard);
-        cell.dataset.tooltip = `${hazardLabel(hazard)} | Height ${hazard.height} | ${fightThroughChance(hazard)}% through`;
-        if (assetPath) {
-          cell.append(makeAsset(assetPath, hazardLabel(hazard)));
+        cell.dataset.tooltip = `${hazardLabel(hazard)} | Height ${hazardHeight(hazard)} | ${fightThroughChance(hazard)}% through`;
+        if (assetPath && isHazardAnchorCell(hazard, x, y)) {
+          const asset = makeAsset(assetPath, hazardLabel(hazard));
+          if (hazardWidth(hazard) > 1) {
+            asset.classList.add("wide-cell-asset");
+          }
+          cell.append(asset);
         }
       }
 
@@ -1174,11 +1363,11 @@ async function refreshCourseLibrary() {
 }
 
 function editorHazardForCell(x, y) {
-  return editorHole.hazards.find((hazard) => hazard.x === x && hazard.y === y);
+  return editorHole.hazards.find((hazard) => isHazardOccupyingCell(hazard, x, y));
 }
 
 function removeEditorHazard(x, y) {
-  editorHole.hazards = editorHole.hazards.filter((hazard) => hazard.x !== x || hazard.y !== y);
+  editorHole.hazards = editorHole.hazards.filter((hazard) => !isHazardOccupyingCell(hazard, x, y));
 }
 
 function setEditorBackground(x, y, type) {
@@ -1186,6 +1375,35 @@ function setEditorBackground(x, y, type) {
   if (type !== "grass") {
     editorHole.backgrounds.push({ type, x, y });
   }
+}
+
+function editorDecorationForCell(x, y) {
+  return decorationForCell(x, y, editorHole);
+}
+
+function removeEditorDecoration(x, y) {
+  editorHole.decorations = editorHole.decorations.filter((decoration) => decoration.x !== x || decoration.y !== y);
+}
+
+function setEditorDecoration(x, y, decoration) {
+  removeEditorDecoration(x, y);
+  editorHole.decorations.push({ ...decoration, x, y });
+}
+
+function coveredCellsForHazard(hazard, origin = hazard) {
+  return Array.from({ length: hazardWidth(hazard) }, (_, index) => ({ x: origin.x + index, y: origin.y }));
+}
+
+function removeEditorHazardsInCells(cells) {
+  editorHole.hazards = editorHole.hazards.filter((hazard) => !cells.some((cell) => isHazardOccupyingCell(hazard, cell.x, cell.y)));
+}
+
+function canPlaceEditorHazard(hazard, x, y) {
+  return coveredCellsForHazard(hazard, { x, y }).every((cell) => {
+    const inBounds = cell.x >= 0 && cell.x < editorHole.columns && cell.y >= 0 && cell.y < editorHole.rows;
+    const reserved = (editorHole.tee && sameCell(editorHole.tee, cell)) || (editorHole.basket && sameCell(editorHole.basket, cell));
+    return inBounds && !reserved;
+  });
 }
 
 function removeEditorOutOfBounds(x, y) {
@@ -1227,6 +1445,7 @@ function renderEditorGrid() {
     for (let x = 0; x < editorHole.columns; x += 1) {
       const cell = document.createElement("button");
       const hazard = editorHazardForCell(x, y);
+      const decoration = editorDecorationForCell(x, y);
       const isTee = Boolean(editorHole.tee && sameCell(editorHole.tee, { x, y }));
       const isBasket = Boolean(editorHole.basket && sameCell(editorHole.basket, { x, y }));
 
@@ -1242,14 +1461,27 @@ function renderEditorGrid() {
         cell.append(makeAsset("course assets/OB.png", "Out of bounds"));
       }
 
+      if (decoration) {
+        const assetPath = decorationAssetPath(decoration);
+        cell.classList.add("decor-cell");
+        if (assetPath) {
+          cell.append(makeAsset(assetPath, decorationLabel(decoration)));
+        }
+      }
+
       if (hazard) {
         const assetPath = hazardAssetPath(hazard);
         cell.classList.add("hazard-cell");
-        cell.dataset.obstacleHeight = hazard.height;
+        cell.classList.toggle("wide-hazard-anchor", isHazardAnchorCell(hazard, x, y) && hazardWidth(hazard) > 1);
+        cell.dataset.obstacleHeight = hazardHeight(hazard);
         cell.dataset.obstruction = obstructionForHazard(hazard);
-        cell.dataset.tooltip = `${hazardLabel(hazard)} | Height ${hazard.height} | ${fightThroughChance(hazard)}% through`;
-        if (assetPath) {
-          cell.append(makeAsset(assetPath, hazardLabel(hazard)));
+        cell.dataset.tooltip = `${hazardLabel(hazard)} | Height ${hazardHeight(hazard)} | ${fightThroughChance(hazard)}% through`;
+        if (assetPath && isHazardAnchorCell(hazard, x, y)) {
+          const asset = makeAsset(assetPath, hazardLabel(hazard));
+          if (hazardWidth(hazard) > 1) {
+            asset.classList.add("wide-cell-asset");
+          }
+          cell.append(asset);
         }
       }
 
@@ -1280,14 +1512,17 @@ function placeEditorAsset(x, y) {
       editorHole.basket = null;
     }
     removeEditorHazard(x, y);
+    removeEditorDecoration(x, y);
   } else if (selectedEditorAsset === "basket") {
     editorHole.basket = { x, y };
     if (editorHole.tee && sameCell(editorHole.tee, { x, y })) {
       editorHole.tee = null;
     }
     removeEditorHazard(x, y);
+    removeEditorDecoration(x, y);
   } else if (selectedEditorAsset === "erase") {
     removeEditorHazard(x, y);
+    removeEditorDecoration(x, y);
     setEditorBackground(x, y, "grass");
     removeEditorOutOfBounds(x, y);
     if (editorHole.tee && sameCell(editorHole.tee, { x, y })) {
@@ -1302,10 +1537,16 @@ function placeEditorAsset(x, y) {
       setEditorBackground(x, y, asset.background.type);
     } else if (asset.outOfBounds) {
       setEditorOutOfBounds(x, y);
-    } else {
-      removeEditorHazard(x, y);
+    } else if (asset.decoration) {
       const isReservedCell = (editorHole.tee && sameCell(editorHole.tee, { x, y })) || (editorHole.basket && sameCell(editorHole.basket, { x, y }));
       if (!isReservedCell) {
+        setEditorDecoration(x, y, asset.decoration);
+      }
+    } else {
+      const coveredCells = coveredCellsForHazard(asset.hazard, { x, y });
+      removeEditorHazardsInCells(coveredCells);
+      coveredCells.forEach((cell) => removeEditorDecoration(cell.x, cell.y));
+      if (canPlaceEditorHazard(asset.hazard, x, y)) {
         editorHole.hazards.push({ ...asset.hazard, x, y });
       }
     }
@@ -1340,10 +1581,14 @@ function updateEditorDimensions() {
   editorHole.basket = clampEditorPoint(editorHole.basket);
   editorHole.hazards = editorHole.hazards
     .map((hazard) => ({ ...hazard, ...clampEditorPoint(hazard) }))
+    .filter((hazard) => hazard.x + hazardWidth(hazard) <= editorHole.columns)
     .filter((hazard, index, hazards) => hazards.findIndex((other) => other.x === hazard.x && other.y === hazard.y) === index);
   editorHole.backgrounds = editorHole.backgrounds
     .map((tile) => ({ ...tile, ...clampEditorPoint(tile) }))
     .filter((tile, index, tiles) => tile.type !== "grass" && tiles.findIndex((other) => other.x === tile.x && other.y === tile.y) === index);
+  editorHole.decorations = editorHole.decorations
+    .map((decoration) => ({ ...decoration, ...clampEditorPoint(decoration) }))
+    .filter((decoration, index, decorations) => decorations.findIndex((other) => other.x === decoration.x && other.y === decoration.y) === index);
   editorHole.outOfBounds = editorHole.outOfBounds
     .map((tile) => clampEditorPoint(tile))
     .filter((tile, index, tiles) => tiles.findIndex((other) => other.x === tile.x && other.y === tile.y) === index);
@@ -1365,6 +1610,7 @@ function editorHoleJson() {
     basket: editorHole.basket,
     hazards: editorHole.hazards,
     backgrounds: editorHole.backgrounds,
+    decorations: editorHole.decorations,
     outOfBounds: editorHole.outOfBounds
   };
 }
@@ -1397,20 +1643,26 @@ function normalizeLoadedHole(data) {
     basket: data.basket && Number.isInteger(data.basket.x) && Number.isInteger(data.basket.y) ? data.basket : null,
     hazards: Array.isArray(data.hazards)
       ? data.hazards
-        .filter((hazard) => Number.isInteger(hazard.x) && Number.isInteger(hazard.y) && ["tree", "rock", "stump", "shrub"].includes(hazard.type))
+        .filter((hazard) => Number.isInteger(hazard.x) && Number.isInteger(hazard.y) && ["tree", "rock", "stump", "shrub", "obstacle"].includes(hazard.type))
         .map((hazard) => ({
           ...hazard,
-          height: hazard.type === "tree" ? 3 : hazard.type === "shrub" ? 2 : 1
+          height: hazard.type === "tree" ? 3 : hazard.type === "shrub" ? 2 : 1,
+          width: hazard.type === "rock" && Number(hazard.width) === 2 ? 2 : undefined
         }))
       : [],
     backgrounds: [
       ...(Array.isArray(data.backgrounds)
-        ? data.backgrounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y) && ["water", "grass2"].includes(tile.type))
+        ? data.backgrounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y) && ["water", "water2", "water3", "grass2", "sand1"].includes(tile.type))
         : []),
       ...(Array.isArray(data.hazards)
         ? data.hazards.filter((hazard) => hazard.type === "water" && Number.isInteger(hazard.x) && Number.isInteger(hazard.y)).map((hazard) => ({ type: "water", x: hazard.x, y: hazard.y }))
         : [])
     ],
+    decorations: Array.isArray(data.decorations)
+      ? data.decorations
+        .filter((decoration) => Number.isInteger(decoration.x) && Number.isInteger(decoration.y) && ["decor"].includes(decoration.type))
+        .map((decoration) => ({ ...decoration }))
+      : [],
     outOfBounds: Array.isArray(data.outOfBounds)
       ? data.outOfBounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y)).map((tile) => ({ x: tile.x, y: tile.y }))
       : []
@@ -1430,6 +1682,7 @@ function loadEditorHole(file) {
       editorHole.basket = clampEditorPoint(editorHole.basket);
       editorHole.hazards = editorHole.hazards.map((hazard) => ({ ...hazard, ...clampEditorPoint(hazard) }));
       editorHole.backgrounds = editorHole.backgrounds.map((tile) => ({ ...tile, ...clampEditorPoint(tile) }));
+      editorHole.decorations = editorHole.decorations.map((decoration) => ({ ...decoration, ...clampEditorPoint(decoration) }));
       editorHole.outOfBounds = editorHole.outOfBounds.map((tile) => clampEditorPoint(tile));
       syncEditorInputs();
       renderEditorGrid();
@@ -1702,7 +1955,7 @@ function updateActionButton() {
   }
 
   if (pendingPutt?.circle === "c1") {
-    throwButton.textContent = "Try C1 Putt";
+    throwButton.textContent = c1MissStreak >= 2 ? "Tap In" : "Try C1 Putt";
     throwButton.disabled = false;
     return;
   }
@@ -1771,14 +2024,19 @@ function completeHole() {
     updateCourseScoreDisplay();
   }
 
-  const hasNextHole = selectedCourseHoleIndex < (selectedCourse.holes?.length ?? 0) - 1;
+  const hasNextHole = !isTestRound && selectedCourseHoleIndex < (selectedCourse.holes?.length ?? 0) - 1;
   if (!hasNextHole && !isCourseRewardRecorded) {
-    pendingCoursePoints = courseRewardPoints(courseScoreToPar);
-    playerPoints += pendingCoursePoints;
-    if (selectedCourse.id === "pitch-and-putt" && courseScoreToPar <= 0) {
-      advancedCoursesUnlocked = true;
+    if (isTestRound) {
+      pendingCoursePoints = 0;
+    } else {
+      recordBestCourseScore(selectedCourse.id, courseScoreToPar);
+      pendingCoursePoints = courseRewardPoints(courseScoreToPar);
+      playerPoints += pendingCoursePoints;
+      if (selectedCourse.id === "pitch-and-putt" && courseScoreToPar <= 0) {
+        advancedCoursesUnlocked = true;
+      }
+      generateSpendOffers();
     }
-    generateSpendOffers();
     isCourseRewardRecorded = true;
   }
 
@@ -1819,25 +2077,266 @@ function scoreLabel(scoreToPar) {
 
 function showHoleCompleteModal() {
   const scoreToPar = strokeNumber - hole.par;
-  const hasNextHole = selectedCourseHoleIndex < (selectedCourse.holes?.length ?? 0) - 1;
+  const hasNextHole = !isTestRound && selectedCourseHoleIndex < (selectedCourse.holes?.length ?? 0) - 1;
   scoreResult.textContent = scoreLabel(scoreToPar);
   scoreResult.classList.remove("score-under", "score-even", "score-over");
   scoreResult.classList.add(scoreToPar < 0 ? "score-under" : scoreToPar === 0 ? "score-even" : "score-over");
   coursePointsResult.hidden = hasNextHole;
-  coursePointsResult.innerHTML = hasNextHole ? "" : `${courseScoreText(courseScoreToPar)}. Earned <span class="point-value"><img src="player_points.png" alt=""> <strong>${pendingCoursePoints}</strong></span> Player Points.`;
-  closeHoleModalButton.textContent = hasNextHole ? "Next Hole" : "Finish Course";
+  coursePointsResult.innerHTML = hasNextHole
+    ? ""
+    : isTestRound
+      ? "Test complete. No points or best score recorded."
+      : `${courseScoreText(courseScoreToPar)}. Earned <span class="point-value"><img src="player_points.png" alt=""> <strong>${pendingCoursePoints}</strong></span> Player Points.`;
+  closeHoleModalButton.textContent = hasNextHole ? "Next Hole" : isTestRound ? "Finish Test" : "Finish Course";
   holeCompleteModal.hidden = false;
   closeHoleModalButton.focus();
 }
 
+function cardSaveData(card) {
+  return {
+    ...card
+  };
+}
+
+function roundSaveData() {
+  if (!hasActiveRound) {
+    return null;
+  }
+
+  return {
+    courseId: selectedCourse.id,
+    holeIndex: selectedCourseHoleIndex,
+    courseScoreToPar,
+    isHoleScoreRecorded,
+    isCourseRewardRecorded,
+    pendingCoursePoints,
+    currentDiscCell: { ...currentDiscCell },
+    currentDiscImage,
+    currentDiscName,
+    strokeNumber,
+    c1MissStreak,
+    pendingPutt: pendingPutt ? { ...pendingPutt } : null,
+    isHoledOut,
+    selectedThrow,
+    selectedDirection,
+    drawDeck: drawDeck.map(cardSaveData),
+    discardPile: discardPile.map(cardSaveData),
+    hand: hand.map(cardSaveData),
+    selectedDiscId,
+    selectedDiscInstanceId,
+    selectedThrowCardId,
+    selectedThrowCardInstanceId,
+    lieNote: lieNote.hidden ? "" : lieNote.textContent
+  };
+}
+
+function gameSaveData() {
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    playerPoints,
+    playerStats: { ...playerStats },
+    playerDeck: playerDeck.map(cardSaveData),
+    spendOffers,
+    advancedCoursesUnlocked,
+    bestCourseScores,
+    activeRound: roundSaveData()
+  };
+}
+
+function saveGame() {
+  if (isThrowing) {
+    setLieNote("Wait for the throw to finish before saving.");
+    return;
+  }
+  if (isTestRound) {
+    setLieNote("Test rounds are not saved.");
+    return;
+  }
+
+  const didSave = writeJsonStorage(manualSaveStorageKey, gameSaveData());
+  const message = didSave ? "Game saved." : "Could not save game.";
+  setLieNote(message);
+  if (playerMenuScreen.hidden === false) {
+    savePlayerButton.textContent = didSave ? "Saved" : "Save Failed";
+    window.setTimeout(() => {
+      savePlayerButton.textContent = "Save Game";
+    }, 900);
+  }
+  if (roundScreen.hidden === false) {
+    saveRoundButton.textContent = didSave ? "Saved" : "Save Failed";
+    window.setTimeout(() => {
+      saveRoundButton.textContent = "Save Game";
+    }, 900);
+  }
+}
+
+function isValidCard(card) {
+  return Boolean(card && discs[card.discId] && (card.throwId === null || card.throwId === undefined || throwCardEffects[card.throwId]));
+}
+
+function loadCards(cards) {
+  return Array.isArray(cards) ? cards.filter(isValidCard).map((card) => ({
+    ...card,
+    throwId: card.throwId ?? null
+  })) : [];
+}
+
+function loadPlayerState(saveData) {
+  playerPoints = Number.isFinite(saveData.playerPoints) ? saveData.playerPoints : playerPoints;
+  if (saveData.playerStats && typeof saveData.playerStats === "object") {
+    Object.keys(playerStats).forEach((stat) => {
+      if (Number.isFinite(saveData.playerStats[stat])) {
+        playerStats[stat] = saveData.playerStats[stat];
+      }
+    });
+  }
+  const savedDeck = loadCards(saveData.playerDeck);
+  if (savedDeck.length) {
+    playerDeck = savedDeck;
+  }
+  if (saveData.spendOffers && typeof saveData.spendOffers === "object") {
+    spendOffers = saveData.spendOffers;
+  }
+  if (saveData.bestCourseScores && typeof saveData.bestCourseScores === "object") {
+    bestCourseScores = saveData.bestCourseScores;
+    saveBestCourseScores();
+  }
+  advancedCoursesUnlocked = Boolean(saveData.advancedCoursesUnlocked || hasParOrBetter("pitch-and-putt"));
+}
+
+function resetGameState() {
+  playerPoints = 5;
+  playerStats.c1 = 50;
+  playerStats.c2 = 20;
+  playerStats.throwIn = 10;
+  playerStats.scramble = 55;
+  playerStats.control = 3;
+  playerDeck = startingDeck.map(cloneCard);
+  spendOffers = null;
+  pendingPurchase = null;
+  selectedThrow = "backhand";
+  selectedDirection = "up";
+  drawDeck = [];
+  discardPile = [];
+  hand = [];
+  selectedDiscId = null;
+  selectedDiscInstanceId = null;
+  selectedThrowCardId = null;
+  selectedThrowCardInstanceId = null;
+  selectedCourse = courseLibrary[0] ?? selectedCourse;
+  selectedCourseHoleIndex = 0;
+  courseScoreToPar = 0;
+  isHoleScoreRecorded = false;
+  isCourseRewardRecorded = false;
+  pendingCoursePoints = 0;
+  advancedCoursesUnlocked = hasParOrBetter("pitch-and-putt");
+  currentDiscCell = { ...(hole.tee ?? { x: 0, y: 0 }) };
+  currentDiscImage = null;
+  currentDiscName = "Disc";
+  strokeNumber = 0;
+  pendingPutt = null;
+  isHoledOut = false;
+  c1MissStreak = 0;
+  hasActiveRound = false;
+  generateSpendOffers();
+}
+
+function restoreRoundState(roundData) {
+  const courseIndex = courseLibrary.findIndex((course) => course.id === roundData.courseId);
+  if (courseIndex < 0) {
+    hasActiveRound = false;
+    return false;
+  }
+
+  selectedCourse = courseLibrary[courseIndex];
+  selectedCourseHoleIndex = Math.min(Math.max(Number(roundData.holeIndex) || 0, 0), Math.max(0, (selectedCourse.holes?.length ?? 1) - 1));
+  hole = cloneHole(selectedCourse.holes?.[selectedCourseHoleIndex] ?? fallbackHole);
+  courseScoreToPar = Number.isFinite(roundData.courseScoreToPar) ? roundData.courseScoreToPar : 0;
+  isHoleScoreRecorded = Boolean(roundData.isHoleScoreRecorded);
+  isCourseRewardRecorded = Boolean(roundData.isCourseRewardRecorded);
+  pendingCoursePoints = Number.isFinite(roundData.pendingCoursePoints) ? roundData.pendingCoursePoints : 0;
+  currentDiscCell = roundData.currentDiscCell && Number.isInteger(roundData.currentDiscCell.x) && Number.isInteger(roundData.currentDiscCell.y)
+    ? { ...roundData.currentDiscCell }
+    : { ...hole.tee };
+  currentDiscImage = typeof roundData.currentDiscImage === "string" ? roundData.currentDiscImage : null;
+  currentDiscName = typeof roundData.currentDiscName === "string" ? roundData.currentDiscName : "Disc";
+  strokeNumber = Number.isFinite(roundData.strokeNumber) ? roundData.strokeNumber : 0;
+  c1MissStreak = Number.isFinite(roundData.c1MissStreak) ? roundData.c1MissStreak : 0;
+  pendingPutt = roundData.pendingPutt ? { ...roundData.pendingPutt } : null;
+  isHoledOut = Boolean(roundData.isHoledOut);
+  selectedThrow = ["backhand", "forehand", "pitch"].includes(roundData.selectedThrow) ? roundData.selectedThrow : "backhand";
+  selectedDirection = ["up", "right", "down", "left"].includes(roundData.selectedDirection) ? roundData.selectedDirection : "up";
+  drawDeck = loadCards(roundData.drawDeck);
+  discardPile = loadCards(roundData.discardPile);
+  hand = loadCards(roundData.hand);
+  selectedDiscInstanceId = hand.some((card) => card.instanceId === roundData.selectedDiscInstanceId) ? roundData.selectedDiscInstanceId : null;
+  selectedDiscId = selectedDiscInstanceId ? hand.find((card) => card.instanceId === selectedDiscInstanceId)?.discId ?? null : null;
+  selectedThrowCardInstanceId = hand.some((card) => card.instanceId === roundData.selectedThrowCardInstanceId) ? roundData.selectedThrowCardInstanceId : null;
+  selectedThrowCardId = selectedThrowCardInstanceId ? hand.find((card) => card.instanceId === selectedThrowCardInstanceId)?.throwId ?? null : null;
+  selectFirstPlayableCards();
+  hasActiveRound = true;
+  return true;
+}
+
+function renderRestoredRound(note = "") {
+  roundHoleLabel.textContent = `Hole ${hole.holeNumber ?? selectedCourseHoleIndex + 1}`;
+  roundTitle.textContent = hole.name;
+  roundParLabel.textContent = `Par ${hole.par}`;
+  updateCourseScoreDisplay();
+  holeCompleteModal.hidden = true;
+  setLieNote(note);
+  updateThrowControls();
+  renderCourse();
+  menuScreen.hidden = true;
+  playerMenuScreen.hidden = true;
+  spendPointsScreen.hidden = true;
+  courseSelectScreen.hidden = true;
+  editorScreen.hidden = true;
+  roundScreen.hidden = false;
+  scrollCourseToCell(currentDiscCell);
+  handCardList.querySelector(".disc-card.selected")?.focus();
+}
+
+async function loadGame() {
+  const saveData = readJsonStorage(manualSaveStorageKey, null);
+  if (!saveData) {
+    loadGameButton.textContent = "No Save Found";
+    window.setTimeout(() => {
+      loadGameButton.textContent = "Load Game";
+    }, 1000);
+    return;
+  }
+
+  await loadCourseLibrary();
+  loadPlayerState(saveData);
+  if (saveData.activeRound && restoreRoundState(saveData.activeRound)) {
+    const savedNote = saveData.activeRound.lieNote ? ` ${saveData.activeRound.lieNote}` : "";
+    renderRestoredRound(`Game loaded.${savedNote}`);
+    return;
+  }
+
+  hasActiveRound = false;
+  showPlayerMenu();
+}
+
 function closeHoleCompleteModal() {
   holeCompleteModal.hidden = true;
+  if (isTestRound) {
+    isTestRound = false;
+    testDeckOverride = null;
+    hasActiveRound = false;
+    showMenu();
+    return;
+  }
+
   if (selectedCourseHoleIndex < (selectedCourse.holes?.length ?? 0) - 1) {
     const courseIndex = Math.max(0, courseLibrary.findIndex((course) => course.id === selectedCourse.id));
     showRound(courseIndex, selectedCourseHoleIndex + 1);
     return;
   }
 
+  hasActiveRound = false;
   showPlayerMenu();
 }
 
@@ -1860,15 +2359,20 @@ function renderCourseSelector() {
     const button = document.createElement("button");
     const holeCount = course.holes?.length ?? 0;
     const coursePar = (course.holes ?? []).reduce((total, courseHole) => total + (Number(courseHole.par) || 0), 0);
-    const isLocked = course.id !== "pitch-and-putt" && !advancedCoursesUnlocked;
+    const lockReason = courseLockReason(course.id);
+    const isLocked = Boolean(lockReason);
+    const bestScore = bestScoreForCourse(course.id);
     button.type = "button";
     button.className = "course-option";
     button.classList.toggle("locked", isLocked);
     button.disabled = isLocked;
     button.innerHTML = `
       ${isLocked ? `<img class="course-lock-icon" src="lock.png" alt="">` : ""}
-      <span>${course.name}</span>
-      <small>${holeCount} ${holeCount === 1 ? "hole" : "holes"} - Par ${coursePar}${isLocked ? " - Locked until Pitch and Putt par" : ""}</small>
+      <span class="course-option-main">
+        <span>${course.name}</span>
+        <small>${holeCount} ${holeCount === 1 ? "hole" : "holes"} - Par ${coursePar}${isLocked ? ` - ${lockReason}` : ""}</small>
+      </span>
+      <strong class="course-best-score">${bestScore === null ? "Best --" : `Best ${scoreShortText(bestScore)}`}</strong>
     `;
     if (!isLocked) {
       button.addEventListener("click", () => showRound(courseIndex));
@@ -1882,6 +2386,34 @@ function renderCourseSelector() {
     empty.textContent = courseLibraryError
       ? `Could not load course JSON files. ${courseLibraryError}`
       : "No preset courses found. Add JSON files to games/chainbound/courses/ and list them in course-library.js.";
+    courseList.append(empty);
+  }
+}
+
+function renderTestLevelSelector() {
+  courseList.innerHTML = "";
+
+  courseLibrary.forEach((course, courseIndex) => {
+    (course.holes ?? []).forEach((courseHole, holeIndex) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "course-option";
+      button.innerHTML = `
+        <span class="course-option-main">
+          <span>${courseHole.name}</span>
+          <small>${course.name} - Hole ${courseHole.holeNumber ?? holeIndex + 1} - Par ${courseHole.par}</small>
+        </span>
+        <strong class="course-best-score">Test</strong>
+      `;
+      button.addEventListener("click", () => startTestLevel(courseIndex, holeIndex));
+      courseList.append(button);
+    });
+  });
+
+  if (!courseList.children.length) {
+    const empty = document.createElement("p");
+    empty.className = "lie-note";
+    empty.textContent = "No holes found for testing.";
     courseList.append(empty);
   }
 }
@@ -2039,6 +2571,7 @@ function renderSpendPoints() {
 }
 async function showCourseSelect() {
   await loadCourseLibrary();
+  courseSelectTitle.textContent = "Level Selector";
   renderCourseSelector();
   menuScreen.hidden = true;
   playerMenuScreen.hidden = true;
@@ -2047,6 +2580,26 @@ async function showCourseSelect() {
   editorScreen.hidden = true;
   courseSelectScreen.hidden = false;
   courseList.querySelector("button")?.focus();
+}
+
+async function showTestLevelSelect() {
+  await loadCourseLibrary();
+  courseSelectTitle.textContent = "Test Level";
+  renderTestLevelSelector();
+  menuScreen.hidden = true;
+  playerMenuScreen.hidden = true;
+  spendPointsScreen.hidden = true;
+  roundScreen.hidden = true;
+  editorScreen.hidden = true;
+  courseSelectScreen.hidden = false;
+  courseList.querySelector("button")?.focus();
+}
+
+function startTestLevel(courseIndex, holeIndex) {
+  isTestRound = true;
+  testDeckOverride = buildTestDeck();
+  showRound(courseIndex, holeIndex);
+  setLieNote("Test level: random bag with one of every disc and random modifiers.");
 }
 
 function showPlayerMenu() {
@@ -2129,6 +2682,7 @@ function puttModifierText() {
 function resolveLanding(cell) {
   const basketDistance = gridDistance(cell, hole.basket);
   pendingPutt = null;
+  c1MissStreak = 0;
 
   if (basketDistance === 0) {
     const chance = throwInChance();
@@ -2159,15 +2713,19 @@ function attemptPutt() {
 
   const circle = pendingPutt.circle;
   const chance = puttChance(circle);
+  const isTapIn = circle === "c1" && c1MissStreak >= 2;
   const puttDisc = selectedDisc();
   const discName = puttDisc.name;
   currentDiscImage = puttDisc.image;
   currentDiscName = puttDisc.name;
   strokeNumber += 1;
 
-  if (percentRoll(chance)) {
+  if (isTapIn || percentRoll(chance)) {
     pendingPutt = null;
-    setLieNote(`${circle.toUpperCase()} putt made at ${chance}% with ${discName}${selectedThrowCardId ? ` and ${throwCardEffects[selectedThrowCardId].name}` : ""}.`);
+    c1MissStreak = 0;
+    setLieNote(isTapIn
+      ? `Tap in made with ${discName}.`
+      : `${circle.toUpperCase()} putt made at ${chance}% with ${discName}${selectedThrowCardId ? ` and ${throwCardEffects[selectedThrowCardId].name}` : ""}.`);
     discardSelectedDisc();
     if (selectedThrowCardId) {
       discardCard(selectedThrowCardInstanceId);
@@ -2179,8 +2737,10 @@ function attemptPutt() {
     if (circle === "c2") {
       currentDiscCell = { ...hole.basket };
       pendingPutt = { circle: "c1" };
+      c1MissStreak = 0;
       setLieNote(`C2 putt missed at ${chance}% with ${discName}. Comeback C1 putt from the basket.`);
     } else {
+      c1MissStreak += 1;
       setLieNote(`C1 putt missed at ${chance}% with ${discName}. Try again from the same lie.`);
     }
     discardSelectedDisc();
@@ -2310,9 +2870,10 @@ async function animateThrow() {
 }
 
 function showRound(courseIndex = 0, holeIndex = 0) {
+  hasActiveRound = true;
   selectedCourse = courseLibrary[courseIndex] ?? selectedCourse;
   selectedCourseHoleIndex = holeIndex;
-  if (selectedCourseHoleIndex === 0) {
+  if (selectedCourseHoleIndex === 0 || isTestRound) {
     courseScoreToPar = 0;
     isCourseRewardRecorded = false;
     pendingCoursePoints = 0;
@@ -2330,6 +2891,7 @@ function showRound(courseIndex = 0, holeIndex = 0) {
   strokeNumber = 0;
   pendingPutt = null;
   isHoledOut = false;
+  c1MissStreak = 0;
   holeCompleteModal.hidden = true;
   setLieNote(null);
   updateThrowControls();
@@ -2344,6 +2906,8 @@ function showRound(courseIndex = 0, holeIndex = 0) {
 }
 
 function showMenu() {
+  isTestRound = false;
+  testDeckOverride = null;
   roundScreen.hidden = true;
   playerMenuScreen.hidden = true;
   spendPointsScreen.hidden = true;
@@ -2356,6 +2920,7 @@ function showMenu() {
   strokeNumber = 0;
   pendingPutt = null;
   isHoledOut = false;
+  c1MissStreak = 0;
   holeCompleteModal.hidden = true;
   setLieNote(null);
   updateThrowControls();
@@ -2395,15 +2960,20 @@ loadCourseLibrary().then(() => {
   renderPlayerMenu();
 });
 startRoundButton.addEventListener("click", () => {
+  resetGameState();
   showPlayerMenu();
 });
+loadGameButton.addEventListener("click", loadGame);
+testLevelButton.addEventListener("click", showTestLevelSelect);
 playRoundButton.addEventListener("click", showCourseSelect);
 spendPointsButton.addEventListener("click", showSpendPoints);
+savePlayerButton.addEventListener("click", saveGame);
 spendBackButton.addEventListener("click", showPlayerMenu);
 courseSelectBackButton.addEventListener("click", showMenu);
 openEditorButton.addEventListener("click", showEditor);
 returnMenuButton.addEventListener("click", showPlayerMenu);
 returnEditorMenuButton.addEventListener("click", showMenu);
+saveRoundButton.addEventListener("click", saveGame);
 backhandButton.addEventListener("click", () => selectThrow("backhand"));
 forehandButton.addEventListener("click", () => selectThrow("forehand"));
 pitchButton.addEventListener("click", () => selectThrow("pitch"));

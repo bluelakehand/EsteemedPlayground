@@ -27,6 +27,12 @@
           <button class="start-button" id="start-round" type="button">
             New Game
           </button>
+          <button class="start-button secondary" id="load-game-button" type="button">
+            Load Game
+          </button>
+          <button class="start-button secondary" id="test-level-button" type="button">
+            Test Level
+          </button>
           <button class="start-button secondary" id="open-editor" type="button">
             Level Editor
           </button>
@@ -54,6 +60,7 @@
               <div class="player-menu-actions">
                 <button class="start-button" id="play-round-button" type="button">Play a Round</button>
                 <button class="start-button secondary" id="spend-points-button" type="button">Spend Points</button>
+                <button class="start-button secondary" id="save-player-button" type="button">Save Game</button>
               </div>
             </section>
             <section class="player-deck-panel" aria-label="Deck of cards">
@@ -118,6 +125,7 @@
             <span>Scramble <strong id="scramble-stat">55%</strong></span>
             <span>Control <strong id="control-stat">3</strong></span>
           </div>
+          <button class="menu-button" id="save-round-button" type="button">Save Game</button>
           <button class="menu-button" id="return-menu" type="button">Player Menu</button>
         </div>
 
@@ -240,9 +248,21 @@
                 <img src="course assets/grass2_bg.png" alt="">
                 Grass 2
               </button>
+              <button class="asset-button" type="button" data-editor-asset="sand1" aria-pressed="false">
+                <img src="course assets/sand1_bg.png" alt="">
+                Sand
+              </button>
               <button class="asset-button" type="button" data-editor-asset="water" aria-pressed="false">
                 <img src="course assets/water1_bg.png" alt="">
-                Water
+                Water 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="water2" aria-pressed="false">
+                <img src="course assets/water2_bg.png" alt="">
+                Water 2
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="water3" aria-pressed="false">
+                <img src="course assets/water3_bg.png" alt="">
+                Water 3
               </button>
               <button class="asset-button" type="button" data-editor-asset="ob" aria-pressed="false">
                 <img src="course assets/OB.png" alt="">
@@ -268,6 +288,14 @@
                 <img src="course assets/tree5.png" alt="">
                 Tree 5
               </button>
+              <button class="asset-button" type="button" data-editor-asset="tree6" aria-pressed="false">
+                <img src="course assets/tree6.png" alt="">
+                Tree 6
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="tree7" aria-pressed="false">
+                <img src="course assets/tree7.png" alt="">
+                Tree 7
+              </button>
               <button class="asset-button" type="button" data-editor-asset="rock1" aria-pressed="false">
                 <img src="course assets/rock1.png" alt="">
                 Rock 1
@@ -276,13 +304,41 @@
                 <img src="course assets/rock2.png" alt="">
                 Rock 2
               </button>
+              <button class="asset-button" type="button" data-editor-asset="rock3" aria-pressed="false">
+                <img src="course assets/rock3.png" alt="">
+                Rock 3
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="rock4" aria-pressed="false">
+                <img src="course assets/rock4_1x2.png" alt="">
+                Rock 1x2
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="obstacle1" aria-pressed="false">
+                <img src="course assets/obstacle1.png" alt="">
+                Obstacle 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="obstacle2" aria-pressed="false">
+                <img src="course assets/obstacle2.png" alt="">
+                Obstacle 2
+              </button>
               <button class="asset-button" type="button" data-editor-asset="stump1" aria-pressed="false">
                 <img src="course assets/stump1.png" alt="">
-                Stump
+                Stump 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="stump2" aria-pressed="false">
+                <img src="course assets/stump2.png" alt="">
+                Stump 2
               </button>
               <button class="asset-button" type="button" data-editor-asset="shrub1" aria-pressed="false">
                 <img src="course assets/shrub1.png" alt="">
-                Shrub
+                Shrub 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="shrub2" aria-pressed="false">
+                <img src="course assets/shrub2.png" alt="">
+                Shrub 2
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="decor1" aria-pressed="false">
+                <img src="course assets/decor1.png" alt="">
+                Decor
               </button>
               <button class="asset-button erase" type="button" data-editor-asset="erase" aria-pressed="false">
                 Erase
