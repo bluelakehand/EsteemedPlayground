@@ -1,0 +1,857 @@
+{
+  "name": "Asteroid Belt",
+  "courseId": "crystal-craters",
+  "courseName": "Crystal Craters",
+  "holeNumber": 3,
+  "par": 5,
+  "columns": 9,
+  "rows": 18,
+  "tee": {
+    "x": 5,
+    "y": 17
+  },
+  "basket": {
+    "x": 4,
+    "y": 0
+  },
+  "hazards": [
+    {
+      "type": "crater",
+      "variant": 1,
+      "height": 2,
+      "obstruction": 50,
+      "x": 2,
+      "y": 8
+    },
+    {
+      "type": "crater",
+      "variant": 1,
+      "height": 2,
+      "obstruction": 50,
+      "x": 6,
+      "y": 4
+    },
+    {
+      "type": "crater",
+      "variant": 1,
+      "height": 2,
+      "obstruction": 50,
+      "x": 6,
+      "y": 11
+    }
+  ],
+  "backgrounds": [
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 10
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 16
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 17
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 12
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 13
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 13
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 12
+    },
+    {
+      "type": "asteroid1",
+      "x": 4,
+      "y": 15
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 14
+    },
+    {
+      "type": "asteroid1",
+      "x": 6,
+      "y": 12
+    },
+    {
+      "type": "asteroid1",
+      "x": 7,
+      "y": 11
+    },
+    {
+      "type": "asteroid1",
+      "x": 6,
+      "y": 10
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 11
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 7
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 8
+    },
+    {
+      "type": "asteroid1",
+      "x": 0,
+      "y": 8
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 9
+    },
+    {
+      "type": "asteroid1",
+      "x": 3,
+      "y": 8
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 4
+    },
+    {
+      "type": "asteroid1",
+      "x": 8,
+      "y": 15
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 17
+    },
+    {
+      "type": "asteroid1",
+      "x": 7,
+      "y": 7
+    },
+    {
+      "type": "asteroid1",
+      "x": 6,
+      "y": 4
+    },
+    {
+      "type": "asteroid1",
+      "x": 7,
+      "y": 3
+    },
+    {
+      "type": "asteroid1",
+      "x": 4,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 9
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 9
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 9
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 9
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 10
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 10
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 10
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 10
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 11
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 11
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 11
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 3
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 3
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 3
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 3
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 3
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 3
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 9
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 9
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 10
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 10
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 10
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 11
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 12
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 12
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 12
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 13
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 13
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 13
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 13
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 14
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 15
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 14
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 14
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 14
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 13
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 12
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 13
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 12
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 11
+    },
+    {
+      "type": "asteroid2",
+      "x": 5,
+      "y": 8
+    },
+    {
+      "type": "asteroid2",
+      "x": 6,
+      "y": 6
+    },
+    {
+      "type": "asteroid2",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "type": "asteroid2",
+      "x": 8,
+      "y": 9
+    },
+    {
+      "type": "asteroid2",
+      "x": 3,
+      "y": 11
+    },
+    {
+      "type": "asteroid2",
+      "x": 6,
+      "y": 11
+    },
+    {
+      "type": "asteroid2",
+      "x": 1,
+      "y": 9
+    },
+    {
+      "type": "asteroid2",
+      "x": 2,
+      "y": 7
+    },
+    {
+      "type": "asteroid2",
+      "x": 7,
+      "y": 4
+    },
+    {
+      "type": "asteroid2",
+      "x": 5,
+      "y": 15
+    },
+    {
+      "type": "asteroid2",
+      "x": 0,
+      "y": 16
+    },
+    {
+      "type": "asteroid3",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "type": "asteroid3",
+      "x": 4,
+      "y": 5
+    },
+    {
+      "type": "asteroid3",
+      "x": 1,
+      "y": 8
+    },
+    {
+      "type": "asteroid3",
+      "x": 4,
+      "y": 14
+    },
+    {
+      "type": "asteroid3",
+      "x": 0,
+      "y": 17
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 15
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 14
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 14
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 15
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 15
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 14
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 13
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 12
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 16
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 16
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 17
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 16
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 17
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 17
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 16
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 16
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 15
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 15
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 16
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 16
+    },
+    {
+      "type": "space2",
+      "x": 8,
+      "y": 17
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 17
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 17
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 0
+    },
+    {
+      "type": "asteroid1",
+      "x": 4,
+      "y": 0
+    },
+    {
+      "type": "asteroid1",
+      "x": 3,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 1
+    },
+    {
+      "type": "asteroid2",
+      "x": 8,
+      "y": 0
+    },
+    {
+      "type": "asteroid2",
+      "x": 8,
+      "y": 1
+    },
+    {
+      "type": "asteroid2",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "asteroid2",
+      "x": 1,
+      "y": 1
+    }
+  ],
+  "decorations": [],
+  "outOfBounds": []
+}
