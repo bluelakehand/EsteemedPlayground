@@ -64,7 +64,15 @@
               </div>
             </section>
             <section class="player-deck-panel" aria-label="Deck of cards">
-              <h3>Deck</h3>
+              <h3>Collection</h3>
+              <div class="player-deck-list" id="player-collection-list"></div>
+            </section>
+            <div class="deck-move-controls" aria-label="Deck editing controls">
+              <button class="menu-button deck-move-button" id="add-card-to-deck" type="button" aria-label="Add selected collection card to deck">→</button>
+              <button class="menu-button deck-move-button" id="remove-card-from-deck" type="button" aria-label="Move selected deck card to collection">←</button>
+            </div>
+            <section class="player-deck-panel" aria-label="Deck of cards">
+              <h3>Deck <small id="player-deck-size">0 / 16</small></h3>
               <div class="player-deck-list" id="player-deck-list"></div>
             </section>
           </div>
@@ -164,6 +172,9 @@
               <button class="throw-button" id="throw-button" type="button">
                 Throw
               </button>
+              <button class="mulligan-button" id="mulligan-button" type="button">
+                Mulligan
+              </button>
             </div>
             <p class="lie-note" id="lie-note" aria-live="polite" hidden></p>
             <div class="selected-card-panel" id="selected-card-panel" aria-label="Selected disc"></div>
@@ -198,6 +209,12 @@
               New Course
               <input id="editor-new-course" type="text" placeholder="Optional">
             </label>
+            <div class="editor-file-actions" aria-label="Editor file actions">
+              <button class="draw-button" id="save-hole-button" type="button">Save JSON</button>
+              <button class="draw-button" id="load-hole-button" type="button">Load JSON</button>
+              <button class="draw-button" id="refresh-courses-button" type="button">Refresh Courses</button>
+              <input id="load-hole-input" type="file" accept="application/json,.json" hidden>
+            </div>
             <label>
               Hole #
               <input id="editor-hole-number" type="number" min="1" max="36" value="1">
@@ -231,7 +248,19 @@
             <div class="hand-header">
               <h3>Assets</h3>
             </div>
+            <div class="asset-settings" id="asset-settings" aria-label="Selected asset settings" hidden>
+              <p class="asset-section-title">Selected Hazard</p>
+              <label>
+                Height
+                <input id="asset-height-input" type="number" min="0" max="9" step="1" value="3">
+              </label>
+              <label>
+                Through %
+                <input id="asset-through-input" type="number" min="0" max="100" step="1" value="30">
+              </label>
+            </div>
             <div class="asset-library" id="asset-library">
+              <p class="asset-section-title">Basics</p>
               <button class="asset-button active" type="button" data-editor-asset="tee" aria-pressed="true">
                 <img src="course assets/teepad.png" alt="">
                 Tee
@@ -240,6 +269,7 @@
                 <img src="basket_icon.png" alt="">
                 Basket
               </button>
+              <p class="asset-section-title">Ground</p>
               <button class="asset-button" type="button" data-editor-asset="grass" aria-pressed="false">
                 <img src="course assets/grass1_bg.png" alt="">
                 Grass 1
@@ -251,6 +281,26 @@
               <button class="asset-button" type="button" data-editor-asset="sand1" aria-pressed="false">
                 <img src="course assets/sand1_bg.png" alt="">
                 Sand
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="space1" aria-pressed="false">
+                <img src="course assets/space1_bg.png" alt="">
+                Space
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="space2" aria-pressed="false">
+                <img src="course assets/space2_bg.png" alt="">
+                Space 2
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="asteroid1" aria-pressed="false">
+                <img src="course assets/asteroid1_bg.png" alt="">
+                Asteroid 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="asteroid2" aria-pressed="false">
+                <img src="course assets/asteroid2_bg.png" alt="">
+                Asteroid 2
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="asteroid3" aria-pressed="false">
+                <img src="course assets/asteroid3_bg.png" alt="">
+                Asteroid 3
               </button>
               <button class="asset-button" type="button" data-editor-asset="water" aria-pressed="false">
                 <img src="course assets/water1_bg.png" alt="">
@@ -268,6 +318,11 @@
                 <img src="course assets/OB.png" alt="">
                 OB
               </button>
+              <button class="asset-button" type="button" data-editor-asset="penaltyHazard" aria-pressed="false">
+                <img src="course assets/hazard.png" alt="">
+                Hazard
+              </button>
+              <p class="asset-section-title">Trees</p>
               <button class="asset-button" type="button" data-editor-asset="tree1" aria-pressed="false">
                 <img src="course assets/tree1.png" alt="">
                 Tree 1
@@ -296,6 +351,15 @@
                 <img src="course assets/tree7.png" alt="">
                 Tree 7
               </button>
+              <button class="asset-button" type="button" data-editor-asset="crystal1" aria-pressed="false">
+                <img src="course assets/crystal1.png" alt="">
+                Crystal 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="crystal2" aria-pressed="false">
+                <img src="course assets/crystal2.png" alt="">
+                Crystal 2
+              </button>
+              <p class="asset-section-title">Obstacles</p>
               <button class="asset-button" type="button" data-editor-asset="rock1" aria-pressed="false">
                 <img src="course assets/rock1.png" alt="">
                 Rock 1
@@ -320,6 +384,26 @@
                 <img src="course assets/obstacle2.png" alt="">
                 Obstacle 2
               </button>
+              <button class="asset-button" type="button" data-editor-asset="obstacle3" aria-pressed="false">
+                <img src="course assets/obstacle3.png" alt="">
+                Obstacle 3
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="structure1" aria-pressed="false">
+                <img src="course assets/structure1.png" alt="">
+                Structure
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="blackHole" aria-pressed="false">
+                <img src="course assets/blackhole.png" alt="">
+                Black Hole
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="crater1" aria-pressed="false">
+                <img src="course assets/crater1.png" alt="">
+                Crater 1
+              </button>
+              <button class="asset-button" type="button" data-editor-asset="crater2" aria-pressed="false">
+                <img src="course assets/crater2.png" alt="">
+                Crater 2
+              </button>
               <button class="asset-button" type="button" data-editor-asset="stump1" aria-pressed="false">
                 <img src="course assets/stump1.png" alt="">
                 Stump 1
@@ -336,19 +420,15 @@
                 <img src="course assets/shrub2.png" alt="">
                 Shrub 2
               </button>
+              <p class="asset-section-title">Decor</p>
               <button class="asset-button" type="button" data-editor-asset="decor1" aria-pressed="false">
                 <img src="course assets/decor1.png" alt="">
                 Decor
               </button>
+              <p class="asset-section-title">Tools</p>
               <button class="asset-button erase" type="button" data-editor-asset="erase" aria-pressed="false">
                 Erase
               </button>
-            </div>
-            <div class="editor-actions">
-              <button class="draw-button" id="save-hole-button" type="button">Save JSON</button>
-              <button class="draw-button" id="load-hole-button" type="button">Load JSON</button>
-              <button class="draw-button" id="refresh-courses-button" type="button">Refresh Courses</button>
-              <input id="load-hole-input" type="file" accept="application/json,.json" hidden>
             </div>
             <p class="lie-note editor-note" id="editor-note" aria-live="polite" hidden></p>
           </aside>

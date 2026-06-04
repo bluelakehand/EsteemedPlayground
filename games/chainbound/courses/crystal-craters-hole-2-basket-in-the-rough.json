@@ -1,0 +1,729 @@
+{
+  "name": "Basket in the Rough",
+  "courseId": "crystal-craters",
+  "courseName": "Crystal Craters",
+  "holeNumber": 2,
+  "par": 3,
+  "columns": 8,
+  "rows": 9,
+  "tee": {
+    "x": 6,
+    "y": 3
+  },
+  "basket": {
+    "x": 2,
+    "y": 4
+  },
+  "hazards": [
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 5,
+      "y": 3,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 7,
+      "y": 3,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 7,
+      "y": 4,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 4,
+      "y": 3,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 3,
+      "y": 2,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 2,
+      "y": 3,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 4,
+      "y": 4,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 4,
+      "y": 5,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 2,
+      "y": 6,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "x": 2,
+      "y": 5,
+      "obstruction": 50
+    },
+    {
+      "type": "crystal",
+      "variant": 1,
+      "height": 3,
+      "x": 1,
+      "y": 4
+    },
+    {
+      "type": "crystal",
+      "variant": 1,
+      "height": 3,
+      "x": 3,
+      "y": 3
+    },
+    {
+      "type": "crystal",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 2
+    },
+    {
+      "type": "crystal",
+      "variant": 1,
+      "height": 3,
+      "x": 4,
+      "y": 6
+    },
+    {
+      "type": "crystal",
+      "variant": 1,
+      "height": 3,
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "crystal",
+      "variant": 1,
+      "height": 3,
+      "x": 2,
+      "y": 2
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "obstruction": 50,
+      "x": 1,
+      "y": 3
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "obstruction": 50,
+      "x": 3,
+      "y": 4
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "obstruction": 50,
+      "x": 3,
+      "y": 6
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "height": 2,
+      "obstruction": 50,
+      "x": 1,
+      "y": 5
+    },
+    {
+      "type": "crystal",
+      "variant": 1,
+      "height": 3,
+      "obstruction": 70,
+      "x": 5,
+      "y": 4
+    }
+  ],
+  "backgrounds": [
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 5
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 6
+    },
+    {
+      "type": "asteroid1",
+      "x": 3,
+      "y": 6
+    },
+    {
+      "type": "asteroid1",
+      "x": 4,
+      "y": 5
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 4
+    },
+    {
+      "type": "asteroid1",
+      "x": 6,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 5
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 3,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 5
+    },
+    {
+      "type": "space1",
+      "x": 6,
+      "y": 6
+    },
+    {
+      "type": "space1",
+      "x": 4,
+      "y": 7
+    },
+    {
+      "type": "space1",
+      "x": 0,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 7
+    },
+    {
+      "type": "asteroid3",
+      "x": 4,
+      "y": 1
+    },
+    {
+      "type": "asteroid3",
+      "x": 3,
+      "y": 0
+    },
+    {
+      "type": "asteroid3",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "type": "asteroid3",
+      "x": 1,
+      "y": 4
+    },
+    {
+      "type": "asteroid1",
+      "x": 3,
+      "y": 5
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 5
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 4
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 3
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 3
+    },
+    {
+      "type": "asteroid1",
+      "x": 1,
+      "y": 2
+    },
+    {
+      "type": "asteroid1",
+      "x": 3,
+      "y": 1
+    },
+    {
+      "type": "asteroid1",
+      "x": 3,
+      "y": 2
+    },
+    {
+      "type": "asteroid1",
+      "x": 4,
+      "y": 2
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 2
+    },
+    {
+      "type": "asteroid1",
+      "x": 6,
+      "y": 2
+    },
+    {
+      "type": "asteroid1",
+      "x": 5,
+      "y": 3
+    },
+    {
+      "type": "asteroid1",
+      "x": 7,
+      "y": 3
+    },
+    {
+      "type": "asteroid2",
+      "x": 7,
+      "y": 4
+    },
+    {
+      "type": "asteroid2",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "type": "asteroid2",
+      "x": 4,
+      "y": 0
+    },
+    {
+      "type": "asteroid2",
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "asteroid2",
+      "x": 4,
+      "y": 4
+    },
+    {
+      "type": "asteroid2",
+      "x": 4,
+      "y": 3
+    },
+    {
+      "type": "asteroid2",
+      "x": 3,
+      "y": 4
+    },
+    {
+      "type": "asteroid2",
+      "x": 2,
+      "y": 2
+    },
+    {
+      "type": "asteroid2",
+      "x": 4,
+      "y": 6
+    },
+    {
+      "type": "space1",
+      "x": 1,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 3
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 4
+    },
+    {
+      "type": "space2",
+      "x": 0,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 1,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 2,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 4,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 8
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 7
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 6
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 2
+    },
+    {
+      "type": "space2",
+      "x": 6,
+      "y": 1
+    },
+    {
+      "type": "space2",
+      "x": 5,
+      "y": 0
+    },
+    {
+      "type": "space2",
+      "x": 7,
+      "y": 0
+    },
+    {
+      "type": "asteroid1",
+      "x": 2,
+      "y": 1
+    },
+    {
+      "type": "space1",
+      "x": 0,
+      "y": 1
+    },
+    {
+      "type": "space1",
+      "x": 6,
+      "y": 0
+    },
+    {
+      "type": "space1",
+      "x": 7,
+      "y": 8
+    },
+    {
+      "type": "space1",
+      "x": 3,
+      "y": 8
+    },
+    {
+      "type": "space1",
+      "x": 7,
+      "y": 1
+    }
+  ],
+  "decorations": [
+    {
+      "type": "crystal",
+      "variant": 2,
+      "x": 5,
+      "y": 2
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "x": 6,
+      "y": 2
+    },
+    {
+      "type": "crystal",
+      "variant": 2,
+      "x": 6,
+      "y": 4
+    },
+    {
+      "type": "structure",
+      "variant": 1,
+      "x": 3,
+      "y": 5
+    }
+  ],
+  "outOfBounds": [
+    {
+      "x": 7,
+      "y": 5
+    },
+    {
+      "x": 6,
+      "y": 5
+    },
+    {
+      "x": 6,
+      "y": 6
+    },
+    {
+      "x": 5,
+      "y": 6
+    },
+    {
+      "x": 5,
+      "y": 7
+    },
+    {
+      "x": 4,
+      "y": 7
+    },
+    {
+      "x": 3,
+      "y": 7
+    },
+    {
+      "x": 2,
+      "y": 7
+    },
+    {
+      "x": 1,
+      "y": 7
+    },
+    {
+      "x": 1,
+      "y": 6
+    },
+    {
+      "x": 0,
+      "y": 7
+    },
+    {
+      "x": 0,
+      "y": 6
+    },
+    {
+      "x": 0,
+      "y": 5
+    },
+    {
+      "x": 6,
+      "y": 1
+    },
+    {
+      "x": 5,
+      "y": 0
+    },
+    {
+      "x": 7,
+      "y": 0
+    },
+    {
+      "x": 6,
+      "y": 0
+    },
+    {
+      "x": 7,
+      "y": 1
+    },
+    {
+      "x": 7,
+      "y": 2
+    },
+    {
+      "x": 7,
+      "y": 6
+    },
+    {
+      "x": 6,
+      "y": 7
+    },
+    {
+      "x": 7,
+      "y": 7
+    },
+    {
+      "x": 7,
+      "y": 8
+    },
+    {
+      "x": 6,
+      "y": 8
+    },
+    {
+      "x": 5,
+      "y": 8
+    },
+    {
+      "x": 4,
+      "y": 8
+    },
+    {
+      "x": 3,
+      "y": 8
+    },
+    {
+      "x": 2,
+      "y": 8
+    },
+    {
+      "x": 1,
+      "y": 8
+    },
+    {
+      "x": 0,
+      "y": 8
+    },
+    {
+      "x": 0,
+      "y": 4
+    },
+    {
+      "x": 0,
+      "y": 3
+    },
+    {
+      "x": 0,
+      "y": 2
+    },
+    {
+      "x": 0,
+      "y": 1
+    },
+    {
+      "x": 1,
+      "y": 1
+    },
+    {
+      "x": 1,
+      "y": 0
+    },
+    {
+      "x": 0,
+      "y": 0
+    },
+    {
+      "x": 2,
+      "y": 0
+    }
+  ]
+}

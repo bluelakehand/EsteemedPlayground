@@ -55,12 +55,15 @@ Height matters for obstacles:
 - Shrubs are height `2`.
 - Rocks are height `1`.
 - Stumps are height `1`.
-- Water is available in the editor, but currently behaves as a height `0` hazard unless rules are expanded.
+- Water is a background tile only. It has no penalty behavior unless the same square is also marked OB.
+- OB is the invalid lie marker. If a disc finishes OB, or kicks into OB after hitting an obstacle, it takes a penalty stroke and returns to the last valid non-OB square. The player cannot throw or pitch from OB.
+- Penalty Hazard is a course overlay saved in `penaltyHazards`. It is visible in the editor and invisible during play. If a disc finishes on Hazard, it takes a `1` stroke penalty and plays from that same lie.
+- Black Hole is a 1x1 special asset saved in `blackHoles`. If it is to the right of the throw line, the throw gets Turn +1 and Fade -1. If it is to the left of the throw line, the throw gets Turn +1 and Fade +1.
 - A disc collides if its flight height is less than or equal to the obstacle height.
 - Obstruction controls whether the disc stops when it collides.
 - Hovering an obstacle shows a styled tooltip with obstacle type, height, and fight-through chance.
-- Trees have `70%` obstruction, so a disc has a `30%` fight-through chance.
-- Rocks and stumps have `100%` obstruction, so they cannot currently be fought through.
+- Trees and crystals have `70%` obstruction by default, so a disc has a `30%` fight-through chance.
+- Rocks, stumps, structures, and craters have `100%` obstruction by default, so they cannot currently be fought through unless overridden in the editor.
 - Shrubs currently have `100%` obstruction.
 - On collision, the lie randomly kicks to the obstacle square or one adjacent square.
 - If the next throw starts on an obstacle, effective disc speed is reduced by `1`.
@@ -77,11 +80,13 @@ Player putting stats:
 - Throw-in: `10%`
 - Scramble: `55%`
 - Control: `3`, which sets hand size. It costs `20` Player Points to upgrade to `4`.
+- The player screen has an active Deck and inactive Collection. The active Deck must stay between `10` and `16` cards. Store purchases go to Collection, then the player can move selected cards between Collection and Deck with the arrow buttons.
+- Each hole gives the player one Mulligan. Using it discards the whole current hand and draws a full new hand up to the current hand size.
 
 Putting rules:
 
 - Landing on the basket square triggers a throw-in roll first.
-- Flying over the basket square at height `2` also triggers a throw-in roll, even when the basket is not the final landing square.
+- Flying over the basket square at any flight height triggers a throw-in roll, even when the basket is not the final landing square.
 - If throw-in misses, the player gets a C1 putt.
 - Landing one square away, including diagonals, gives a C2 putt.
 - Putt chance is base player stat plus the selected disc's `putt` modifier.
@@ -136,7 +141,7 @@ Manual save/load:
 - Test rounds do not award Player Points, record best scores, save game progress, or continue to the next hole.
 - Player menu and the in-round HUD both have `Save Game`.
 - Manual saves are stored in browser `localStorage` under `chainbound.manualSave.v1`.
-- A manual save includes Player Points, player stats, deck, store offers, course unlock state, best course scores, and active round progress.
+- A manual save includes Player Points, player stats, active deck, collection/library cards, store offers, course unlock state, best course scores, and active round progress.
 - Active round progress includes course id, hole index, course score, current lie, stroke count, selected direction/throw, hand, draw deck, discard pile, selected cards, putt state, and current status text.
 - Active round saves also include the current C1 miss streak for Tap In logic.
 - `New Game` resets the current session but does not erase the manual save or best course scores.
@@ -156,6 +161,7 @@ Cards combine a disc from the `discs` object with a modifier from `throwCardEffe
 | EXPANSE | Driver | 7 | 1 | 0 | 3 | -5 |
 | TUNDRA | Midrange | 7 | 3 | 0 | 0 | 0 |
 | SHELL | Putter | 4 | 2 | 0 | 2 | +5 |
+| MIGRATION | Putter | 3 | 2 | 0 | 0 | +10 |
 
 Throw modifiers live in `throwCardEffects`.
 
@@ -168,11 +174,12 @@ Throw modifiers live in `throwCardEffects`.
 | Layup | Set Speed to 2 with 0 Turn and Fade |
 | Overhand | Height 4 for the first 3 squares, Speed -2 |
 | Turnover | Turn -2 |
-| Roller | Fade -1, Turn -1, Speed +1, Height 1 for the full flight |
+| Roller | Fade -1, Turn -1, Speed +1, Height 0 for the full flight. Stops on all obstacles and OB. |
 | Clutch Up | C1 putting +20% |
 | Big Basket | C2 putting +20% |
 | Absolute Smash | Speed +2, Fade +1, Turn -1 |
 | Hunting | Throw-In +20% |
+| Fight Through | +20% chance to get through obstacles |
 
 The starting deck is built from `startingDiscIds` and `startingThrowIds`.
 
@@ -195,13 +202,18 @@ Editor controls:
 - `Par`: saved par value.
 - `Width`: grid columns, currently clamped from `5` to `24`.
 - `Height`: grid rows, currently clamped from `5` to `30`.
-- Asset palette: Tee, Basket, Grass/Sand/Water background variants, OB, Trees, Rocks, Stump, Shrubs, Obstacles, Decor, Erase.
+- Asset palette: Tee, Basket, Grass/Sand/Water/Space/Asteroid background variants, OB, Trees/Crystals, Rocks, Stump, Shrubs, Obstacles/Structures, Decor, Erase.
+- The asset palette is grouped by category and scrolls independently from the editor controls.
+- Selecting a hazard asset shows Height and Through % settings. Changing them updates that asset template and all matching instances already placed on the current level.
+- Hazard JSON can include `obstruction`; fight-through chance is `100 - obstruction`.
+- Crystals and structures are hazard assets. They save in `hazards` and block disc flight based on their height and obstruction settings.
+- `Crystal Craters` is always available as an editor course option, even before preset holes are added.
 - Click an asset, then click a grid cell to place it.
 - Tee and Basket are unique; placing a new one moves the existing one.
 - Grass, Sand, and Water are background tiles, not obstacles. Grass 1 is the default tile; other variants are saved as background overrides.
 - Decor tiles are visual-only foreground assets saved in `decorations`; they do not block disc flight.
 - Rock 1x2 is saved as a height 1 rock hazard with `width: 2`, anchored on its left tile and occupying that tile plus the tile to its right.
-- OB marks out-of-bounds cells in the editor. OB is invisible during play, and only matters if the disc's final lie is OB after the throw or after an obstacle kick.
+- OB marks out-of-bounds cells in the editor. OB is invisible during play, and matters if the disc's final lie is OB after the throw or after an obstacle kick. Roller throws also stop when they reach OB because they fly at height 0.
 - Erase removes hazards, decorations, backgrounds, OB, tee, or basket from a cell.
 - The editor grid starts blank, with no tee and no basket.
 - Drag-scroll is enabled from the area outside the grid. Grid cell clicks are reserved for placement.
@@ -230,7 +242,7 @@ Current saved hole JSON shape:
   "basket": { "x": 4, "y": 2 },
   "hazards": [
     { "type": "tree", "variant": 1, "height": 3, "x": 2, "y": 3 },
-    { "type": "rock", "variant": 1, "height": 1, "x": 4, "y": 5 },
+    { "type": "rock", "variant": 1, "height": 1, "obstruction": 100, "x": 4, "y": 5 },
     { "type": "rock", "variant": 4, "height": 1, "width": 2, "x": 1, "y": 6 },
     { "type": "obstacle", "variant": 1, "height": 1, "x": 5, "y": 6 },
     { "type": "stump", "variant": 1, "height": 1, "x": 3, "y": 6 },
@@ -244,6 +256,12 @@ Current saved hole JSON shape:
   ],
   "decorations": [
     { "type": "decor", "variant": 1, "x": 4, "y": 9 }
+  ],
+  "penaltyHazards": [
+    { "x": 2, "y": 10 }
+  ],
+  "blackHoles": [
+    { "x": 6, "y": 4 }
   ],
   "outOfBounds": [
     { "x": 0, "y": 0 }
@@ -279,9 +297,22 @@ games/chainbound/
     grass1_bg.png
     grass2_bg.png
     sand1_bg.png
+    space1_bg.png
+    space2_bg.png
+    asteroid1_bg.png
+    asteroid2_bg.png
+    asteroid3_bg.png
     decor1.png
+    crystal1.png
+    crystal2.png
+    structure1.png
     obstacle1.png
     obstacle2.png
+    obstacle3.png
+    crater1.png
+    crater2.png
+    hazard.png
+    blackhole.png
     rock1.png
     rock2.png
     rock3.png

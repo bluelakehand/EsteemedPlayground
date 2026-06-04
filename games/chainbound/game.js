@@ -16,7 +16,11 @@ const playerC2Label = document.querySelector("#player-c2");
 const playerThrowInLabel = document.querySelector("#player-throw-in");
 const playerScrambleLabel = document.querySelector("#player-scramble");
 const playerControlLabel = document.querySelector("#player-control");
+const playerCollectionList = document.querySelector("#player-collection-list");
 const playerDeckList = document.querySelector("#player-deck-list");
+const playerDeckSizeLabel = document.querySelector("#player-deck-size");
+const addCardToDeckButton = document.querySelector("#add-card-to-deck");
+const removeCardFromDeckButton = document.querySelector("#remove-card-from-deck");
 const spendPlayerPointsLabel = document.querySelector("#spend-player-points");
 const discShopList = document.querySelector("#disc-shop-list");
 const trainingList = document.querySelector("#training-list");
@@ -40,6 +44,9 @@ const editorHoleParInput = document.querySelector("#editor-hole-par");
 const editorHoleColumnsInput = document.querySelector("#editor-hole-columns");
 const editorHoleRowsInput = document.querySelector("#editor-hole-rows");
 const assetButtons = document.querySelectorAll("[data-editor-asset]");
+const assetSettingsPanel = document.querySelector("#asset-settings");
+const assetHeightInput = document.querySelector("#asset-height-input");
+const assetThroughInput = document.querySelector("#asset-through-input");
 const saveHoleButton = document.querySelector("#save-hole-button");
 const loadHoleButton = document.querySelector("#load-hole-button");
 const refreshCoursesButton = document.querySelector("#refresh-courses-button");
@@ -52,6 +59,7 @@ const directionButtons = document.querySelectorAll(".direction-button");
 const backhandButton = document.querySelector("#backhand-button");
 const forehandButton = document.querySelector("#forehand-button");
 const throwButton = document.querySelector("#throw-button");
+const mulliganButton = document.querySelector("#mulligan-button");
 const pitchButton = document.querySelector("#pitch-button");
 const strokeCounter = document.querySelector("#stroke-counter");
 const roundHoleLabel = document.querySelector("#round-hole-label");
@@ -80,6 +88,8 @@ const obstacleTooltip = document.querySelector("#obstacle-tooltip");
 let courseLibrary = window.CHAINBOUND_COURSES ?? [];
 let courseLibraryLoaded = false;
 let courseLibraryError = null;
+let testOnlyCourses = [];
+let testOnlyCoursesLoaded = false;
 const bestScoresStorageKey = "chainbound.bestScores.v1";
 const manualSaveStorageKey = "chainbound.manualSave.v1";
 
@@ -97,6 +107,8 @@ const fallbackHole = {
   hazards: [],
   backgrounds: [],
   decorations: [],
+  penaltyHazards: [],
+  blackHoles: [],
   outOfBounds: []
 };
 
@@ -201,6 +213,16 @@ const discs = {
     turn: 0,
     fade: 2,
     putt: 5
+  },
+  migration: {
+    name: "MIGRATION",
+    type: "Putter",
+    image: "discs/Migration_putter.png",
+    speed: 3,
+    glide: 2,
+    turn: 0,
+    fade: 0,
+    putt: 10
   }
 };
 
@@ -276,6 +298,11 @@ const throwCardEffects = {
     name: "Hunting",
     text: "+20% Throw-In.",
     throwIn: 20
+  },
+  "fight-through": {
+    name: "Fight Through",
+    text: "+20% chance to get through obstacles.",
+    fightThrough: 20
   }
 };
 
@@ -295,10 +322,16 @@ const editorAssetTypes = {
   grass: { label: "Grass 1", asset: "course assets/grass1_bg.png", background: { type: "grass" } },
   grass2: { label: "Grass 2", asset: "course assets/grass2_bg.png", background: { type: "grass2" } },
   sand1: { label: "Sand", asset: "course assets/sand1_bg.png", background: { type: "sand1" } },
+  space1: { label: "Space", asset: "course assets/space1_bg.png", background: { type: "space1" } },
+  space2: { label: "Space 2", asset: "course assets/space2_bg.png", background: { type: "space2" } },
+  asteroid1: { label: "Asteroid 1", asset: "course assets/asteroid1_bg.png", background: { type: "asteroid1" } },
+  asteroid2: { label: "Asteroid 2", asset: "course assets/asteroid2_bg.png", background: { type: "asteroid2" } },
+  asteroid3: { label: "Asteroid 3", asset: "course assets/asteroid3_bg.png", background: { type: "asteroid3" } },
   water: { label: "Water 1", asset: "course assets/water1_bg.png", background: { type: "water" } },
   water2: { label: "Water 2", asset: "course assets/water2_bg.png", background: { type: "water2" } },
   water3: { label: "Water 3", asset: "course assets/water3_bg.png", background: { type: "water3" } },
   ob: { label: "OB", asset: "course assets/OB.png", outOfBounds: true },
+  penaltyHazard: { label: "Hazard", asset: "course assets/hazard.png", penaltyHazard: true },
   tree1: { label: "Tree", asset: "course assets/tree1.png", hazard: { type: "tree", variant: 1, height: 3 } },
   tree2: { label: "Tree", asset: "course assets/tree2.png", hazard: { type: "tree", variant: 2, height: 3 } },
   tree3: { label: "Tree", asset: "course assets/tree3.png", hazard: { type: "tree", variant: 3, height: 3 } },
@@ -306,12 +339,19 @@ const editorAssetTypes = {
   tree5: { label: "Tree", asset: "course assets/tree5.png", hazard: { type: "tree", variant: 5, height: 3 } },
   tree6: { label: "Tree", asset: "course assets/tree6.png", hazard: { type: "tree", variant: 6, height: 3 } },
   tree7: { label: "Tree", asset: "course assets/tree7.png", hazard: { type: "tree", variant: 7, height: 3 } },
+  crystal1: { label: "Crystal", asset: "course assets/crystal1.png", hazard: { type: "crystal", variant: 1, height: 3 } },
+  crystal2: { label: "Crystal", asset: "course assets/crystal2.png", hazard: { type: "crystal", variant: 2, height: 3 } },
   rock1: { label: "Rock", asset: "course assets/rock1.png", hazard: { type: "rock", variant: 1, height: 1 } },
   rock2: { label: "Rock", asset: "course assets/rock2.png", hazard: { type: "rock", variant: 2, height: 1 } },
   rock3: { label: "Rock", asset: "course assets/rock3.png", hazard: { type: "rock", variant: 3, height: 1 } },
   rock4: { label: "Rock 1x2", asset: "course assets/rock4_1x2.png", hazard: { type: "rock", variant: 4, height: 1, width: 2 } },
   obstacle1: { label: "Obstacle", asset: "course assets/obstacle1.png", hazard: { type: "obstacle", variant: 1, height: 1 } },
   obstacle2: { label: "Obstacle", asset: "course assets/obstacle2.png", hazard: { type: "obstacle", variant: 2, height: 1 } },
+  obstacle3: { label: "Obstacle", asset: "course assets/obstacle3.png", hazard: { type: "obstacle", variant: 3, height: 1 } },
+  structure1: { label: "Structure", asset: "course assets/structure1.png", hazard: { type: "structure", variant: 1, height: 1 } },
+  blackHole: { label: "Black Hole", asset: "course assets/blackhole.png", blackHole: true },
+  crater1: { label: "Crater", asset: "course assets/crater1.png", hazard: { type: "crater", variant: 1, height: 1 } },
+  crater2: { label: "Crater", asset: "course assets/crater2.png", hazard: { type: "crater", variant: 2, height: 1 } },
   stump1: { label: "Stump", asset: "course assets/stump1.png", hazard: { type: "stump", variant: 1, height: 1 } },
   stump2: { label: "Stump", asset: "course assets/stump2.png", hazard: { type: "stump", variant: 2, height: 1 } },
   shrub1: { label: "Shrub", asset: "course assets/shrub1.png", hazard: { type: "shrub", variant: 1, height: 2 } },
@@ -320,11 +360,16 @@ const editorAssetTypes = {
   erase: { label: "Erase" }
 };
 
-const startingDiscIds = ["cacti", "cacti", "comb", "comb", "comb", "palm", "palm"];
+const minPlayerDeckSize = 10;
+const maxPlayerDeckSize = 16;
+const startingDiscIds = ["cacti", "cacti", "cacti", "comb", "comb", "comb", "comb", "palm", "palm", "palm"];
 const startingThrowIds = ["hyzer", "anhyzer", "clutch-up"];
 const startingDeck = buildStartingDeck();
 let playerPoints = 5;
-let playerDeck = startingDeck.map(cloneCard);
+let playerDeck = ensureCardIds(startingDeck.map(cloneCard));
+let playerCollection = [];
+let selectedDeckCardId = null;
+let selectedCollectionCardId = null;
 let spendOffers = null;
 let pendingPurchase = null;
 
@@ -352,6 +397,7 @@ let strokeNumber = 0;
 let isThrowing = false;
 let pendingPutt = null;
 let isHoledOut = false;
+let mulliganUsedThisHole = false;
 let hasActiveRound = false;
 let c1MissStreak = 0;
 let isTestRound = false;
@@ -370,6 +416,8 @@ let editorHole = {
   hazards: [],
   backgrounds: [],
   decorations: [],
+  penaltyHazards: [],
+  blackHoles: [],
   outOfBounds: []
 };
 
@@ -381,6 +429,8 @@ function cloneHole(holeData) {
     hazards: (holeData.hazards ?? []).map((hazard) => ({ ...hazard })),
     backgrounds: (holeData.backgrounds ?? []).map((tile) => ({ ...tile })),
     decorations: (holeData.decorations ?? []).map((decoration) => ({ ...decoration })),
+    penaltyHazards: (holeData.penaltyHazards ?? []).map((tile) => ({ ...tile })),
+    blackHoles: (holeData.blackHoles ?? []).map((blackHole) => ({ ...blackHole })),
     outOfBounds: (holeData.outOfBounds ?? []).map((tile) => ({ ...tile }))
   };
 }
@@ -534,6 +584,46 @@ async function loadCourseLibrary() {
   return courseLibrary;
 }
 
+async function loadTestOnlyCourses() {
+  if (testOnlyCoursesLoaded) {
+    return testOnlyCourses;
+  }
+
+  if (window.CHAINBOUND_TEST_COURSES?.length) {
+    testOnlyCourses = window.CHAINBOUND_TEST_COURSES;
+    testOnlyCoursesLoaded = true;
+    return testOnlyCourses;
+  }
+
+  testOnlyCoursesLoaded = true;
+  try {
+    const response = await fetch("courses/shadow-islands-hole-1-loki-s-luck.json");
+    if (!response.ok) {
+      throw new Error("Could not load Shadow Islands test hole");
+    }
+
+    const holeData = normalizeLoadedHole(await response.json());
+    const courseId = holeData.courseId || "shadow-islands";
+    const courseName = holeData.courseName || "Shadow Islands";
+    testOnlyCourses = [{
+      id: courseId,
+      name: courseName,
+      testOnly: true,
+      holes: [{
+        ...holeData,
+        id: holeData.id ?? `${courseId}-${holeData.holeNumber ?? 1}`,
+        courseId,
+        courseName,
+        file: "courses/shadow-islands-hole-1-loki-s-luck.json"
+      }]
+    }];
+  } catch {
+    testOnlyCourses = [];
+  }
+
+  return testOnlyCourses;
+}
+
 function selectedDisc() {
   return discs[selectedDiscId];
 }
@@ -552,11 +642,23 @@ function cloneCard(card) {
   };
 }
 
+function uniqueCardId() {
+  return `card-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function buildCard(discId, throwId) {
   return {
+    cardId: uniqueCardId(),
     discId,
     throwId: throwId ?? null
   };
+}
+
+function ensureCardIds(cards) {
+  return cards.map((card) => ({
+    ...card,
+    cardId: card.cardId ?? uniqueCardId()
+  }));
 }
 
 function buildStartingDeck() {
@@ -586,14 +688,51 @@ function modifiedDisc() {
   const effect = selectedThrowCardId ? throwCardEffects[selectedThrowCardId] : {};
   const throwEffect = effect.puttOnly ? {} : effect;
   const modifiedSpeed = Math.max(1, throwEffect.speedSet ?? (disc.speed + (throwEffect.speed ?? 0)));
+  const blackHoleEffect = blackHoleThrowEffect();
 
   return {
     ...disc,
     speed: modifiedSpeed,
-    turn: throwEffect.turnSet ?? (disc.turn + (throwEffect.turn ?? 0)),
-    fade: Math.max(0, throwEffect.fadeSet ?? (disc.fade + (throwEffect.fade ?? 0))),
+    turn: (throwEffect.turnSet ?? (disc.turn + (throwEffect.turn ?? 0))) + blackHoleEffect.turn,
+    fade: Math.max(0, (throwEffect.fadeSet ?? (disc.fade + (throwEffect.fade ?? 0))) + blackHoleEffect.fade),
     heightOverride: throwEffect.heightOverride ?? null
   };
+}
+
+function directionLocalCoordinates(cell, origin = currentDiscCell) {
+  const relative = {
+    x: cell.x - origin.x,
+    y: cell.y - origin.y
+  };
+
+  const coordinates = {
+    up: { forward: -relative.y, lateral: relative.x },
+    right: { forward: relative.x, lateral: relative.y },
+    down: { forward: relative.y, lateral: -relative.x },
+    left: { forward: -relative.x, lateral: -relative.y }
+  };
+
+  return coordinates[selectedDirection];
+}
+
+function blackHoleThrowEffect(origin = currentDiscCell) {
+  return (hole.blackHoles ?? []).reduce((effect, blackHole) => {
+    const center = {
+      x: blackHole.x,
+      y: blackHole.y
+    };
+    const coordinates = directionLocalCoordinates(center, origin);
+
+    if (coordinates.lateral > 0) {
+      return { turn: effect.turn + 1, fade: effect.fade - 1 };
+    }
+
+    if (coordinates.lateral < 0) {
+      return { turn: effect.turn + 1, fade: effect.fade + 1 };
+    }
+
+    return effect;
+  }, { turn: 0, fade: 0 });
 }
 
 function shuffledDeck(cards) {
@@ -763,6 +902,29 @@ function discardCard(instanceId) {
   }
 }
 
+function discardWholeHand() {
+  discardPile.push(...hand.map(cloneCard));
+  hand = [];
+  selectedDiscId = null;
+  selectedDiscInstanceId = null;
+  selectedThrowCardId = null;
+  selectedThrowCardInstanceId = null;
+}
+
+function useMulligan() {
+  if (mulliganUsedThisHole || isThrowing || isHoledOut || pendingPutt) {
+    return;
+  }
+
+  mulliganUsedThisHole = true;
+  discardWholeHand();
+  autoRefillHand();
+  selectFirstPlayableCards();
+  setLieNote("Mulligan used. Hand discarded and redrawn.");
+  updateThrowControls();
+  renderCourse();
+}
+
 function discardSelectedDisc() {
   discardCard(selectedDiscInstanceId);
   selectFirstPlayableCards();
@@ -777,7 +939,7 @@ function needsShuffleDiscard() {
 }
 
 function canAct() {
-  return Boolean(selectedDiscId);
+  return Boolean(selectedDiscId) && !invalidLieReason(currentDiscCell);
 }
 
 function hasDiscInDeck() {
@@ -869,7 +1031,7 @@ function gridDistance(a, b) {
 }
 
 function canPitch() {
-  return selectedThrow === "pitch" && Boolean(selectedDiscId) && !pendingPutt && !isThrowing && !isHoledOut;
+  return selectedThrow === "pitch" && Boolean(selectedDiscId) && !invalidLieReason(currentDiscCell) && !pendingPutt && !isThrowing && !isHoledOut;
 }
 
 function isPitchTargetCell(x, y) {
@@ -910,11 +1072,43 @@ function backgroundImageForCell(x, y, holeData = hole) {
     return 'url("course assets/sand1_bg.png")';
   }
 
+  if (tile?.type === "space1") {
+    return 'url("course assets/space1_bg.png")';
+  }
+
+  if (tile?.type === "space2") {
+    return 'url("course assets/space2_bg.png")';
+  }
+
+  if (tile?.type === "asteroid1") {
+    return 'url("course assets/asteroid1_bg.png")';
+  }
+
+  if (tile?.type === "asteroid2") {
+    return 'url("course assets/asteroid2_bg.png")';
+  }
+
+  if (tile?.type === "asteroid3") {
+    return 'url("course assets/asteroid3_bg.png")';
+  }
+
   return 'url("course assets/grass1_bg.png")';
 }
 
 function hazardWidth(hazard) {
   return Math.max(1, Number(hazard?.width) || 1);
+}
+
+function blackHoleCells(blackHole, origin = blackHole) {
+  return [{ x: origin.x, y: origin.y }];
+}
+
+function isBlackHoleOccupyingCell(blackHole, x, y) {
+  return Boolean(blackHole && blackHoleCells(blackHole).some((cell) => cell.x === x && cell.y === y));
+}
+
+function isBlackHoleAnchorCell(blackHole, x, y) {
+  return Boolean(blackHole && blackHole.x === x && blackHole.y === y);
 }
 
 function hazardHeight(hazard) {
@@ -935,6 +1129,31 @@ function isOutOfBoundsCell(x, y, holeData = hole) {
   }
 
   return Boolean(holeData.outOfBounds?.some((tile) => tile.x === x && tile.y === y));
+}
+
+function isPenaltyHazardCell(x, y, holeData = hole) {
+  return Boolean(holeData.penaltyHazards?.some((tile) => tile.x === x && tile.y === y));
+}
+
+function invalidLieReason(cell, holeData = hole) {
+  if (isOutOfBoundsCell(cell.x, cell.y, holeData)) {
+    return "out-of-bounds";
+  }
+
+  return "";
+}
+
+function invalidLieMessage() {
+  return "Out of bounds. Take a penalty stroke and play from the last valid square.";
+}
+
+function applyPenaltyHazardIfNeeded(cell) {
+  if (!isPenaltyHazardCell(cell.x, cell.y)) {
+    return "";
+  }
+
+  strokeNumber += 1;
+  return "Hazard. 1 stroke penalty. Throw from this lie.";
 }
 
 function clampCell(cell) {
@@ -995,7 +1214,7 @@ function projectCell(origin, forward, lateral) {
 
 function flightHeight(step, speed, glide, heightOverride = null) {
   if (heightOverride === "roller") {
-    return 1;
+    return 0;
   }
 
   if (heightOverride === "overhand" && step <= 3) {
@@ -1052,16 +1271,28 @@ function isCollision(step, hazard) {
   return Boolean(step && hazard && step.height <= hazardHeight(hazard));
 }
 
+function isOutOfBoundsCollision(step) {
+  return Boolean(step && step.height <= 0 && isOutOfBoundsCell(step.x, step.y));
+}
+
 function obstructionForHazard(hazard) {
   if (!hazard) {
     return 0;
   }
 
-  if (hazard.type === "tree") {
+  if (Number.isFinite(hazard.obstruction)) {
+    return Math.min(Math.max(Number(hazard.obstruction), 0), 100);
+  }
+
+  return defaultObstructionForHazard(hazard);
+}
+
+function defaultObstructionForHazard(hazard) {
+  if (hazard.type === "tree" || hazard.type === "crystal") {
     return 70;
   }
 
-  if (hazard.type === "rock" || hazard.type === "stump" || hazard.type === "obstacle") {
+  if (hazard.type === "rock" || hazard.type === "stump" || hazard.type === "obstacle" || hazard.type === "crater" || hazard.type === "structure") {
     return 100;
   }
 
@@ -1076,20 +1307,32 @@ function fightThroughChance(hazard) {
   return Math.max(0, 100 - obstructionForHazard(hazard));
 }
 
+function selectedFightThroughBonus() {
+  return selectedThrowCardId ? (throwCardEffects[selectedThrowCardId]?.fightThrough ?? 0) : 0;
+}
+
+function effectiveObstructionForThrow(hazard) {
+  return Math.max(0, obstructionForHazard(hazard) - selectedFightThroughBonus());
+}
+
 function firstPotentialCollision(path) {
-  return path.find((step) => isCollision(step, hazardForCell(step.x, step.y)));
+  return path.find((step) => isOutOfBoundsCollision(step) || isCollision(step, hazardForCell(step.x, step.y)));
 }
 
 function resolveCollision(path) {
   const fights = [];
 
   for (const step of path) {
+    if (isOutOfBoundsCollision(step)) {
+      return { collision: step, hazard: null, fights, outOfBounds: true };
+    }
+
     const hazard = hazardForCell(step.x, step.y);
     if (!isCollision(step, hazard)) {
       continue;
     }
 
-    const obstruction = obstructionForHazard(hazard);
+    const obstruction = effectiveObstructionForThrow(hazard);
     if (percentRoll(obstruction)) {
       return { collision: step, hazard, fights };
     }
@@ -1097,13 +1340,13 @@ function resolveCollision(path) {
     fights.push({ step, hazard });
   }
 
-  return { collision: null, hazard: null, fights };
+  return { collision: null, hazard: null, fights, outOfBounds: false };
 }
 
 function lastValidInPath(path, fallback = currentDiscCell) {
   for (let index = path.length - 1; index >= 0; index -= 1) {
     const step = path[index];
-    if (!isOutOfBoundsCell(step.x, step.y)) {
+    if (!invalidLieReason(step)) {
       return { ...step };
     }
   }
@@ -1184,6 +1427,10 @@ function hazardAssetPath(hazard) {
     return `course assets/tree${hazard.variant ?? 1}.png`;
   }
 
+  if (hazard?.type === "crystal") {
+    return `course assets/crystal${hazard.variant ?? 1}.png`;
+  }
+
   if (hazard?.type === "rock") {
     return hazardWidth(hazard) > 1
       ? `course assets/rock${hazard.variant ?? 1}_1x2.png`
@@ -1192,6 +1439,14 @@ function hazardAssetPath(hazard) {
 
   if (hazard?.type === "obstacle") {
     return `course assets/obstacle${hazard.variant ?? 1}.png`;
+  }
+
+  if (hazard?.type === "structure") {
+    return `course assets/structure${hazard.variant ?? 1}.png`;
+  }
+
+  if (hazard?.type === "crater") {
+    return `course assets/crater${hazard.variant ?? 1}.png`;
   }
 
   if (hazard?.type === "stump") {
@@ -1214,6 +1469,14 @@ function decorationAssetPath(decoration) {
     return `course assets/decor${decoration.variant ?? 1}.png`;
   }
 
+  if (decoration?.type === "crystal") {
+    return `course assets/crystal${decoration.variant ?? 1}.png`;
+  }
+
+  if (decoration?.type === "structure") {
+    return `course assets/structure${decoration.variant ?? 1}.png`;
+  }
+
   return null;
 }
 
@@ -1232,6 +1495,8 @@ function renderCourse(lockedFlightPath = null) {
       const cell = document.createElement("div");
       const hazard = hazardForCell(x, y);
       const decoration = decorationForCell(x, y);
+      const isPenaltyHazard = isPenaltyHazardCell(x, y);
+      const blackHole = (hole.blackHoles ?? []).find((candidate) => isBlackHoleOccupyingCell(candidate, x, y));
       const isTee = Boolean(hole.tee && sameCell(hole.tee, { x, y }));
       const isBasket = Boolean(hole.basket && sameCell(hole.basket, { x, y }));
       const flightStep = flightStepForCell(flightPath, x, y);
@@ -1243,6 +1508,10 @@ function renderCourse(lockedFlightPath = null) {
       cell.dataset.x = x;
       cell.dataset.y = y;
       cell.style.backgroundImage = backgroundImageForCell(x, y);
+
+      if (isPenaltyHazard) {
+        cell.dataset.tooltip = "Hazard. | 1+ Stroke";
+      }
 
       if (isFlight) {
         cell.classList.add("flight-cell");
@@ -1279,6 +1548,17 @@ function renderCourse(lockedFlightPath = null) {
           if (hazardWidth(hazard) > 1) {
             asset.classList.add("wide-cell-asset");
           }
+          cell.append(asset);
+        }
+      }
+
+      if (blackHole) {
+        cell.classList.add("black-hole-cell");
+        cell.classList.toggle("black-hole-anchor", isBlackHoleAnchorCell(blackHole, x, y));
+        cell.dataset.tooltip = "Black Hole | Turn +1 | Gravity changes fade";
+        if (isBlackHoleAnchorCell(blackHole, x, y)) {
+          const asset = makeAsset("course assets/blackhole.png", "Black Hole");
+          asset.classList.add("black-hole-asset");
           cell.append(asset);
         }
       }
@@ -1341,6 +1621,7 @@ function populateEditorCourseSelect() {
 
 function availableCourseOptions() {
   const coursesById = new Map();
+  coursesById.set("crystal-craters", { id: "crystal-craters", name: "Crystal Craters" });
 
   courseLibrary.forEach((course) => {
     coursesById.set(course.id, { id: course.id, name: course.name });
@@ -1406,13 +1687,116 @@ function canPlaceEditorHazard(hazard, x, y) {
   });
 }
 
+function selectedEditorHazardTemplate() {
+  return editorAssetTypes[selectedEditorAsset]?.hazard ?? null;
+}
+
+function isSameHazardAsset(hazard, template) {
+  return Boolean(hazard && template && hazard.type === template.type && (hazard.variant ?? 1) === (template.variant ?? 1) && hazardWidth(hazard) === hazardWidth(template));
+}
+
+function syncSelectedAssetTemplateFromLevel() {
+  const template = selectedEditorHazardTemplate();
+  if (!template) {
+    return;
+  }
+
+  const matchingHazard = editorHole.hazards.find((hazard) => isSameHazardAsset(hazard, template));
+  if (!matchingHazard) {
+    return;
+  }
+
+  template.height = hazardHeight(matchingHazard);
+  template.obstruction = obstructionForHazard(matchingHazard);
+}
+
+function setSelectedHazardSettings(height, throughChance) {
+  const template = selectedEditorHazardTemplate();
+  if (!template) {
+    return;
+  }
+
+  const cleanHeight = Math.min(Math.max(Math.round(Number(height) || 0), 0), 9);
+  const cleanThrough = Math.min(Math.max(Math.round(Number(throughChance) || 0), 0), 100);
+  const obstruction = 100 - cleanThrough;
+
+  template.height = cleanHeight;
+  template.obstruction = obstruction;
+  editorHole.hazards = editorHole.hazards.map((hazard) => isSameHazardAsset(hazard, template)
+    ? { ...hazard, height: cleanHeight, obstruction }
+    : hazard);
+}
+
+function updateAssetSettingsPanel() {
+  const template = selectedEditorHazardTemplate();
+  const hasHazard = Boolean(template);
+  assetSettingsPanel.hidden = !hasHazard;
+  assetHeightInput.disabled = !hasHazard;
+  assetThroughInput.disabled = !hasHazard;
+
+  if (!hasHazard) {
+    return;
+  }
+
+  assetHeightInput.value = hazardHeight(template);
+  assetThroughInput.value = fightThroughChance(template);
+}
+
+function handleAssetSettingChange() {
+  setSelectedHazardSettings(assetHeightInput.value, assetThroughInput.value);
+  updateAssetSettingsPanel();
+  renderEditorGrid();
+}
+
 function removeEditorOutOfBounds(x, y) {
   editorHole.outOfBounds = editorHole.outOfBounds.filter((tile) => tile.x !== x || tile.y !== y);
 }
 
 function setEditorOutOfBounds(x, y) {
   removeEditorOutOfBounds(x, y);
+  removeEditorPenaltyHazard(x, y);
   editorHole.outOfBounds.push({ x, y });
+}
+
+function removeEditorPenaltyHazard(x, y) {
+  editorHole.penaltyHazards = editorHole.penaltyHazards.filter((tile) => tile.x !== x || tile.y !== y);
+}
+
+function setEditorPenaltyHazard(x, y) {
+  removeEditorPenaltyHazard(x, y);
+  removeEditorOutOfBounds(x, y);
+  editorHole.penaltyHazards.push({ x, y });
+}
+
+function removeEditorBlackHolesInCells(cells) {
+  editorHole.blackHoles = editorHole.blackHoles.filter((blackHole) => !cells.some((cell) => isBlackHoleOccupyingCell(blackHole, cell.x, cell.y)));
+}
+
+function removeEditorBlackHole(x, y) {
+  removeEditorBlackHolesInCells([{ x, y }]);
+}
+
+function canPlaceEditorBlackHole(x, y) {
+  return blackHoleCells({ x, y }).every((cell) => {
+    const inBounds = cell.x >= 0 && cell.x < editorHole.columns && cell.y >= 0 && cell.y < editorHole.rows;
+    const reserved = (editorHole.tee && sameCell(editorHole.tee, cell)) || (editorHole.basket && sameCell(editorHole.basket, cell));
+    return inBounds && !reserved;
+  });
+}
+
+function setEditorBlackHole(x, y) {
+  const cells = blackHoleCells({ x, y });
+  removeEditorBlackHolesInCells(cells);
+  cells.forEach((cell) => {
+    removeEditorHazard(cell.x, cell.y);
+    removeEditorDecoration(cell.x, cell.y);
+    removeEditorPenaltyHazard(cell.x, cell.y);
+    removeEditorOutOfBounds(cell.x, cell.y);
+  });
+
+  if (canPlaceEditorBlackHole(x, y)) {
+    editorHole.blackHoles.push({ x, y });
+  }
 }
 
 function clampEditorPoint(point) {
@@ -1446,6 +1830,8 @@ function renderEditorGrid() {
       const cell = document.createElement("button");
       const hazard = editorHazardForCell(x, y);
       const decoration = editorDecorationForCell(x, y);
+      const isPenaltyHazard = isPenaltyHazardCell(x, y, editorHole);
+      const blackHole = editorHole.blackHoles.find((candidate) => isBlackHoleOccupyingCell(candidate, x, y));
       const isTee = Boolean(editorHole.tee && sameCell(editorHole.tee, { x, y }));
       const isBasket = Boolean(editorHole.basket && sameCell(editorHole.basket, { x, y }));
 
@@ -1459,6 +1845,12 @@ function renderEditorGrid() {
       if (isOutOfBoundsCell(x, y, editorHole)) {
         cell.classList.add("ob-cell");
         cell.append(makeAsset("course assets/OB.png", "Out of bounds"));
+      }
+
+      if (isPenaltyHazard) {
+        cell.classList.add("penalty-hazard-cell");
+        cell.dataset.tooltip = "Hazard. | 1+ Stroke";
+        cell.append(makeAsset("course assets/hazard.png", "Hazard"));
       }
 
       if (decoration) {
@@ -1481,6 +1873,17 @@ function renderEditorGrid() {
           if (hazardWidth(hazard) > 1) {
             asset.classList.add("wide-cell-asset");
           }
+          cell.append(asset);
+        }
+      }
+
+      if (blackHole) {
+        cell.classList.add("black-hole-cell");
+        cell.classList.toggle("black-hole-anchor", isBlackHoleAnchorCell(blackHole, x, y));
+        cell.dataset.tooltip = "Black Hole | Turn +1 | Gravity changes fade";
+        if (isBlackHoleAnchorCell(blackHole, x, y)) {
+          const asset = makeAsset("course assets/blackhole.png", "Black Hole");
+          asset.classList.add("black-hole-asset");
           cell.append(asset);
         }
       }
@@ -1513,6 +1916,8 @@ function placeEditorAsset(x, y) {
     }
     removeEditorHazard(x, y);
     removeEditorDecoration(x, y);
+    removeEditorPenaltyHazard(x, y);
+    removeEditorBlackHole(x, y);
   } else if (selectedEditorAsset === "basket") {
     editorHole.basket = { x, y };
     if (editorHole.tee && sameCell(editorHole.tee, { x, y })) {
@@ -1520,11 +1925,15 @@ function placeEditorAsset(x, y) {
     }
     removeEditorHazard(x, y);
     removeEditorDecoration(x, y);
+    removeEditorPenaltyHazard(x, y);
+    removeEditorBlackHole(x, y);
   } else if (selectedEditorAsset === "erase") {
     removeEditorHazard(x, y);
     removeEditorDecoration(x, y);
     setEditorBackground(x, y, "grass");
     removeEditorOutOfBounds(x, y);
+    removeEditorPenaltyHazard(x, y);
+    removeEditorBlackHole(x, y);
     if (editorHole.tee && sameCell(editorHole.tee, { x, y })) {
       editorHole.tee = null;
     }
@@ -1537,6 +1946,10 @@ function placeEditorAsset(x, y) {
       setEditorBackground(x, y, asset.background.type);
     } else if (asset.outOfBounds) {
       setEditorOutOfBounds(x, y);
+    } else if (asset.penaltyHazard) {
+      setEditorPenaltyHazard(x, y);
+    } else if (asset.blackHole) {
+      setEditorBlackHole(x, y);
     } else if (asset.decoration) {
       const isReservedCell = (editorHole.tee && sameCell(editorHole.tee, { x, y })) || (editorHole.basket && sameCell(editorHole.basket, { x, y }));
       if (!isReservedCell) {
@@ -1545,6 +1958,7 @@ function placeEditorAsset(x, y) {
     } else {
       const coveredCells = coveredCellsForHazard(asset.hazard, { x, y });
       removeEditorHazardsInCells(coveredCells);
+      removeEditorBlackHolesInCells(coveredCells);
       coveredCells.forEach((cell) => removeEditorDecoration(cell.x, cell.y));
       if (canPlaceEditorHazard(asset.hazard, x, y)) {
         editorHole.hazards.push({ ...asset.hazard, x, y });
@@ -1557,11 +1971,13 @@ function placeEditorAsset(x, y) {
 
 function selectEditorAsset(assetId) {
   selectedEditorAsset = assetId;
+  syncSelectedAssetTemplateFromLevel();
   assetButtons.forEach((button) => {
     const isSelected = button.dataset.editorAsset === assetId;
     button.classList.toggle("active", isSelected);
     button.setAttribute("aria-pressed", String(isSelected));
   });
+  updateAssetSettingsPanel();
 }
 
 function updateEditorDimensions() {
@@ -1589,6 +2005,12 @@ function updateEditorDimensions() {
   editorHole.decorations = editorHole.decorations
     .map((decoration) => ({ ...decoration, ...clampEditorPoint(decoration) }))
     .filter((decoration, index, decorations) => decorations.findIndex((other) => other.x === decoration.x && other.y === decoration.y) === index);
+  editorHole.penaltyHazards = editorHole.penaltyHazards
+    .map((tile) => clampEditorPoint(tile))
+    .filter((tile, index, tiles) => tiles.findIndex((other) => other.x === tile.x && other.y === tile.y) === index);
+  editorHole.blackHoles = editorHole.blackHoles
+    .map((blackHole) => clampEditorPoint(blackHole))
+    .filter((blackHole, index, blackHoles) => blackHoles.findIndex((other) => other.x === blackHole.x && other.y === blackHole.y) === index);
   editorHole.outOfBounds = editorHole.outOfBounds
     .map((tile) => clampEditorPoint(tile))
     .filter((tile, index, tiles) => tiles.findIndex((other) => other.x === tile.x && other.y === tile.y) === index);
@@ -1611,6 +2033,8 @@ function editorHoleJson() {
     hazards: editorHole.hazards,
     backgrounds: editorHole.backgrounds,
     decorations: editorHole.decorations,
+    penaltyHazards: editorHole.penaltyHazards,
+    blackHoles: editorHole.blackHoles,
     outOfBounds: editorHole.outOfBounds
   };
 }
@@ -1643,16 +2067,17 @@ function normalizeLoadedHole(data) {
     basket: data.basket && Number.isInteger(data.basket.x) && Number.isInteger(data.basket.y) ? data.basket : null,
     hazards: Array.isArray(data.hazards)
       ? data.hazards
-        .filter((hazard) => Number.isInteger(hazard.x) && Number.isInteger(hazard.y) && ["tree", "rock", "stump", "shrub", "obstacle"].includes(hazard.type))
+        .filter((hazard) => Number.isInteger(hazard.x) && Number.isInteger(hazard.y) && ["tree", "rock", "stump", "shrub", "obstacle", "crater", "crystal", "structure"].includes(hazard.type))
         .map((hazard) => ({
           ...hazard,
-          height: hazard.type === "tree" ? 3 : hazard.type === "shrub" ? 2 : 1,
+          height: Number.isFinite(hazard.height) ? Math.min(Math.max(Math.round(Number(hazard.height)), 0), 9) : hazard.type === "tree" || hazard.type === "crystal" ? 3 : hazard.type === "shrub" ? 2 : 1,
+          obstruction: Number.isFinite(hazard.obstruction) ? Math.min(Math.max(Math.round(Number(hazard.obstruction)), 0), 100) : undefined,
           width: hazard.type === "rock" && Number(hazard.width) === 2 ? 2 : undefined
         }))
       : [],
     backgrounds: [
       ...(Array.isArray(data.backgrounds)
-        ? data.backgrounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y) && ["water", "water2", "water3", "grass2", "sand1"].includes(tile.type))
+        ? data.backgrounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y) && ["water", "water2", "water3", "grass2", "sand1", "space1", "space2", "asteroid1", "asteroid2", "asteroid3"].includes(tile.type))
         : []),
       ...(Array.isArray(data.hazards)
         ? data.hazards.filter((hazard) => hazard.type === "water" && Number.isInteger(hazard.x) && Number.isInteger(hazard.y)).map((hazard) => ({ type: "water", x: hazard.x, y: hazard.y }))
@@ -1660,8 +2085,14 @@ function normalizeLoadedHole(data) {
     ],
     decorations: Array.isArray(data.decorations)
       ? data.decorations
-        .filter((decoration) => Number.isInteger(decoration.x) && Number.isInteger(decoration.y) && ["decor"].includes(decoration.type))
+        .filter((decoration) => Number.isInteger(decoration.x) && Number.isInteger(decoration.y) && ["decor", "crystal", "structure"].includes(decoration.type))
         .map((decoration) => ({ ...decoration }))
+      : [],
+    penaltyHazards: Array.isArray(data.penaltyHazards)
+      ? data.penaltyHazards.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y)).map((tile) => ({ x: tile.x, y: tile.y }))
+      : [],
+    blackHoles: Array.isArray(data.blackHoles)
+      ? data.blackHoles.filter((blackHole) => Number.isInteger(blackHole.x) && Number.isInteger(blackHole.y)).map((blackHole) => ({ x: blackHole.x, y: blackHole.y }))
       : [],
     outOfBounds: Array.isArray(data.outOfBounds)
       ? data.outOfBounds.filter((tile) => Number.isInteger(tile.x) && Number.isInteger(tile.y)).map((tile) => ({ x: tile.x, y: tile.y }))
@@ -1683,6 +2114,8 @@ function loadEditorHole(file) {
       editorHole.hazards = editorHole.hazards.map((hazard) => ({ ...hazard, ...clampEditorPoint(hazard) }));
       editorHole.backgrounds = editorHole.backgrounds.map((tile) => ({ ...tile, ...clampEditorPoint(tile) }));
       editorHole.decorations = editorHole.decorations.map((decoration) => ({ ...decoration, ...clampEditorPoint(decoration) }));
+      editorHole.penaltyHazards = editorHole.penaltyHazards.map((tile) => clampEditorPoint(tile));
+      editorHole.blackHoles = editorHole.blackHoles.map((blackHole) => clampEditorPoint(blackHole));
       editorHole.outOfBounds = editorHole.outOfBounds.map((tile) => clampEditorPoint(tile));
       syncEditorInputs();
       renderEditorGrid();
@@ -1709,6 +2142,8 @@ function updateThrowControls() {
   backhandButton.disabled = controlsLocked;
   forehandButton.disabled = controlsLocked;
   pitchButton.disabled = pitchLocked;
+  mulliganButton.textContent = mulliganUsedThisHole ? "Mulligan Used" : "Mulligan";
+  mulliganButton.disabled = controlsLocked || Boolean(pendingPutt) || mulliganUsedThisHole;
   updateDirectionControls();
   renderHand();
   renderSelectedCard();
@@ -1954,6 +2389,12 @@ function updateActionButton() {
     return;
   }
 
+  if (invalidLieReason(currentDiscCell)) {
+    throwButton.textContent = "Invalid Lie";
+    throwButton.disabled = true;
+    return;
+  }
+
   if (pendingPutt?.circle === "c1") {
     throwButton.textContent = c1MissStreak >= 2 ? "Tap In" : "Try C1 Putt";
     throwButton.disabled = false;
@@ -2001,16 +2442,22 @@ function pitchToCell(cell) {
   currentDiscCell = { ...cell };
   strokeNumber += 1;
 
-  if (isOutOfBoundsCell(currentDiscCell.x, currentDiscCell.y)) {
+  const invalidReason = invalidLieReason(currentDiscCell);
+  if (invalidReason) {
     strokeNumber += 1;
     currentDiscCell = { ...lastValidInPath([{ ...cell }], originalCell) };
-    setLieNote("Out of bounds. Take a penalty stroke and play from the last valid square.");
+    const penaltyMessage = invalidLieMessage(invalidReason);
+    setLieNote(penaltyMessage);
     resolveLanding(currentDiscCell);
     if (lieNote.textContent) {
-      setLieNote(`Out of bounds. Take a penalty stroke and play from the last valid square. ${lieNote.textContent}`);
+      setLieNote(`${penaltyMessage} ${lieNote.textContent}`);
     }
   } else {
+    const hazardPenaltyMessage = applyPenaltyHazardIfNeeded(currentDiscCell);
     resolveLanding(currentDiscCell);
+    if (hazardPenaltyMessage && lieNote.textContent) {
+      setLieNote(`${hazardPenaltyMessage} ${lieNote.textContent}`);
+    }
   }
 
   finishPlayedThrow();
@@ -2114,6 +2561,7 @@ function roundSaveData() {
     currentDiscImage,
     currentDiscName,
     strokeNumber,
+    mulliganUsedThisHole,
     c1MissStreak,
     pendingPutt: pendingPutt ? { ...pendingPutt } : null,
     isHoledOut,
@@ -2137,6 +2585,7 @@ function gameSaveData() {
     playerPoints,
     playerStats: { ...playerStats },
     playerDeck: playerDeck.map(cardSaveData),
+    playerCollection: playerCollection.map(cardSaveData),
     spendOffers,
     advancedCoursesUnlocked,
     bestCourseScores,
@@ -2176,10 +2625,10 @@ function isValidCard(card) {
 }
 
 function loadCards(cards) {
-  return Array.isArray(cards) ? cards.filter(isValidCard).map((card) => ({
+  return ensureCardIds(Array.isArray(cards) ? cards.filter(isValidCard).map((card) => ({
     ...card,
     throwId: card.throwId ?? null
-  })) : [];
+  })) : []);
 }
 
 function loadPlayerState(saveData) {
@@ -2195,6 +2644,10 @@ function loadPlayerState(saveData) {
   if (savedDeck.length) {
     playerDeck = savedDeck;
   }
+  playerCollection = loadCards(saveData.playerCollection);
+  normalizePlayerDeckBounds();
+  selectedDeckCardId = null;
+  selectedCollectionCardId = null;
   if (saveData.spendOffers && typeof saveData.spendOffers === "object") {
     spendOffers = saveData.spendOffers;
   }
@@ -2212,7 +2665,10 @@ function resetGameState() {
   playerStats.throwIn = 10;
   playerStats.scramble = 55;
   playerStats.control = 3;
-  playerDeck = startingDeck.map(cloneCard);
+  playerDeck = ensureCardIds(buildStartingDeck());
+  playerCollection = [];
+  selectedDeckCardId = null;
+  selectedCollectionCardId = null;
   spendOffers = null;
   pendingPurchase = null;
   selectedThrow = "backhand";
@@ -2237,6 +2693,7 @@ function resetGameState() {
   strokeNumber = 0;
   pendingPutt = null;
   isHoledOut = false;
+  mulliganUsedThisHole = false;
   c1MissStreak = 0;
   hasActiveRound = false;
   generateSpendOffers();
@@ -2262,6 +2719,7 @@ function restoreRoundState(roundData) {
   currentDiscImage = typeof roundData.currentDiscImage === "string" ? roundData.currentDiscImage : null;
   currentDiscName = typeof roundData.currentDiscName === "string" ? roundData.currentDiscName : "Disc";
   strokeNumber = Number.isFinite(roundData.strokeNumber) ? roundData.strokeNumber : 0;
+  mulliganUsedThisHole = Boolean(roundData.mulliganUsedThisHole);
   c1MissStreak = Number.isFinite(roundData.c1MissStreak) ? roundData.c1MissStreak : 0;
   pendingPutt = roundData.pendingPutt ? { ...roundData.pendingPutt } : null;
   isHoledOut = Boolean(roundData.isHoledOut);
@@ -2392,8 +2850,9 @@ function renderCourseSelector() {
 
 function renderTestLevelSelector() {
   courseList.innerHTML = "";
+  const testCourses = [...courseLibrary, ...testOnlyCourses];
 
-  courseLibrary.forEach((course, courseIndex) => {
+  testCourses.forEach((course, courseIndex) => {
     (course.holes ?? []).forEach((courseHole, holeIndex) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -2405,7 +2864,7 @@ function renderTestLevelSelector() {
         </span>
         <strong class="course-best-score">Test</strong>
       `;
-      button.addEventListener("click", () => startTestLevel(courseIndex, holeIndex));
+      button.addEventListener("click", () => startTestLevel(courseIndex, holeIndex, testCourses));
       courseList.append(button);
     });
   });
@@ -2431,10 +2890,98 @@ function cardStatsForDeck(card) {
   return `${cardDiscStatsForDeck(card)} - ${card.throwId ? (throwCardEffects[card.throwId]?.text ?? "") : "No throw modifier"}`;
 }
 
-function sortedPlayerDeck() {
-  return [...playerDeck].sort((a, b) => cardNameForDeck(a).localeCompare(cardNameForDeck(b)));
+function sortedCards(cards) {
+  return [...cards].sort((a, b) => cardNameForDeck(a).localeCompare(cardNameForDeck(b)));
 }
+
+function isPlayerDeckLegal() {
+  return playerDeck.length >= minPlayerDeckSize && playerDeck.length <= maxPlayerDeckSize;
+}
+
+function normalizePlayerDeckBounds() {
+  while (playerDeck.length > maxPlayerDeckSize) {
+    playerCollection.push(playerDeck.pop());
+  }
+
+  const fillerDiscIds = ["cacti", "comb", "palm"];
+  let fillerIndex = 0;
+  while (playerDeck.length < minPlayerDeckSize) {
+    if (playerCollection.length) {
+      playerDeck.push(playerCollection.shift());
+    } else {
+      playerDeck.push(buildCard(fillerDiscIds[fillerIndex % fillerDiscIds.length], null));
+      fillerIndex += 1;
+    }
+  }
+}
+
+function renderOwnedCard(card, location) {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = "player-deck-card";
+  item.setAttribute("aria-pressed", String(location === "deck" ? selectedDeckCardId === card.cardId : selectedCollectionCardId === card.cardId));
+  const disc = discs[card.discId];
+  const throwCard = card.throwId ? throwCardEffects[card.throwId] : null;
+  item.innerHTML = `
+    <img src="${disc.image}" alt="">
+    <span>
+      <span>${disc.name}</span>
+      <strong>${throwCard?.name ?? "No Modifier"}</strong>
+    </span>
+    <em>${throwCard?.text ?? "No throw modifier"}</em>
+    <small>${cardDiscStatsForDeck(card)}</small>
+  `;
+  item.addEventListener("click", () => {
+    if (location === "deck") {
+      selectedDeckCardId = card.cardId;
+      selectedCollectionCardId = null;
+    } else {
+      selectedCollectionCardId = card.cardId;
+      selectedDeckCardId = null;
+    }
+    renderPlayerMenu();
+  });
+  return item;
+}
+
+function updateDeckBuilderControls() {
+  const selectedCollectionCard = playerCollection.find((card) => card.cardId === selectedCollectionCardId);
+  const selectedDeckCard = playerDeck.find((card) => card.cardId === selectedDeckCardId);
+  addCardToDeckButton.disabled = !selectedCollectionCard || playerDeck.length >= maxPlayerDeckSize;
+  removeCardFromDeckButton.disabled = !selectedDeckCard || playerDeck.length <= minPlayerDeckSize;
+  playRoundButton.disabled = !isPlayerDeckLegal();
+  playerDeckSizeLabel.textContent = `${playerDeck.length} / ${maxPlayerDeckSize}`;
+  playerDeckSizeLabel.classList.toggle("invalid", !isPlayerDeckLegal());
+}
+
+function moveCollectionCardToDeck() {
+  const cardIndex = playerCollection.findIndex((card) => card.cardId === selectedCollectionCardId);
+  if (cardIndex < 0 || playerDeck.length >= maxPlayerDeckSize) {
+    return;
+  }
+
+  const [card] = playerCollection.splice(cardIndex, 1);
+  playerDeck.push(card);
+  selectedDeckCardId = card.cardId;
+  selectedCollectionCardId = null;
+  renderPlayerMenu();
+}
+
+function moveDeckCardToCollection() {
+  const cardIndex = playerDeck.findIndex((card) => card.cardId === selectedDeckCardId);
+  if (cardIndex < 0 || playerDeck.length <= minPlayerDeckSize) {
+    return;
+  }
+
+  const [card] = playerDeck.splice(cardIndex, 1);
+  playerCollection.push(card);
+  selectedCollectionCardId = card.cardId;
+  selectedDeckCardId = null;
+  renderPlayerMenu();
+}
+
 function renderPlayerMenu() {
+  normalizePlayerDeckBounds();
   playerPointsLabel.textContent = playerPoints;
   playerC1Label.textContent = `${playerStats.c1}%`;
   playerC2Label.textContent = `${playerStats.c2}%`;
@@ -2442,23 +2989,15 @@ function renderPlayerMenu() {
   playerScrambleLabel.textContent = `${playerStats.scramble}%`;
   playerControlLabel.textContent = playerStats.control;
   playerDeckList.innerHTML = "";
+  playerCollectionList.innerHTML = "";
 
-  sortedPlayerDeck().forEach((card) => {
-    const item = document.createElement("div");
-    item.className = "player-deck-card";
-    const disc = discs[card.discId];
-    const throwCard = card.throwId ? throwCardEffects[card.throwId] : null;
-    item.innerHTML = `
-      <img src="${disc.image}" alt="">
-      <span>
-        <span>${disc.name}</span>
-        <strong>${throwCard?.name ?? "No Modifier"}</strong>
-      </span>
-      <em>${throwCard?.text ?? "No throw modifier"}</em>
-      <small>${cardDiscStatsForDeck(card)}</small>
-    `;
-    playerDeckList.append(item);
+  sortedCards(playerCollection).forEach((card) => {
+    playerCollectionList.append(renderOwnedCard(card, "collection"));
   });
+  sortedCards(playerDeck).forEach((card) => {
+    playerDeckList.append(renderOwnedCard(card, "deck"));
+  });
+  updateDeckBuilderControls();
 }
 
 function buyOffer(offer) {
@@ -2467,7 +3006,7 @@ function buyOffer(offer) {
   }
 
   playerPoints -= offer.price;
-  playerDeck.push(buildCard(offer.discId, offer.throwId));
+  playerCollection.push(buildCard(offer.discId, offer.throwId));
   offer.sold = true;
   closePurchaseConfirm();
   renderSpendPoints();
@@ -2570,6 +3109,11 @@ function renderSpendPoints() {
   });
 }
 async function showCourseSelect() {
+  if (!isPlayerDeckLegal()) {
+    renderPlayerMenu();
+    return;
+  }
+
   await loadCourseLibrary();
   courseSelectTitle.textContent = "Level Selector";
   renderCourseSelector();
@@ -2584,6 +3128,7 @@ async function showCourseSelect() {
 
 async function showTestLevelSelect() {
   await loadCourseLibrary();
+  await loadTestOnlyCourses();
   courseSelectTitle.textContent = "Test Level";
   renderTestLevelSelector();
   menuScreen.hidden = true;
@@ -2595,10 +3140,10 @@ async function showTestLevelSelect() {
   courseList.querySelector("button")?.focus();
 }
 
-function startTestLevel(courseIndex, holeIndex) {
+function startTestLevel(courseIndex, holeIndex, testCourses = courseLibrary) {
   isTestRound = true;
   testDeckOverride = buildTestDeck();
-  showRound(courseIndex, holeIndex);
+  showRound(courseIndex, holeIndex, testCourses);
   setLieNote("Test level: random bag with one of every disc and random modifiers.");
 }
 
@@ -2664,7 +3209,7 @@ function basketFlyoverStep(path) {
     return null;
   }
 
-  return path.find((step) => step.height === 2 && sameCell(step, hole.basket)) ?? null;
+  return path.find((step) => sameCell(step, hole.basket)) ?? null;
 }
 
 function puttModifierText() {
@@ -2793,6 +3338,7 @@ async function animateThrow() {
   const path = getThrowPath(selectedThrow);
   const collisionResult = scrambleMiss ? { collision: null, hazard: null, fights: [] } : resolveCollision(path);
   const collision = scrambleMiss ? null : collisionResult.collision;
+  const hitOutOfBounds = Boolean(collisionResult.outOfBounds);
   const collisionIndex = collision ? path.indexOf(collision) : Infinity;
   const hitCollision = Boolean(collision);
   const terminalIndex = scrambleMiss ? -1 : Math.min(collisionIndex, path.length - 1);
@@ -2810,13 +3356,13 @@ async function animateThrow() {
   if (scrambleMiss) {
     currentDiscCell = randomScrambleKick(currentDiscCell);
   } else if (hitCollision && collision) {
-    currentDiscCell = randomCollisionLie(collision);
+    currentDiscCell = hitOutOfBounds ? { ...collision } : randomCollisionLie(collision);
   } else if (path.length > 0) {
     currentDiscCell = { ...path[path.length - 1] };
   }
 
-  const wentOutOfBounds = isOutOfBoundsCell(currentDiscCell.x, currentDiscCell.y);
-  if (wentOutOfBounds) {
+  const invalidReason = invalidLieReason(currentDiscCell);
+  if (invalidReason) {
     currentDiscCell = lastValidInPath(animationPath);
   }
 
@@ -2825,32 +3371,39 @@ async function animateThrow() {
   const flyoverChance = flyoverStep ? throwInChance() : 0;
   if (flyoverStep && percentRoll(flyoverChance)) {
     currentDiscCell = { ...hole.basket };
-    setLieNote(`Throw-in made while flying over the basket at height 2. ${flyoverChance}% chance hit, no putt required.`);
+    setLieNote(`Throw-in made while flying over the basket at height ${flyoverStep.height}. ${flyoverChance}% chance hit, no putt required.`);
     completeHole();
-  } else if (wentOutOfBounds) {
+  } else if (invalidReason) {
     strokeNumber += 1;
-    setLieNote("Out of bounds. Take a penalty stroke and play from the last valid square.");
+    const penaltyMessage = invalidLieMessage(invalidReason);
+    setLieNote(penaltyMessage);
     resolveLanding(currentDiscCell);
     if (lieNote.textContent) {
-      setLieNote(`Out of bounds. Take a penalty stroke and play from the last valid square. ${lieNote.textContent}`);
+      setLieNote(`${penaltyMessage} ${lieNote.textContent}`);
     }
   } else if (scrambleMiss) {
+    const hazardPenaltyMessage = applyPenaltyHazardIfNeeded(currentDiscCell);
     setLieNote(`Scramble failed from ${hazardLabel(startingHazard).toLowerCase()}. The disc kicked to a random nearby lie.`);
     resolveLanding(currentDiscCell);
     if (lieNote.textContent) {
-      setLieNote(`Scramble failed from ${hazardLabel(startingHazard).toLowerCase()}. The disc kicked to a random nearby lie. ${lieNote.textContent}`);
+      setLieNote(`${hazardPenaltyMessage ? `${hazardPenaltyMessage} ` : ""}Scramble failed from ${hazardLabel(startingHazard).toLowerCase()}. The disc kicked to a random nearby lie. ${lieNote.textContent}`);
     }
   } else if (hitCollision && collision) {
     const hazard = hazardForCell(currentDiscCell.x, currentDiscCell.y);
     const penaltyText = hazard ? " The next throw is from an obstacle, so disc speed is reduced by 1 and must pass a scramble check." : "";
     const fightText = collisionResult.fights.length ? ` Fought through ${collisionResult.fights.length} obstruction${collisionResult.fights.length === 1 ? "" : "s"} before stopping.` : "";
     const collisionText = `Hit an obstacle and kicked to a new lie.${fightText}${penaltyText}`;
+    const hazardPenaltyMessage = applyPenaltyHazardIfNeeded(currentDiscCell);
     resolveLanding(currentDiscCell);
     if (lieNote.textContent) {
-      setLieNote(`${collisionText} ${lieNote.textContent}`);
+      setLieNote(`${hazardPenaltyMessage ? `${hazardPenaltyMessage} ` : ""}${collisionText} ${lieNote.textContent}`);
     }
   } else {
+    const hazardPenaltyMessage = applyPenaltyHazardIfNeeded(currentDiscCell);
     resolveLanding(currentDiscCell);
+    if (hazardPenaltyMessage && lieNote.textContent) {
+      setLieNote(`${hazardPenaltyMessage} ${lieNote.textContent}`);
+    }
   }
   isThrowing = false;
   throwButton.disabled = false;
@@ -2869,9 +3422,9 @@ async function animateThrow() {
   throwButton.focus();
 }
 
-function showRound(courseIndex = 0, holeIndex = 0) {
+function showRound(courseIndex = 0, holeIndex = 0, courses = courseLibrary) {
   hasActiveRound = true;
-  selectedCourse = courseLibrary[courseIndex] ?? selectedCourse;
+  selectedCourse = courses[courseIndex] ?? selectedCourse;
   selectedCourseHoleIndex = holeIndex;
   if (selectedCourseHoleIndex === 0 || isTestRound) {
     courseScoreToPar = 0;
@@ -2891,6 +3444,7 @@ function showRound(courseIndex = 0, holeIndex = 0) {
   strokeNumber = 0;
   pendingPutt = null;
   isHoledOut = false;
+  mulliganUsedThisHole = false;
   c1MissStreak = 0;
   holeCompleteModal.hidden = true;
   setLieNote(null);
@@ -2920,6 +3474,7 @@ function showMenu() {
   strokeNumber = 0;
   pendingPutt = null;
   isHoledOut = false;
+  mulliganUsedThisHole = false;
   c1MissStreak = 0;
   holeCompleteModal.hidden = true;
   setLieNote(null);
@@ -2936,6 +3491,7 @@ async function showEditor() {
   courseSelectScreen.hidden = true;
   roundScreen.hidden = true;
   editorScreen.hidden = false;
+  updateAssetSettingsPanel();
   syncEditorInputs();
   renderEditorGrid();
   setEditorNote(null);
@@ -2950,6 +3506,7 @@ initializeDragPanning(courseViewport, { ignoreSelector: ".pitch-target-cell" });
 initializeDragPanning(editorViewport, { ignoreSelector: ".editor-cell" });
 initializeObstacleTooltips(courseGrid);
 initializeObstacleTooltips(editorGrid);
+updateAssetSettingsPanel();
 updateThrowControls();
 renderCourse();
 renderEditorGrid();
@@ -2968,6 +3525,8 @@ testLevelButton.addEventListener("click", showTestLevelSelect);
 playRoundButton.addEventListener("click", showCourseSelect);
 spendPointsButton.addEventListener("click", showSpendPoints);
 savePlayerButton.addEventListener("click", saveGame);
+addCardToDeckButton.addEventListener("click", moveCollectionCardToDeck);
+removeCardFromDeckButton.addEventListener("click", moveDeckCardToCollection);
 spendBackButton.addEventListener("click", showPlayerMenu);
 courseSelectBackButton.addEventListener("click", showMenu);
 openEditorButton.addEventListener("click", showEditor);
@@ -2978,6 +3537,7 @@ backhandButton.addEventListener("click", () => selectThrow("backhand"));
 forehandButton.addEventListener("click", () => selectThrow("forehand"));
 pitchButton.addEventListener("click", () => selectThrow("pitch"));
 throwButton.addEventListener("click", animateThrow);
+mulliganButton.addEventListener("click", useMulligan);
 closeHoleModalButton.addEventListener("click", closeHoleCompleteModal);
 confirmPurchaseButton.addEventListener("click", () => buyOffer(pendingPurchase));
 cancelPurchaseButton.addEventListener("click", closePurchaseConfirm);
@@ -2994,6 +3554,8 @@ loadHoleInput.addEventListener("change", () => {
 assetButtons.forEach((button) => {
   button.addEventListener("click", () => selectEditorAsset(button.dataset.editorAsset));
 });
+assetHeightInput.addEventListener("change", handleAssetSettingChange);
+assetThroughInput.addEventListener("change", handleAssetSettingChange);
 [editorHoleNameInput, editorCourseSelect, editorNewCourseInput, editorHoleNumberInput, editorHoleParInput, editorHoleColumnsInput, editorHoleRowsInput].forEach((input) => {
   input.addEventListener("change", updateEditorDimensions);
 });

@@ -12,6 +12,7 @@ The browser level editor downloads `.json` files because a normal web page canno
 
 - `window.CHAINBOUND_COURSE_FILES`: a manifest of source JSON files.
 - `window.CHAINBOUND_COURSES`: the playable course bundle used when `index.html` is opened directly as a `file://` URL.
+- `window.CHAINBOUND_TEST_COURSES`: optional test-only holes shown by the Test Level button but not by the normal course selector.
 
 Browsers often block `fetch()` for local JSON files when using `file://`, so `CHAINBOUND_COURSES` is what makes the level selector work without a local server. Keep the JSON files as the editable source, then copy their data into the playable bundle.
 
@@ -59,6 +60,12 @@ Hole JSON shape:
   "decorations": [
     { "type": "decor", "variant": 1, "x": 4, "y": 8 }
   ],
+  "penaltyHazards": [
+    { "x": 2, "y": 9 }
+  ],
+  "blackHoles": [
+    { "x": 5, "y": 5 }
+  ],
   "outOfBounds": [
     { "x": 0, "y": 0 }
   ]
@@ -67,6 +74,6 @@ Hole JSON shape:
 
 The game groups holes by `courseId`, sorts them by `holeNumber`, and plays them in that order. To add more holes to a course, add another manifest entry with the same `courseId` and `courseName`.
 
-Water and sand are stored in `backgrounds`, not `hazards`. Decor is stored in `decorations` and is visual-only. OB is stored in `outOfBounds`; it displays in the editor only and is invisible during play. Wide assets such as `rock4_1x2.png` are saved as a hazard with `width: 2`, anchored on the left tile.
+Water and sand are stored in `backgrounds`, not `hazards`; water is visual unless the same square is also marked OB. Decor is stored in `decorations` and is visual-only. Penalty Hazard zones are stored in `penaltyHazards`; they display in the editor only, are invisible during play, and add 1 stroke without moving the lie when the disc finishes there. Black Holes are stored in `blackHoles`; each saved coordinate is a 1x1 special asset that modifies throw Turn/Fade based on whether it is left or right of the throw line. OB is stored in `outOfBounds`; it displays in the editor only and is invisible during play. Wide assets such as `rock4_1x2.png` are saved as a hazard with `width: 2`, anchored on the left tile.
 
 Note: if the game is run through a local server, the manifest JSON fetch path can work. If the game is opened directly from disk, the embedded `CHAINBOUND_COURSES` data is used.
