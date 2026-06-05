@@ -8,6 +8,7 @@ A playground for esteemed comrades: a growing arcade of small daily browser game
 - [Portdle](games/portdle/) - a seeded wizard maze puzzle where portals let you bend routes to the exit.
 - [Deck Measuring Contest](games/deck-measuring/) - a daily wood sizing challenge. Study a 10 m² reference deck, then estimate the area of 5 seeded decks. Golf scoring, custom seeds, and spoiler-free sharing.
 - [One More Orbit](games/one-more-orbit/) - a daily gravity puzzle about slingshotting a probe through beacons and docking with limited burns.
+- [Wordforge](games/wordforge/) - a robot civilization builder where mined letters become crafted words and rebuilt systems.
 
 ## Run
 
