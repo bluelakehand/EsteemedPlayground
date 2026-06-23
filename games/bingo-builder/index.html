@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bingo Forge | Esteemed Arcade</title>
+    <meta
+      name="description"
+      content="Design a custom bingo board, encode it into a share link, and let everyone play a shuffled copy."
+    >
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+
+    <main class="app-shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Bingo Forge</p>
+          <h1>Build a board. Ship a link. Let chaos do the seating chart.</h1>
+          <p class="lede">
+            Create custom bingo cards for watch parties, standups, road trips,
+            family lore, or whatever extremely specific nonsense deserves a 5×5 grid.
+            The board data lives inside the URL, and every player gets a freshly shuffled card.
+          </p>
+        </div>
+        <div class="hero-card" aria-label="Bingo Forge feature list">
+          <span>Base64 share links</span>
+          <span>Randomized player boards</span>
+          <span>Rows, columns, diagonals, corners, X, and blackout wins</span>
+          <span>Local-only play state</span>
+        </div>
+      </section>
+
+      <div class="mode-tabs" role="tablist" aria-label="Bingo Forge modes">
+        <button id="designerTab" class="tab active" type="button">Design</button>
+        <button id="playerTab" class="tab" type="button">Play</button>
+      </div>
+
+      <section id="designerPanel" class="panel designer-panel" aria-labelledby="designerTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Designer</p>
+            <h2 id="designerTitle">Make a shareable board</h2>
+          </div>
+          <button id="loadExampleButton" class="ghost-button" type="button">Load silly example</button>
+        </div>
+
+        <form id="builderForm" class="builder-grid">
+          <label class="field full">
+            <span>Board title</span>
+            <input id="titleInput" type="text" maxlength="80" value="Movie Night Bingo">
+          </label>
+
+          <label class="field">
+            <span>Board size</span>
+            <select id="sizeInput">
+              <option value="3">3×3 quick card</option>
+              <option value="4">4×4 chunky card</option>
+              <option value="5" selected>5×5 classic</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Theme</span>
+            <select id="themeInput">
+              <option value="neon" selected>Neon Arcade</option>
+              <option value="sunset">Laser Sunset</option>
+              <option value="forest">Goblin Forest</option>
+              <option value="paper">Notebook Goblin</option>
+            </select>
+          </label>
+
+          <label class="check-field">
+            <input id="freeInput" type="checkbox" checked>
+            <span>Use a free center square</span>
+          </label>
+
+          <label class="field">
+            <span>Free square text</span>
+            <input id="freeTextInput" type="text" maxlength="40" value="Free Space">
+          </label>
+
+          <fieldset class="win-field full">
+            <legend>Winning patterns</legend>
+            <label><input type="checkbox" name="win" value="row" checked> Any row</label>
+            <label><input type="checkbox" name="win" value="col" checked> Any column</label>
+            <label><input type="checkbox" name="win" value="diag" checked> Diagonals</label>
+            <label><input type="checkbox" name="win" value="corners"> Four corners</label>
+            <label><input type="checkbox" name="win" value="x"> Giant X</label>
+            <label><input type="checkbox" name="win" value="blackout"> Blackout</label>
+          </fieldset>
+
+          <label class="field full">
+            <span>Squares, one per line</span>
+            <textarea id="squaresInput" rows="14" spellcheck="true"></textarea>
+            <span id="squarePoolHint" class="field-hint">
+              Add at least enough squares to fill the board. Extra squares become a random draw pool,
+              so each player may see a different subset.
+            </span>
+          </label>
+
+          <div class="designer-actions full">
+            <button class="primary-button" type="submit">Generate share link</button>
+            <button id="previewButton" class="secondary-button" type="button">Preview as player</button>
+          </div>
+        </form>
+
+        <div id="designerMessage" class="message" role="status" aria-live="polite"></div>
+
+        <section id="sharePanel" class="share-panel" hidden>
+          <label class="field full">
+            <span>Share link</span>
+            <div class="copy-row">
+              <input id="shareLinkInput" type="text" readonly>
+              <button id="copyButton" class="secondary-button" type="button">Copy</button>
+            </div>
+          </label>
+          <p id="linkStats" class="hint"></p>
+        </section>
+      </section>
+
+      <section id="playerPanel" class="panel player-panel" aria-labelledby="playerTitle" hidden>
+        <div id="emptyPlayerState" class="empty-state">
+          <p class="eyebrow">Player</p>
+          <h2>No board loaded yet</h2>
+          <p>Design a board first, or open a Bingo Forge share link.</p>
+          <button id="jumpToDesignerButton" class="primary-button" type="button">Design a board</button>
+        </div>
+
+        <div id="gameState" hidden>
+          <div class="game-topper">
+            <div>
+              <p class="eyebrow">Now playing</p>
+              <h2 id="playerTitle">Custom Bingo</h2>
+              <p id="rulesSummary" class="hint"></p>
+            </div>
+            <div class="player-controls">
+              <label class="field compact">
+                <span>Optional name seed</span>
+                <input id="playerNameInput" type="text" maxlength="40" placeholder="Same name = same layout">
+              </label>
+              <button id="reshuffleButton" class="secondary-button" type="button">New random card</button>
+              <button id="resetMarksButton" class="ghost-button" type="button">Clear marks</button>
+            </div>
+          </div>
+
+          <div id="winBanner" class="win-banner" hidden>
+            <span>🎉 Bingo!</span>
+            <p id="winDetails"></p>
+          </div>
+
+          <div id="board" class="bingo-board" aria-label="Bingo board"></div>
+
+          <div class="play-footer">
+            <button id="copyResultButton" class="secondary-button" type="button">Copy my result</button>
+            <button id="editBoardButton" class="ghost-button" type="button">Edit this board</button>
+            <a id="makeBoardLink" class="quiet-link" href="./" hidden>Make your own board</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
