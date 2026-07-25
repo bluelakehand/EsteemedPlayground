@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>GOTHI — Board Prototype</title>
+    <title>GOTHI â€” Board Prototype</title>
     <meta name="description" content="Interactive board scaffold for GOTHI, an Icelandic strategy game.">
     <link rel="stylesheet" href="../../arcade-home-link.css">
     <link rel="stylesheet" href="styles.css">
@@ -13,13 +13,20 @@
     <main class="gothi-shell">
       <header class="game-header">
         <div>
-          <p class="eyebrow">Board Prototype · Alþingi I</p>
+          <p class="eyebrow">Board Prototype Â· AlÃ¾ingi I</p>
           <h1>GOTHI</h1>
           <p class="intro">Claim the Farthings. Hold the island. Shape a saga worthy of memory.</p>
         </div>
         <img src="gothi_icon_yellow.png" alt="" class="gothi-mark">
       </header>
-      <section class="board-workspace" aria-labelledby="board-title">
+      <section class="main-menu" id="main-menu" aria-labelledby="menu-title">
+        <img src="gothi_icon_yellow.png" alt="" class="menu-mark">
+        <p class="section-kicker">An Icelandic game of influence</p>
+        <h2 id="menu-title">Gather the Thing</h2>
+        <p>Command the Yellow Gothi against the Purple computer, claim the Farthings, and become the first player to control five territories.</p>
+        <button class="primary-action" id="new-game-button" type="button">Start New Game</button>
+      </section>
+      <section class="board-workspace" id="board-workspace" aria-labelledby="board-title" hidden>
         <div class="board-heading">
           <div>
             <p class="section-kicker">Interactive scaffold</p>
@@ -27,15 +34,31 @@
           </div>
           <button class="grid-toggle" id="grid-toggle" type="button" aria-pressed="true">Hide grid</button>
         </div>
-        <div class="board-frame" id="board-frame">
-          <canvas class="board-grid" id="board-grid" aria-label="Interactive GOTHI hex board" role="application" tabindex="0"></canvas>
-
+        <div class="board-play-area">
+          <div class="board-frame" id="board-frame">
+            <canvas class="board-grid" id="board-grid" aria-label="Interactive GOTHI hex board" role="application" tabindex="0"></canvas>
+          </div>
+          <aside class="game-status" aria-labelledby="status-title">
+            <p class="section-kicker">Control of Iceland</p>
+            <h3 id="status-title">Farthings</h3>
+            <div class="score-row yellow-score">
+              <span>Yellow</span>
+              <strong id="yellow-farthing-count">0</strong>
+            </div>
+            <div class="score-row purple-score">
+              <span>Purple (Computer)</span>
+              <strong id="purple-farthing-count">0</strong>
+            </div>
+            <p class="victory-target">First to control 5 wins.</p>
+            <p class="game-message" id="game-message" aria-live="assertive">Yellow to move.</p>
+            <button class="secondary-action" id="restart-game-button" type="button">New Game</button>
+          </aside>
         </div>
         <div class="board-footer">
           <div class="space-readout" aria-live="polite">
-            <span class="readout-label">Selected space</span>
-            <strong id="space-name">Choose a hex</strong>
-            <span id="space-detail">Hover or tap the board to inspect the scaffold.</span>
+            <span class="readout-label">Turn &amp; selection</span>
+            <strong id="space-name">Yellow to move</strong>
+            <span id="space-detail">Select a Yellow piece.</span>
           </div>
           <ul class="legend" aria-label="Board legend">
             <li><span class="legend-swatch farthing"></span>Farthing space</li>

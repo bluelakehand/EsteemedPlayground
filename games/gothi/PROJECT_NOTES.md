@@ -11,8 +11,8 @@ GOTHI is an Icelandic-themed, two-player strategy board game being implemented a
 - The canvas renders the full colored board and provides selectable hexes, hover/tap feedback, keyboard navigation, provisional terrain types, and provisional Farthing regions.
 - Yellow and purple starting armies are placed on canonical grid coordinates at the north and south ends.
 - Thingman movement is implemented: selectable one- or two-step movement on non-water hexes. Outlaw movement is implemented: unlimited straight-line movement until the board edge, water, or another piece. Raven movement is implemented: one adjacent step or an exact two-space straight jump over any middle piece; Ravens may enter water. Gothi movement is implemented: one adjacent step or an unobstructed two-space straight move; Gothi cannot enter or pass through water. Storgothi movement matches the Outlaw. White dots mark normal destinations and red dots mark captures.
-- Stacking captures are implemented. Every piece can capture every enemy piece by moving onto its hex, except that a Gothi cannot capture with its two-space move. Captured pieces remain underneath the capturer, cannot move, and exert no Farthing control. A small side marker shows each covered piece, and the directly covered piece is released when its capturer moves away.
-- Live weighted Farthing control scoring and territory highlighting are implemented. Turns and win conditions are not implemented yet.
+- Stacking captures are implemented. Every piece can capture every enemy piece by moving onto its hex, except that a Gothi cannot capture with its two-space move. Captured pieces remain underneath the capturer, cannot move, and exert no Farthing control. A captured stack shifts its active piece slightly left; the directly covered piece appears centered to its right, with deeper pieces cascading downward in overlapping layer order. The directly covered piece is released when its capturer moves away.
+- Live weighted Farthing control scoring and territory highlighting are implemented. Alternating turns are implemented with Yellow moving first; only the active player's pieces can be selected. A main menu starts or resets a single-player game with the human as Yellow and the computer as Purple. The computer automatically evaluates legal moves, captures, and resulting Farthing control on its turn. The side panel shows each player's live Farthing count, and the first player to control five Farthings wins and ends play.
 
 ## Canonical Retheme
 
@@ -87,7 +87,7 @@ The source map is 1363 x 1154 pixels. Board and piece coordinates are stored in 
 - `cellCenter(q, row)` as the shared coordinate source for board cells and pieces.
 - `northFormation` and `southFormation` arrays for starting piece coordinates.
 - `getFarthing()` and `getTerrain()` provisional classifiers.
-- Canvas rendering, pointer/keyboard selection, geometric six-neighbor lookup, Thingman pathing, six-direction Outlaw ray movement, Raven step/jump movement, non-jumping Gothi movement, and shared Outlaw/Storgothi ray movement.
+- Canvas rendering, pointer/keyboard piece selection, alternating Yellow/Purple turn state, geometric six-neighbor lookup, Thingman pathing, six-direction Outlaw ray movement, Raven step/jump movement, non-jumping Gothi movement, and shared Outlaw/Storgothi ray movement.
 - Stack-based capture state through each piece's `coveredBy` field, with covered pieces excluded from selection and control scoring.
 
 
@@ -98,9 +98,9 @@ The pattern is divided into eight scoring Farthings:
 - North and South home Farthings (green)
 - Heart Farthing (charcoal)
 - Northwest, Northeast, Southwest, and Southeast Farthings (ice)
-- One paired Outer Farthing spanning both purple wings
+- One paired Outer Farthing made from independently controlled west and east edge territories
 
-Water and neutral tan cells belong to no Farthing. Control weight is Thingman 1, Outlaw 1, Raven 2, Gothi 3, and Storgothi 3. The higher total controls the Farthing. A tie, including 0-0, is neutral. Controlled Farthing hexes receive yellow or purple tinting, borders, and glow. Control outlines render in a dedicated top pass so every controlled edge remains visible beside neutral and water cells.
+Water and neutral tan cells belong to no Farthing. Control weight is Thingman 1, Outlaw 1, Raven 2, Gothi 3, and Storgothi 3. The higher total controls the Farthing. A tie, including 0-0, is neutral. Controlled Farthing hexes receive yellow or purple tinting, borders, and glow. The west and east edge territories highlight independently according to the pieces on that side, but award one Outer Farthing point only when the same player controls both. Control outlines render in a dedicated top pass so every controlled edge remains visible beside neutral and water cells.
 ## Known Provisional Areas
 
 - Hexes currently use provisional `qÂ±N-rNN` IDs based on their calibrated column and row.
@@ -114,6 +114,6 @@ Water and neutral tan cells belong to no Farthing. Control weight is Thingman 1,
 1. Create an explicit board-data array: hex ID, axial coordinates, pixel center, terrain, Farthing, starting-slot owner, and occupant.
 2. Confirm final Farthing names and exact boundaries.
 3. Bind every starting piece to a canonical hex ID rather than a raw pixel coordinate.
-4. Add turn state and enforce which team may select and move.
-5. Implement the two win conditions.
+4. Add optional move history to the board UI.
+5. Confirm and implement the opposing-Homestead win condition.
 6. Decide whether the white setup circles should remain in the final board art after pieces can move.
