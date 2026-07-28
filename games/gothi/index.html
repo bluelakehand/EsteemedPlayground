@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GOTHI â€” Board Prototype</title>
+    <meta name="description" content="Interactive board scaffold for GOTHI, an Icelandic strategy game.">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+    <main class="gothi-shell">
+      <header class="game-header">
+        <div>
+          <h1>GOTHI</h1>
+          <p class="intro">Leadership. Diplomacy. Control.</p>
+        </div>
+        <img src="gothi_icon_yellow.png" alt="" class="gothi-mark">
+      </header>
+      <section class="main-menu" id="main-menu" aria-label="GOTHI main menu">
+        <img src="gothi_icon_yellow.png" alt="" class="menu-mark">
+        <p class="section-kicker">An Icelandic game of influence</p>
+
+        <p>Command the Yellow Gothi against the Purple computer, claim the Farthings, and become the first player to control five territories.</p>
+        <fieldset class="difficulty-choice game-mode-choice">
+          <legend>Game</legend>
+          <label>
+            <input type="radio" name="game-mode" value="basic" checked>
+            <span><strong>Basic</strong></span>
+          </label>
+          <label>
+            <input type="radio" name="game-mode" value="advanced">
+            <span><strong>Advanced</strong></span>
+          </label>
+        </fieldset>
+        <fieldset class="difficulty-choice">
+          <legend>Computer difficulty</legend>
+          <label>
+            <input type="radio" name="difficulty" value="easy" checked>
+            <span><strong>Easy</strong></span>
+          </label>
+          <label>
+            <input type="radio" name="difficulty" value="hard">
+            <span><strong>Hard</strong></span>
+          </label>
+        </fieldset>
+        <button class="primary-action" id="new-game-button" type="button">Start New Game</button>
+      </section>
+      <section class="board-workspace" id="board-workspace" aria-labelledby="board-title" hidden>
+        <div class="board-heading">
+          <div>
+            <h2 id="board-title">The Farthings</h2>
+          </div>
+          <button class="grid-toggle" id="grid-toggle" type="button" aria-pressed="true">Hide grid</button>
+        </div>
+        <div class="board-play-area">
+          <div class="board-frame" id="board-frame">
+            <canvas class="board-grid" id="board-grid" aria-label="Interactive GOTHI hex board" role="application" tabindex="0"></canvas>
+            <div class="piece-tooltip" id="piece-tooltip" role="tooltip" aria-hidden="true" hidden>
+              <strong id="piece-tooltip-name"></strong>
+              <span>Control <b id="piece-tooltip-control"></b></span>
+            </div>
+          </div>
+          <aside class="game-status" aria-labelledby="status-title">
+            <p class="section-kicker">Control of Iceland</p>
+            <h3 id="status-title">Farthings</h3>
+            <div class="score-row yellow-score">
+              <span>Yellow</span>
+              <strong id="yellow-farthing-count">0</strong>
+            </div>
+            <div class="score-row purple-score">
+              <span>Purple (Computer)</span>
+              <strong id="purple-farthing-count">0</strong>
+            </div>
+            <p class="difficulty-readout">Mode: <strong id="game-mode-output">Basic</strong></p>
+            <p class="difficulty-readout">Computer: <strong id="computer-difficulty">Easy</strong></p>
+            <button class="primary-action setup-confirm" id="confirm-setup-button" type="button" hidden>Confirm Setup</button>
+            <p class="victory-target">First to control 5 wins.</p>
+            <p class="game-message" id="game-message" aria-live="assertive">Yellow to move.</p>
+            <section class="move-history" aria-labelledby="move-log-title">
+              <div class="move-log-heading">
+                <h4 id="move-log-title">Game Record</h4>
+              </div>
+              <ol id="move-log" aria-live="polite">
+                <li class="empty-log">No moves recorded yet.</li>
+              </ol>
+            </section>
+            <button class="secondary-action" id="restart-game-button" type="button">Main Menu</button>
+          </aside>
+        </div>
+        <div class="board-footer">
+          <div class="space-readout" aria-live="polite">
+            <span class="readout-label">Turn &amp; selection</span>
+            <strong id="space-name">Yellow to move</strong>
+            <span id="space-detail">Select a Yellow piece.</span>
+          </div>
+          <ul class="legend" aria-label="Board legend">
+            <li><span class="legend-swatch farthing"></span>Farthing space</li>
+            <li><span class="legend-swatch water"></span>Water space</li>
+            <li><span class="legend-swatch neutral"></span>Neutral space</li>
+            <li><span class="legend-swatch outer"></span>Paired outer Farthing</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+    <div class="victory-overlay" id="victory-overlay" role="dialog" aria-modal="true" aria-labelledby="victory-title" hidden>
+      <div class="victory-dialog">
+        <p class="section-kicker">The saga is decided</p>
+        <h2 id="victory-title">Yellow Wins!</h2>
+        <p id="victory-detail">Yellow controls 5 Farthings.</p>
+        <div class="victory-actions">
+          <button class="secondary-action save-log-action" id="save-game-log-button" type="button">Save Game Log</button>
+          <button class="primary-action" id="winner-new-game-button" type="button">Play Again</button>
+          <button class="secondary-action" id="winner-menu-button" type="button">Main Menu</button>
+        </div>
+      </div>
+    </div>
+    <script src="game.js"></script>
+  </body>
+</html>

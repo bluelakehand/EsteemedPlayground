@@ -11,8 +11,20 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="../../arcade-home-link.css">
   </head>
-  <body>
+  <body class="menu-active">
     <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+
+    <section class="main-menu" id="main-menu" aria-labelledby="menu-title">
+      <img class="menu-art" src="splashscreen.png" alt="">
+      <div class="menu-content">
+        <p class="eyebrow">Archive Recovery &amp; Language Operator</p>
+        <h1 id="menu-title">Wordforge</h1>
+        <div class="menu-actions">
+          <button class="menu-button primary" id="start-game-button" type="button">Start Game</button>
+          <button class="menu-button" id="test-mode-button" type="button">Test Mode</button>
+        </div>
+      </div>
+    </section>
 
     <main class="shell">
       <section class="game-header" aria-labelledby="game-title">
@@ -32,6 +44,7 @@
           <div>
             <span class="hud-label">Controls</span>
             <strong>W jump / A left / D right</strong>
+            <small class="control-hint hidden" id="mine-control-hint">Click on a block to mine</small>
           </div>
           <div>
             <span class="hud-label">Carry</span>
@@ -41,16 +54,25 @@
             <span class="hud-label">Tools</span>
             <div class="tool-slots" id="tool-slots" aria-label="Unlocked tools"></div>
           </div>
+          <div>
+            <span class="hud-label">Culture</span>
+            <strong><span id="restoration-score">0</span> / 1000</strong>
+          </div>
         </div>
       </section>
     </main>
+
+    <div class="win-banner hidden" id="win-banner" role="status" aria-live="polite">
+      <span class="panel-label">Civilization Restored</span>
+      <strong>The humans can return.</strong>
+    </div>
 
     <div class="crafting-window hidden" id="crafting-window" role="dialog" aria-modal="true" aria-labelledby="crafting-title">
       <div class="crafting-panel">
         <div class="crafting-header">
           <div>
-            <span class="panel-label">Crafting Machine</span>
-            <h2 id="crafting-title">Wordforge Recipes</h2>
+            <span class="panel-label">Civilization Archive</span>
+            <h2 id="crafting-title">Library of Knowledge</h2>
           </div>
           <button class="exit-button" id="crafting-exit" type="button">Exit</button>
         </div>
@@ -60,61 +82,24 @@
             <div class="stored-letter-grid" id="stored-letter-grid"></div>
           </section>
           <section class="craft-tree" aria-label="Crafting tree">
-            <h3>Craft Tree</h3>
+            <h3>Knowledge Catalog</h3>
             <div class="craft-workbench hidden" id="craft-workbench" aria-label="Crafting workbench">
               <div class="craft-result hidden" id="craft-result">
                 <img id="craft-result-image" src="images/craft items/spade.png" alt="">
-                <strong id="craft-result-name">Spade</strong>
+                <div>
+                  <strong id="craft-result-name">Spade</strong>
+                  <p id="craft-result-description"></p>
+                </div>
               </div>
               <div class="craft-attempt">
                 <div class="craft-slots" id="craft-slots" aria-label="Crafting slots"></div>
-                <img class="craft-target-preview" id="craft-target-preview" src="images/craft items/spade_black.png" alt="">
+                <div class="craft-target-preview" id="craft-target-preview" aria-label="Selected recipe"></div>
               </div>
               <button class="try-craft-button" id="try-craft-button" type="button">Try to Craft</button>
               <p class="craft-message" id="craft-message" aria-live="polite"></p>
             </div>
-            <div class="tree-view">
-              <button class="craft-node branch-left" id="spade-node" type="button" data-recipe="spade" aria-label="Spade recipe">
-                <img id="spade-node-image" src="images/craft items/spade_black.png" alt="">
-                <strong class="craft-node-name hidden" id="spade-node-name">Spade</strong>
-                <span class="recipe-boxes" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-              </button>
-              <button class="craft-node branch-right" id="pick-node" type="button" data-recipe="pick" aria-label="Pick recipe">
-                <img id="pick-node-image" src="images/craft items/pick_black.png" alt="">
-                <strong class="craft-node-name hidden" id="pick-node-name">Pick</strong>
-                <span class="recipe-boxes" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-              </button>
-              <button class="craft-node branch-left" id="beam-node" type="button" data-recipe="beam" aria-label="Beam recipe">
-                <img id="beam-node-image" src="images/craft items/beam_black.png" alt="">
-                <strong class="craft-node-name hidden" id="beam-node-name">Beam</strong>
-                <span class="recipe-boxes" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-              </button>
-              <button class="craft-node branch-right" id="bag-node" type="button" data-recipe="bag" aria-label="Bag recipe">
-                <img id="bag-node-image" src="images/craft items/bag_black.png" alt="">
-                <strong class="craft-node-name hidden" id="bag-node-name">Bag</strong>
-                <span class="recipe-boxes" aria-hidden="true">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-              </button>
-            </div>
+            <div class="craft-categories" id="craft-categories" role="tablist" aria-label="Knowledge categories"></div>
+            <div class="craft-card-grid" id="craft-card-grid"></div>
           </section>
         </div>
       </div>

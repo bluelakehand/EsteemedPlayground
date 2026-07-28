@@ -12,7 +12,7 @@ words into restored systems, structures, and infrastructure.
 
 - `index.html` - platformer canvas shell and HUD
 - `styles.css` - responsive game frame and Wordforge visual direction
-- `game.js` - starter platforming, layered terrain, ground-level background, grid collision, ARLO sprite states, spade/pick digging tiers, beam lighting, bag carry upgrades, starter SPADE letters, block-locked letters, chest storage, and drag/drop crafting UI
+- `game.js` - starter platforming, 60-block procedural chunks, Plains, River, and Mountain biomes, water hazards, bridges, climbable cliffs, decorative trees, grid collision, ARLO sprite states, tool upgrades, letter harvesting, chest storage, and the categorized Library of Knowledge
 
 ## Next Build Targets
 
