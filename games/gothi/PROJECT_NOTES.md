@@ -1,4 +1,4 @@
-﻿# GOTHI Project Notes
+# GOTHI Project Notes
 
 ## Purpose
 
@@ -8,11 +8,14 @@ GOTHI is an Icelandic-themed, two-player strategy board game being implemented a
 
 - The arcade dashboard links to `games/gothi/` as a Board Prototype.
 - The original `gothi_map_v1.png` remains as a visual reference, but the live prototype currently renders a standalone colored hex board without the background image.
-- The canvas renders the full colored board and provides selectable hexes, hover/tap feedback, keyboard navigation, provisional terrain types, and provisional Farthing regions.
+- The canvas renders the full colored board and provides selectable pieces, hover/tap feedback, keyboard navigation, provisional terrain types, and provisional Farthing regions. Hovering a visible piece shows a team-colored tooltip with its name and control value.
 - Yellow and purple starting armies are placed on canonical grid coordinates at the north and south ends.
 - Thingman movement is implemented: selectable one- or two-step movement on non-water hexes. Outlaw movement is implemented: unlimited straight-line movement until the board edge, water, or another piece. Raven movement is implemented: one adjacent step or an exact two-space straight jump over any middle piece; Ravens may enter water. Gothi movement is implemented: one adjacent step or an unobstructed two-space straight move; Gothi cannot enter or pass through water. Storgothi movement matches the Outlaw. White dots mark normal destinations and red dots mark captures.
-- Stacking captures are implemented. Every piece can capture every enemy piece by moving onto its hex, except that a Gothi cannot capture with its two-space move. Captured pieces remain underneath the capturer, cannot move, and exert no Farthing control. A captured stack shifts its active piece slightly left; the directly covered piece appears centered to its right, with deeper pieces cascading downward in overlapping layer order. The directly covered piece is released when its capturer moves away.
-- Live weighted Farthing control scoring and territory highlighting are implemented. Alternating turns are implemented with Yellow moving first; only the active player's pieces can be selected. A main menu starts or resets a single-player game with the human as Yellow and the computer as Purple. The computer automatically evaluates legal moves, captures, and resulting Farthing control on its turn. The side panel shows each player's live Farthing count, and the first player to control five Farthings wins and ends play.
+- Stacking captures are implemented. Every piece can capture every enemy piece by moving onto its hex, except that a Gothi cannot capture with its two-space move. Captured pieces remain underneath the capturer, cannot move, and exert no Farthing control. A captured stack shifts its active piece slightly left; the directly covered piece appears centered to its right, with deeper pieces cascading downward in overlapping layer order. The directly covered piece is released when its capturer moves away. Each visible miniature and exposed lower layer has its own hover target, allowing the tooltip and side readout to identify every covered piece and its inactive control value.
+- Victory occurs when a player controls five Farthings or controls the opponent's Homestead Farthing. Either condition opens a modal announcement with the winner and victory reason, plus Save Game Log, Play Again, and Main Menu actions. Save Game Log downloads a timestamped `.txt` report containing the mode, difficulty, result, final Farthing totals, starting setup, and every structured game-record entry.
+- Piece movement uses a 220ms eased canvas slide. Captures, control scoring, Game Record entries, turn changes, victory checks, and computer turns finalize only after the piece reaches its destination; input is locked during the transition.
+- A structured in-session Game Record logs every Yellow and Purple move with piece identity, origin, destination, captures, released covered pieces, resulting Farthing totals, passes, and victories. The chronological record appears in the side panel, resets with each new game, and can be downloaded as text when the game ends.
+- Live weighted Farthing control scoring and territory highlighting are implemented. Alternating turns are implemented with Yellow moving first; only the active player's pieces can be selected. A main menu starts or resets a single-player game with the human as Yellow and the computer as Purple. The menu offers Easy and Hard computer difficulty. Easy usually chooses from the stronger 40% of scored legal moves, still sometimes chooses from the full move list, and always takes an immediate win; Hard evaluates every legal move and every immediate Yellow reply. Its phase-aware evaluation prioritizes early Gothi development, controlling or neutralizing the Heart, control margins, partial edge-territory pressure (weighted more when Yellow owns the Heart), valuable captures, and immediate wins or losses. As covered stacks reduce the active piece count below 18, both difficulties increasingly value advancing weighted control toward the opposing Homestead; the pivot reaches full strength at 10 active pieces. Both difficulties explicitly scan every candidate for an immediate five-Farthing or Homestead victory before using their normal selection logic. The side panel shows each player's live Farthing count. Controlling five Farthings or the opposing Homestead ends play immediately.
 
 ## Canonical Retheme
 
@@ -107,13 +110,19 @@ Water and neutral tan cells belong to no Farthing. Control weight is Thingman 1,
 - Farthing boundaries and names beyond the generic directional labels are placeholders.
 - The canonical color layout is encoded explicitly in `PATTERN_COLUMNS` and is based on `map_pattern.png`. The center is exactly seven charcoal cells: the central hex plus its six neighbors.
 - Piece positions use the same `q`/row coordinates as the grid and align with the map's white setup circles.
-- The board artwork itself contains the white setup markers.
+- The active board is rendered without the old background artwork; starting slots are defined by the canonical north and south formation coordinates.
 
+## Game Modes
+
+- Basic uses the fixed Yellow and Purple formations and begins immediately with Yellow's turn.
+- Advanced keeps the same twelve starting cells per side. Yellow, the first player, can repeatedly select two Yellow pieces to swap their starting cells, then confirms the formation.
+- After Yellow confirms, Purple responds according to difficulty. Easy begins from the mirrored response and makes two to four cross-type swaps. Hard generates 120 candidate formations, scores mobility, inward development, center access, weighted lane matchups, and wing placement, then randomly chooses among the three strongest non-mirrored responses. Normal play then begins with Yellow.
+- The saved text game log records the selected game mode and the finalized starting cell for every piece.
 ## Recommended Next Steps
 
 1. Create an explicit board-data array: hex ID, axial coordinates, pixel center, terrain, Farthing, starting-slot owner, and occupant.
 2. Confirm final Farthing names and exact boundaries.
 3. Bind every starting piece to a canonical hex ID rather than a raw pixel coordinate.
-4. Add optional move history to the board UI.
-5. Confirm and implement the opposing-Homestead win condition.
+4. Decide whether setup choices and AI reasoning need additional in-game explanation beyond the Game Record.
+5. Confirm the final terminology and presentation for Homestead victories.
 6. Decide whether the white setup circles should remain in the final board art after pieces can move.
