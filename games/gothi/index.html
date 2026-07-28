@@ -22,7 +22,8 @@
         <img src="gothi_icon_yellow.png" alt="" class="menu-mark">
         <p class="section-kicker">An Icelandic game of influence</p>
 
-        <p>Command the Yellow Gothi against the Purple computer, claim the Farthings, and become the first player to control five territories.</p>
+        <p>Command the Yellow Gothi against the Purple computer, claim the Farthings, and win by controlling five territories or the opposing Homestead.</p>
+        <button class="primary-action tutorial-launch" id="tutorial-button" type="button">Learn to Play &middot; Tutorial</button>
         <fieldset class="difficulty-choice game-mode-choice">
           <legend>Game</legend>
           <label>
@@ -47,6 +48,105 @@
         </fieldset>
         <button class="primary-action" id="new-game-button" type="button">Start New Game</button>
       </section>
+      <section class="tutorial-menu" id="tutorial-menu" aria-label="GOTHI tutorial" hidden>
+        <div class="tutorial-progress">
+          <p class="section-kicker">Learn to play GOTHI</p>
+          <span id="tutorial-progress-text">1 of 6</span>
+        </div>
+        <article class="tutorial-slide" data-tutorial-slide>
+          <div class="tutorial-copy">
+            <p class="section-kicker">The objective</p>
+            <h2 id="tutorial-title">How to Win</h2>
+            <p>Win immediately by controlling <strong>five Farthings</strong> or by taking control of the opposing player's <strong>Homestead</strong>.</p>
+            <ul>
+              <li>Add the control values of your uncovered pieces in each Farthing.</li>
+              <li>The higher total controls that Farthing; tied totals leave it neutral.</li>
+              <li>The two edge territories count as one Farthing only when you control both sides.</li>
+              <li>Covered pieces in a stack cannot move and contribute no control.</li>
+            </ul>
+          </div>
+          <img src="map_pattern.png" alt="The colored GOTHI board pattern showing its Farthings" class="tutorial-image board-pattern-image">
+        </article>
+        <article class="tutorial-slide" data-tutorial-slide hidden>
+          <div class="tutorial-copy">
+            <p class="section-kicker">Piece lesson 1</p>
+            <h2>The Gothi</h2>
+            <p>The Gothi is your central leader and contributes <strong>3 control</strong> to its Farthing.</p>
+            <ul>
+              <li>Move one space in any direction.</li>
+              <li>Or move exactly two spaces in a straight line when the middle space is clear.</li>
+              <li>The two-space move is not a jump and cannot cross another piece or water.</li>
+              <li>A Gothi may capture with its one-space move, but not with its two-space move.</li>
+            </ul>
+            <p>Your practice match has no opponent. Move your five Gothi into position until you control five Farthings or seize the empty Purple Homestead.</p>
+          </div>
+          <img src="gothi_example.png" alt="Example showing how the Gothi piece moves" class="tutorial-image">
+        </article>
+        <article class="tutorial-slide" data-tutorial-slide hidden>
+          <div class="tutorial-copy">
+            <p class="section-kicker">Piece lesson 2</p>
+            <h2>The Raven</h2>
+            <p>The Raven contributes <strong>2 control</strong>&mdash;less than the Gothi's 3&mdash;but its freedom of movement makes it uniquely flexible.</p>
+            <ul>
+              <li>Move one space in any direction.</li>
+              <li>Or jump exactly two spaces in a straight line.</li>
+              <li>The two-space jump may pass over pieces and water.</li>
+              <li>The Raven may land on and move through water spaces.</li>
+              <li>It may capture with either its one-space move or its two-space jump.</li>
+            </ul>
+          </div>
+          <img src="raven_example.png" alt="Example showing the Raven's step, jump, and water movement" class="tutorial-image">
+        </article>
+        <article class="tutorial-slide" data-tutorial-slide hidden>
+          <div class="tutorial-copy">
+            <p class="section-kicker">Piece lesson 3</p>
+            <h2>The Thingman</h2>
+            <p>The Thingman contributes <strong>1 control</strong> and advances through short, flexible paths.</p>
+            <ul>
+              <li>Move one space in any direction, then optionally move one more space.</li>
+              <li>The second step may turn in a different direction.</li>
+              <li>Thingmen cannot enter water.</li>
+              <li>A Thingman may capture an enemy occupying its final destination.</li>
+            </ul>
+          </div>
+          <img src="thingman_example.png" alt="Example showing the Thingman's flexible two-step movement" class="tutorial-image">
+        </article>
+        <article class="tutorial-slide" data-tutorial-slide hidden>
+          <div class="tutorial-copy">
+            <p class="section-kicker">Piece lesson 4</p>
+            <h2>The Outlaw</h2>
+            <p>The Outlaw contributes <strong>1 control</strong> but can cross long open lanes in a single move.</p>
+            <ul>
+              <li>Move any number of spaces in one straight line.</li>
+              <li>The Outlaw stops at the board edge, water, or another piece.</li>
+              <li>It cannot jump over pieces or enter water.</li>
+              <li>It captures by moving onto the first enemy piece in its path.</li>
+            </ul>
+            <p>The next practice board gives you only Ravens, Thingmen, and Outlaws. Purple pieces are scattered as stationary blockers and capture targets. Use these pieces to control five Farthings or seize the Purple Homestead.</p>
+          </div>
+          <img src="outlaw_example.png" alt="Example showing the Outlaw's long straight-line movement" class="tutorial-image">
+        </article>
+        <article class="tutorial-slide" data-tutorial-slide hidden>
+          <div class="tutorial-copy">
+            <p class="section-kicker">Piece lesson 5</p>
+            <h2>The Storgothi</h2>
+            <p>The Storgothi is your most influential leader. It contributes <strong>3 control</strong> to its Farthing and moves like an Outlaw.</p>
+            <ul>
+              <li>Move any number of spaces in one straight line.</li>
+              <li>The Storgothi stops at the board edge, water, or another piece.</li>
+              <li>It cannot jump over pieces or enter water.</li>
+              <li>It captures by moving onto the first enemy piece in its path.</li>
+            </ul>
+            <p>Your final practice game gives you a full Yellow lineup. Purple uses its normal Basic setup with two Gothi removed, and the computer plays back on Easy. Use everything you have learned to win.</p>
+          </div>
+          <img src="storgothi_example.png" alt="Example showing the Storgothi's long straight-line movement" class="tutorial-image">
+        </article>
+        <div class="tutorial-navigation">
+          <button class="secondary-action" id="tutorial-menu-button" type="button">Main Menu</button>
+          <button class="secondary-action" id="tutorial-back-button" type="button" disabled>Back</button>
+          <button class="primary-action" id="tutorial-next-button" type="button">Next: The Gothi</button>
+        </div>
+      </section>
       <section class="board-workspace" id="board-workspace" aria-labelledby="board-title" hidden>
         <div class="board-heading">
           <div>
@@ -69,15 +169,19 @@
               <span>Yellow</span>
               <strong id="yellow-farthing-count">0</strong>
             </div>
-            <div class="score-row purple-score">
+            <div class="score-row purple-score" id="purple-score-row">
               <span>Purple (Computer)</span>
               <strong id="purple-farthing-count">0</strong>
             </div>
             <p class="difficulty-readout">Mode: <strong id="game-mode-output">Basic</strong></p>
-            <p class="difficulty-readout">Computer: <strong id="computer-difficulty">Easy</strong></p>
+            <p class="difficulty-readout" id="computer-difficulty-row">Computer: <strong id="computer-difficulty">Easy</strong></p>
             <button class="primary-action setup-confirm" id="confirm-setup-button" type="button" hidden>Confirm Setup</button>
-            <p class="victory-target">First to control 5 wins.</p>
+            <p class="victory-target">Control 5 Farthings or the opposing Homestead to win.</p>
             <p class="game-message" id="game-message" aria-live="assertive">Yellow to move.</p>
+            <div class="board-review-actions" id="board-review-actions" hidden>
+              <p>Final position &middot; Pieces frozen</p>
+              <button class="secondary-action" id="review-menu-button" type="button">Main Menu</button>
+            </div>
             <section class="move-history" aria-labelledby="move-log-title">
               <div class="move-log-heading">
                 <h4 id="move-log-title">Game Record</h4>
@@ -111,6 +215,8 @@
         <p id="victory-detail">Yellow controls 5 Farthings.</p>
         <div class="victory-actions">
           <button class="secondary-action save-log-action" id="save-game-log-button" type="button">Save Game Log</button>
+          <button class="secondary-action" id="tutorial-continue-button" type="button" hidden>Continue Tutorial</button>
+          <button class="secondary-action" id="view-board-button" type="button">View Board</button>
           <button class="primary-action" id="winner-new-game-button" type="button">Play Again</button>
           <button class="secondary-action" id="winner-menu-button" type="button">Main Menu</button>
         </div>

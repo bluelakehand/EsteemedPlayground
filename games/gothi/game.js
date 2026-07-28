@@ -9,11 +9,21 @@
   const menu = document.querySelector("#main-menu");
   const workspace = document.querySelector("#board-workspace");
   const newGameButton = document.querySelector("#new-game-button");
+  const tutorialButton = document.querySelector("#tutorial-button");
+  const tutorialMenu = document.querySelector("#tutorial-menu");
+  const tutorialSlides = [...document.querySelectorAll("[data-tutorial-slide]")];
+  const tutorialProgressText = document.querySelector("#tutorial-progress-text");
+  const tutorialBackButton = document.querySelector("#tutorial-back-button");
+  const tutorialNextButton = document.querySelector("#tutorial-next-button");
+  const tutorialMenuButton = document.querySelector("#tutorial-menu-button");
+  const tutorialContinueButton = document.querySelector("#tutorial-continue-button");
   const restartGameButton = document.querySelector("#restart-game-button");
   const yellowFarthingOutput = document.querySelector("#yellow-farthing-count");
   const purpleFarthingOutput = document.querySelector("#purple-farthing-count");
+  const purpleScoreRow = document.querySelector("#purple-score-row");
   const gameMessage = document.querySelector("#game-message");
   const computerDifficultyOutput = document.querySelector("#computer-difficulty");
+  const computerDifficultyRow = document.querySelector("#computer-difficulty-row");
   const gameModeOutput = document.querySelector("#game-mode-output");
   const confirmSetupButton = document.querySelector("#confirm-setup-button");
   const pieceTooltip = document.querySelector("#piece-tooltip");
@@ -26,6 +36,9 @@
   const winnerNewGameButton = document.querySelector("#winner-new-game-button");
   const winnerMenuButton = document.querySelector("#winner-menu-button");
   const saveGameLogButton = document.querySelector("#save-game-log-button");
+  const viewBoardButton = document.querySelector("#view-board-button");
+  const boardReviewActions = document.querySelector("#board-review-actions");
+  const reviewMenuButton = document.querySelector("#review-menu-button");
   const context = canvas.getContext("2d");
 
   const MAP_WIDTH = 1363;
@@ -100,6 +113,7 @@
   let gameStarted = false;
   let winner = null;
   let winnerReason = null;
+  let reviewingFinalBoard = false;
   let computerThinking = false;
   let pieceAnimating = false;
   let movingPiece = null;
@@ -110,6 +124,9 @@
   let setupPhase = null;
   let setupSelectedPiece = null;
   let initialSetup = [];
+  let tutorialSlideIndex = 0;
+  let tutorialDemoActive = false;
+  let tutorialDemoLesson = null;
   const moveHistory = [];
   let moveNumber = 0;
   let gameStartedAt = null;
@@ -264,10 +281,37 @@
   function showVictoryPopup(counts) {
     if (!winner) return;
     const team = winner[0].toUpperCase() + winner.slice(1);
-    victoryTitle.textContent = `${team} Wins!`;
-    victoryDetail.textContent = `${victoryDescription(winner, counts)} and claims the victory.`;
+    const tutorialWon = tutorialDemoActive && winner === "yellow";
+    saveGameLogButton.hidden = tutorialWon;
+    viewBoardButton.hidden = tutorialWon;
+    tutorialContinueButton.hidden = !tutorialWon;
+    if (tutorialWon) {
+      victoryTitle.textContent = "Tutorial Complete!";
+      victoryDetail.textContent = `You completed this piece lesson. ${victoryDescription(winner, counts)}.`;
+      winnerNewGameButton.textContent = "Replay Lesson";
+      tutorialContinueButton.textContent = tutorialDemoLesson === "storgothi" ? "Finish Tutorial" : "Continue Tutorial";
+    } else {
+      victoryTitle.textContent = `${team} Wins!`;
+      victoryDetail.textContent = `${victoryDescription(winner, counts)} and claims the victory.`;
+      winnerNewGameButton.textContent = tutorialDemoActive ? "Try Again" : "Play Again";
+    }
     victoryOverlay.hidden = false;
     winnerNewGameButton.focus();
+  }
+
+  function viewFinalBoard() {
+    if (!winner) return;
+    hideVictoryPopup();
+    reviewingFinalBoard = true;
+    boardReviewActions.hidden = false;
+    restartGameButton.hidden = true;
+    clearSelection();
+    const counts = countControlledFarthings();
+    gameMessage.textContent = `Final position — ${victoryDescription(winner, counts)}.`;
+    nameOutput.textContent = "Final position";
+    detailOutput.textContent = "Pieces are frozen. Hover over any visible piece or stack layer to inspect it.";
+    reviewMenuButton.focus();
+    draw();
   }
 
   function describeFarthingControl(cell) {
@@ -585,6 +629,84 @@
     pieces.splice(0, pieces.length, ...startingPieces);
   }
 
+  function resetGothiTutorialPieces() {
+    const tutorialPieces = southFormation.filter(([type]) => type === "gothi")
+      .map(([, q, row], index) => makePiece("yellow", "gothi", q, row, index));
+    pieces.splice(0, pieces.length, ...tutorialPieces);
+  }
+
+  function resetMovementTutorialPieces() {
+    const allowedTypes = new Set(["raven", "thingman", "outlaw"]);
+    const yellowPieces = southFormation.filter(([type]) => allowedTypes.has(type))
+      .map(([type, q, row], index) => makePiece("yellow", type, q, row, index));
+    const occupied = new Set(yellowPieces.map((piece) => getCell(piece.q, piece.row).id));
+    const availableCells = cells.filter((cell) => cell.farthing !== "South Farthing" && !occupied.has(cell.id));
+    for (let index = availableCells.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [availableCells[index], availableCells[swapIndex]] = [availableCells[swapIndex], availableCells[index]];
+    }
+    const purpleTypes = ["gothi", "raven", "thingman", "outlaw", "storgothi"];
+    const purplePieces = purpleTypes.map((type, index) => {
+      const cellIndex = availableCells.findIndex((cell) => type === "raven" || cell.terrain !== "Water space");
+      const cell = availableCells.splice(Math.max(0, cellIndex), 1)[0];
+      return makePiece("purple", type, cell.q, cell.row, index);
+    });
+    pieces.splice(0, pieces.length, ...purplePieces, ...yellowPieces);
+  }
+
+  function resetStorgothiTutorialPieces() {
+    const yellowPieces = southFormation
+      .map(([type, q, row], index) => makePiece("yellow", type, q, row, index));
+    const purplePieces = northFormation
+      .filter(([type, q]) => type !== "gothi" || Math.abs(q) < 2)
+      .map(([type, q, row], index) => makePiece("purple", type, q, row, index));
+    pieces.splice(0, pieces.length, ...purplePieces, ...yellowPieces);
+  }
+
+  function showTutorialSlide(index) {
+    const nextLabels = ["Next: The Gothi", "Start Gothi Demo", "Next: Thingman", "Next: Outlaw", "Start Piece Demo", "Start Final Demo"];
+    tutorialSlideIndex = Math.max(0, Math.min(index, tutorialSlides.length - 1));
+    tutorialSlides.forEach((slide, slideIndex) => {
+      slide.hidden = slideIndex !== tutorialSlideIndex;
+    });
+    tutorialProgressText.textContent = `${tutorialSlideIndex + 1} of ${tutorialSlides.length}`;
+    tutorialBackButton.disabled = tutorialSlideIndex === 0;
+    tutorialNextButton.textContent = nextLabels[tutorialSlideIndex];
+  }
+
+  function openTutorial() {
+    hideVictoryPopup();
+    tutorialDemoActive = false;
+    tutorialDemoLesson = null;
+    gameStarted = false;
+    menu.hidden = true;
+    workspace.hidden = true;
+    tutorialMenu.hidden = false;
+    showTutorialSlide(0);
+    tutorialNextButton.focus();
+  }
+
+  function continueTutorialAfterDemo() {
+    hideVictoryPopup();
+    gameStarted = false;
+    workspace.hidden = true;
+    tutorialDemoActive = false;
+    if (tutorialDemoLesson === "gothi") {
+      tutorialDemoLesson = null;
+      tutorialMenu.hidden = false;
+      showTutorialSlide(2);
+      tutorialNextButton.focus();
+    } else if (tutorialDemoLesson === "movement") {
+      tutorialDemoLesson = null;
+      tutorialMenu.hidden = false;
+      showTutorialSlide(5);
+      tutorialNextButton.focus();
+    } else {
+      tutorialDemoLesson = null;
+      showMainMenu();
+    }
+  }
+
   function placePieceAtCell(piece, cell) {
     piece.q = cell.q;
     piece.row = cell.row;
@@ -866,8 +988,20 @@
 
   function buildGameLogText() {
     const counts = countControlledFarthings();
-    const difficulty = computerDifficulty === "hard" ? "Hard" : "Easy";
-    const mode = gameMode === "advanced" ? "Advanced" : "Basic";
+    const difficulty = tutorialDemoActive
+      ? tutorialDemoLesson === "gothi"
+        ? "None (solo tutorial)"
+        : tutorialDemoLesson === "movement"
+          ? "Stationary pieces"
+          : "Easy"
+      : computerDifficulty === "hard" ? "Hard" : "Easy";
+    const mode = gameMode === "tutorial"
+      ? "Gothi Tutorial"
+      : gameMode === "tutorial-pieces"
+        ? "Raven / Thingman / Outlaw Tutorial"
+        : gameMode === "tutorial-final"
+          ? "Full Lineup Tutorial"
+          : gameMode === "advanced" ? "Advanced" : "Basic";
     const result = winner
       ? `${winner[0].toUpperCase() + winner.slice(1)} wins${winnerReason === "homestead" ? " by taking the opposing Homestead" : ""}`
       : "Game unfinished";
@@ -917,6 +1051,11 @@
     pieceAnimating = false;
     movingPiece = null;
     resetPieces();
+    tutorialDemoActive = false;
+    tutorialDemoLesson = null;
+    tutorialMenu.hidden = true;
+    purpleScoreRow.hidden = false;
+    computerDifficultyRow.hidden = false;
     moveHistory.length = 0;
     moveNumber = 0;
     gameStartedAt = new Date();
@@ -928,6 +1067,9 @@
     currentTurn = "yellow";
     winner = null;
     winnerReason = null;
+    reviewingFinalBoard = false;
+    boardReviewActions.hidden = true;
+    restartGameButton.hidden = false;
     computerThinking = false;
     if (computerTurnTimer) clearTimeout(computerTurnTimer);
     computerTurnTimer = null;
@@ -951,6 +1093,157 @@
     });
   }
 
+  function startGothiTutorialGame() {
+    hideVictoryPopup();
+    movementAnimationToken += 1;
+    pieceAnimating = false;
+    movingPiece = null;
+    resetGothiTutorialPieces();
+    tutorialDemoActive = true;
+    tutorialDemoLesson = "gothi";
+    moveHistory.length = 0;
+    moveNumber = 0;
+    gameStartedAt = new Date();
+    renderMoveHistory();
+    computerDifficulty = "easy";
+    computerDifficultyOutput.textContent = "None";
+    gameMode = "tutorial";
+    gameModeOutput.textContent = "Gothi Tutorial";
+    currentTurn = "yellow";
+    winner = null;
+    winnerReason = null;
+    reviewingFinalBoard = false;
+    boardReviewActions.hidden = true;
+    restartGameButton.hidden = false;
+    computerThinking = false;
+    if (computerTurnTimer) clearTimeout(computerTurnTimer);
+    computerTurnTimer = null;
+    gameStarted = true;
+    hoverCell = null;
+    hoverPiece = null;
+    setupSelectedPiece = null;
+    setupPhase = null;
+    confirmSetupButton.hidden = true;
+    initialSetup = [];
+    captureInitialSetup();
+    clearSelection();
+    menu.hidden = true;
+    tutorialMenu.hidden = true;
+    purpleScoreRow.hidden = true;
+    computerDifficultyRow.hidden = true;
+    workspace.hidden = false;
+    updateGameStatus();
+    gameMessage.textContent = "Solo Gothi lesson: move into position and claim the empty Purple Homestead.";
+    updateReadout(null);
+    requestAnimationFrame(() => {
+      resizeCanvas();
+      canvas.focus();
+    });
+  }
+
+  function startMovementTutorialGame() {
+    hideVictoryPopup();
+    movementAnimationToken += 1;
+    pieceAnimating = false;
+    movingPiece = null;
+    resetMovementTutorialPieces();
+    tutorialDemoActive = true;
+    tutorialDemoLesson = "movement";
+    moveHistory.length = 0;
+    moveNumber = 0;
+    gameStartedAt = new Date();
+    renderMoveHistory();
+    computerDifficulty = "easy";
+    computerDifficultyOutput.textContent = "Stationary";
+    gameMode = "tutorial-pieces";
+    gameModeOutput.textContent = "Piece Tutorial";
+    currentTurn = "yellow";
+    winner = null;
+    winnerReason = null;
+    reviewingFinalBoard = false;
+    boardReviewActions.hidden = true;
+    restartGameButton.hidden = false;
+    computerThinking = false;
+    if (computerTurnTimer) clearTimeout(computerTurnTimer);
+    computerTurnTimer = null;
+    gameStarted = true;
+    hoverCell = null;
+    hoverPiece = null;
+    setupSelectedPiece = null;
+    setupPhase = null;
+    confirmSetupButton.hidden = true;
+    initialSetup = [];
+    captureInitialSetup();
+    clearSelection();
+    menu.hidden = true;
+    tutorialMenu.hidden = true;
+    purpleScoreRow.hidden = false;
+    computerDifficultyRow.hidden = false;
+    workspace.hidden = false;
+    updateGameStatus();
+    gameMessage.textContent = "Practice Raven, Thingman, and Outlaw movement. Purple pieces are stationary.";
+    updateReadout(null);
+    requestAnimationFrame(() => {
+      resizeCanvas();
+      canvas.focus();
+    });
+  }
+
+  function startStorgothiTutorialGame() {
+    hideVictoryPopup();
+    movementAnimationToken += 1;
+    pieceAnimating = false;
+    movingPiece = null;
+    resetStorgothiTutorialPieces();
+    tutorialDemoActive = true;
+    tutorialDemoLesson = "storgothi";
+    moveHistory.length = 0;
+    moveNumber = 0;
+    gameStartedAt = new Date();
+    renderMoveHistory();
+    computerDifficulty = "easy";
+    computerDifficultyOutput.textContent = "Easy";
+    gameMode = "tutorial-final";
+    gameModeOutput.textContent = "Final Tutorial";
+    currentTurn = "yellow";
+    winner = null;
+    winnerReason = null;
+    reviewingFinalBoard = false;
+    boardReviewActions.hidden = true;
+    restartGameButton.hidden = false;
+    computerThinking = false;
+    if (computerTurnTimer) clearTimeout(computerTurnTimer);
+    computerTurnTimer = null;
+    gameStarted = true;
+    hoverCell = null;
+    hoverPiece = null;
+    setupSelectedPiece = null;
+    setupPhase = null;
+    confirmSetupButton.hidden = true;
+    initialSetup = [];
+    captureInitialSetup();
+    clearSelection();
+    menu.hidden = true;
+    tutorialMenu.hidden = true;
+    purpleScoreRow.hidden = false;
+    computerDifficultyRow.hidden = false;
+    workspace.hidden = false;
+    updateGameStatus();
+    gameMessage.textContent = "Final lesson: face Purple's Basic setup with two Gothi removed on Easy.";
+    updateReadout(null);
+    requestAnimationFrame(() => {
+      resizeCanvas();
+      canvas.focus();
+    });
+  }
+
+  function replayCurrentGame() {
+    if (tutorialDemoLesson === "gothi") startGothiTutorialGame();
+    else if (tutorialDemoLesson === "movement") startMovementTutorialGame();
+    else if (tutorialDemoLesson === "storgothi") startStorgothiTutorialGame();
+    else startNewGame();
+  }
+
   function showMainMenu() {
     hideVictoryPopup();
     movementAnimationToken += 1;
@@ -960,6 +1253,14 @@
     computerTurnTimer = null;
     computerThinking = false;
     gameStarted = false;
+    tutorialDemoActive = false;
+    tutorialDemoLesson = null;
+    tutorialMenu.hidden = true;
+    purpleScoreRow.hidden = false;
+    computerDifficultyRow.hidden = false;
+    reviewingFinalBoard = false;
+    boardReviewActions.hidden = true;
+    restartGameButton.hidden = false;
     setupPhase = null;
     setupSelectedPiece = null;
     confirmSetupButton.hidden = true;
@@ -1303,7 +1604,8 @@
         nameOutput.textContent = `${team} wins!`;
         detailOutput.textContent = `${victoryDescription(winner, counts)}.`;
       } else {
-        currentTurn = currentTurn === "yellow" ? "purple" : "yellow";
+        const keepsYellowTurn = tutorialDemoLesson === "gothi" || tutorialDemoLesson === "movement";
+        currentTurn = keepsYellowTurn ? "yellow" : currentTurn === "yellow" ? "purple" : "yellow";
         nameOutput.textContent = capturedPiece ? `${mover.name} pinned ${capturedPiece.name}` : `${mover.name} moved`;
         detailOutput.textContent = `${turnName()} to move.`;
       }
@@ -1481,7 +1783,7 @@
     draw();
   });
   canvas.addEventListener("click", (event) => {
-    if (computerThinking || pieceAnimating) return;
+    if (winner || computerThinking || pieceAnimating) return;
     const point = eventPoint(event);
     const clickedCell = findCell(point);
     const clickedPiece = findPiece(point);
@@ -1519,7 +1821,7 @@
   canvas.addEventListener("keydown", (event) => {
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Enter", " "].includes(event.key)) return;
     event.preventDefault();
-    if (computerThinking || pieceAnimating) return;
+    if (winner || computerThinking || pieceAnimating) return;
     if (setupPhase) return;
 
     if (event.key === "Enter" || event.key === " ") {
@@ -1540,9 +1842,21 @@
     draw();
   });
   newGameButton.addEventListener("click", startNewGame);
+  tutorialButton.addEventListener("click", openTutorial);
+  tutorialBackButton.addEventListener("click", () => showTutorialSlide(tutorialSlideIndex - 1));
+  tutorialNextButton.addEventListener("click", () => {
+    if (tutorialSlideIndex === 1) startGothiTutorialGame();
+    else if (tutorialSlideIndex === 4) startMovementTutorialGame();
+    else if (tutorialSlideIndex === tutorialSlides.length - 1) startStorgothiTutorialGame();
+    else showTutorialSlide(tutorialSlideIndex + 1);
+  });
+  tutorialMenuButton.addEventListener("click", showMainMenu);
+  tutorialContinueButton.addEventListener("click", continueTutorialAfterDemo);
   restartGameButton.addEventListener("click", showMainMenu);
-  winnerNewGameButton.addEventListener("click", startNewGame);
+  winnerNewGameButton.addEventListener("click", replayCurrentGame);
   winnerMenuButton.addEventListener("click", showMainMenu);
+  viewBoardButton.addEventListener("click", viewFinalBoard);
+  reviewMenuButton.addEventListener("click", showMainMenu);
   saveGameLogButton.addEventListener("click", saveGameLog);
   confirmSetupButton.addEventListener("click", confirmAdvancedSetup);
 
