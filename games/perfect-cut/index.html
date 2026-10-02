@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#11131a">
+    <meta name="description" content="A freehand equal-area cutting prototype.">
+    <title>Perfect Cut Prototype</title>
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4d67'/%3E%3Cpath d='M13 44 49 18M17 16l31 32' stroke='%23fff8e8' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #11131a;
+        --panel: #191c26;
+        --panel-2: #222634;
+        --cream: #fff8e8;
+        --muted: #aeb4c5;
+        --pink: #ff4d67;
+        --pink-deep: #c92848;
+        --gold: #ffd166;
+        --mint: #4ee6b1;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { min-height: 100%; }
+
+      body {
+        margin: 0;
+        overflow-x: hidden;
+        color: var(--cream);
+        background:
+          radial-gradient(circle at 50% -10%, rgba(255, 77, 103, .24), transparent 33rem),
+          linear-gradient(180deg, #10121a 0%, #171a24 100%);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        opacity: .22;
+        background-image: radial-gradient(rgba(255,255,255,.17) .7px, transparent .7px);
+        background-size: 13px 13px;
+        pointer-events: none;
+      }
+
+      button { font: inherit; }
+
+      .game-shell {
+        width: min(100%, 32rem);
+        min-height: 100svh;
+        margin: 0 auto;
+        padding: max(4.25rem, env(safe-area-inset-top)) 1rem max(1.25rem, env(safe-area-inset-bottom));
+      }
+
+      .game-head {
+        text-align: center;
+      }
+
+      .eyebrow {
+        margin: 0 0 .4rem;
+        color: var(--pink);
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .19em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.55rem, 11vw, 4rem);
+        font-weight: 950;
+        line-height: .9;
+        letter-spacing: -.065em;
+        text-transform: uppercase;
+      }
+
+      h1 span { color: var(--pink); }
+
+      .objective {
+        margin: 1.1rem 0 .4rem;
+        font-size: 1.05rem;
+        font-weight: 850;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+
+      .cut-count {
+        margin: 0;
+        color: var(--muted);
+        font-size: .9rem;
+        font-weight: 750;
+      }
+
+      .round-progress {
+        display: flex;
+        justify-content: center;
+        gap: .45rem;
+        margin-top: .7rem;
+      }
+
+      .round-progress span {
+        width: 1.8rem;
+        height: .32rem;
+        border-radius: 999px;
+        background: #343948;
+        transition: background .2s ease, transform .2s ease;
+      }
+
+      .round-progress span.current {
+        background: var(--pink);
+        transform: scaleY(1.35);
+      }
+
+      .round-progress span.complete { background: var(--mint); }
+
+      .game-card {
+        position: relative;
+        margin-top: 1rem;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 1.55rem;
+        background: linear-gradient(180deg, rgba(36,40,54,.98), rgba(24,27,37,.98));
+        box-shadow: 0 1.6rem 4.5rem rgba(0,0,0,.42);
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        cursor: crosshair;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .status {
+        min-height: 2.8rem;
+        margin: 0;
+        padding: .8rem 1rem 1rem;
+        color: var(--muted);
+        text-align: center;
+        font-size: .9rem;
+        line-height: 1.4;
+      }
+
+      .status.invalid { color: #ff9caa; }
+      .status.success { color: var(--mint); }
+
+      .result {
+        display: none;
+        margin-top: 1rem;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 1.35rem;
+        padding: 1.15rem;
+        background: rgba(25,28,38,.93);
+        text-align: center;
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.28);
+      }
+
+      .result.visible {
+        display: block;
+        animation: reveal .36s cubic-bezier(.18,.89,.32,1.28) both;
+      }
+
+      .rating {
+        margin: 0;
+        color: var(--gold);
+        font-size: clamp(1.9rem, 8vw, 2.8rem);
+        font-weight: 950;
+        line-height: 1;
+        letter-spacing: -.035em;
+      }
+
+      .result-kicker {
+        margin: 0 0 .45rem;
+        color: var(--muted);
+        font-size: .75rem;
+        font-weight: 850;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+      }
+
+      .percentages {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: .65rem;
+        margin: .8rem 0;
+      }
+
+      .percentage {
+        min-width: 7.25rem;
+        border-radius: .85rem;
+        padding: .65rem .75rem;
+        color: var(--cream);
+        background: var(--panel-2);
+        font-size: 1.2rem;
+        font-weight: 850;
+      }
+
+      .score-line {
+        margin: 0 0 1rem;
+        color: var(--muted);
+        font-size: .9rem;
+      }
+
+      .score-line strong { color: var(--cream); }
+
+      .round-scores {
+        display: grid;
+        gap: .42rem;
+        margin: 1rem 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .round-scores li {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        border-radius: .7rem;
+        padding: .55rem .75rem;
+        color: var(--muted);
+        background: var(--panel-2);
+        font-size: .88rem;
+        font-weight: 750;
+      }
+
+      .round-scores strong { color: var(--cream); }
+
+      [hidden] { display: none !important; }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .7rem;
+      }
+
+      .actions button {
+        min-height: 3.1rem;
+        border: 0;
+        border-radius: .9rem;
+        padding: .75rem 1rem;
+        color: var(--cream);
+        background: #303545;
+        font-weight: 850;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .actions button:first-child {
+        color: #241319;
+        background: var(--pink);
+      }
+
+      .actions button:hover,
+      .actions button:focus-visible {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+      }
+
+      .hint {
+        margin: 1rem auto 0;
+        max-width: 28rem;
+        color: #9198aa;
+        font-size: .82rem;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      @keyframes reveal {
+        from { opacity: 0; transform: translateY(.55rem) scale(.97); }
+        to { opacity: 1; transform: none; }
+      }
+
+      @media (max-height: 760px) and (min-width: 520px) {
+        .game-shell { padding-top: 1rem; }
+        h1 { font-size: 2.6rem; }
+        .objective { margin-top: .75rem; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+    <main class="game-shell">
+      <header class="game-head">
+        <p class="eyebrow" id="shape-name">Shape 1 · Block</p>
+        <h1>Perfect <span>Cut</span></h1>
+        <p class="objective" id="objective">Cut into 2 equal pieces</p>
+        <p class="cut-count" id="cut-count">Cuts: 0 / 1</p>
+        <div class="round-progress" id="round-progress" aria-label="Round progress"></div>
+      </header>
+
+      <section class="game-card" aria-label="Perfect Cut play area">
+        <canvas id="game" width="640" height="620" aria-label="Drag across the pink rectangle to cut it into two equal pieces"></canvas>
+        <p class="status" id="status" role="status">Click outside the shape, then drag all the way through.</p>
+      </section>
+
+      <section class="result" id="result" aria-live="polite">
+        <p class="result-kicker" id="result-kicker">Shape score</p>
+        <p class="rating" id="rating">Great</p>
+        <div class="percentages" id="percentages"></div>
+        <p class="score-line"><span id="score-label">Accuracy score</span> <strong id="score">0.0</strong></p>
+        <ul class="round-scores" id="round-scores" hidden></ul>
+        <div class="actions">
+          <button type="button" id="retry">Retry</button>
+          <button type="button" id="next">Next shape</button>
+        </div>
+      </section>
+
+      <p class="hint">Your exact mouse path becomes the cut. A shaky drag makes a shaky edge—and changes the area.</p>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const canvas = document.querySelector("#game");
+        const ctx = canvas.getContext("2d");
+        const statusEl = document.querySelector("#status");
+        const resultEl = document.querySelector("#result");
+        const percentagesEl = document.querySelector("#percentages");
+        const ratingEl = document.querySelector("#rating");
+        const scoreEl = document.querySelector("#score");
+        const scoreLabelEl = document.querySelector("#score-label");
+        const resultKickerEl = document.querySelector("#result-kicker");
+        const roundScoresEl = document.querySelector("#round-scores");
+        const roundProgressEl = document.querySelector("#round-progress");
+        const shapeNameEl = document.querySelector("#shape-name");
+        const objectiveEl = document.querySelector("#objective");
+        const cutCountEl = document.querySelector("#cut-count");
+        const retryButton = document.querySelector("#retry");
+        const nextButton = document.querySelector("#next");
+
+        const FOOD_BOX = { x: 84, y: 70, w: 472, h: 472 };
+        const makeFoodImage = source => {
+          const image = new Image();
+          image.src = source;
+          image.addEventListener("load", () => render());
+          return image;
+        };
+        const mapOutline = points => points.map(([x, y]) => ({
+          x: FOOD_BOX.x + x * FOOD_BOX.w,
+          y: FOOD_BOX.y + y * FOOD_BOX.h
+        }));
+        const foodLevel = (name, source, outline, colors) => ({
+          name,
+          points: mapOutline(outline),
+          colors,
+          sprite: { image: makeFoodImage(source), ...FOOD_BOX }
+        });
+        const levels = [
+          foodLevel("Banana", "banana.png", [[.0547,.5234],[.043,.4023],[.0664,.3125],[.1758,.1797],[.2148,.0469],[.2266,.0352],[.2852,.0391],[.3398,.0781],[.3516,.1172],[.293,.1641],[.2695,.2227],[.2734,.2539],[.3164,.3203],[.3711,.4609],[.4102,.5156],[.4766,.5781],[.582,.6445],[.6953,.6836],[.8281,.6992],[.9531,.7578],[.9727,.7852],[.9727,.8203],[.9492,.8555],[.9062,.875],[.8633,.918],[.7773,.957],[.6133,.9727],[.4805,.9492],[.3477,.8906],[.2305,.8008],[.1133,.6641]], ["#ffe45e", "#e8a316"]),
+          foodLevel("Croissant", "croissant.png", [[.2031,.2695],[.3047,.1992],[.4336,.1367],[.5781,.1406],[.6875,.1875],[.8242,.3086],[.8516,.3125],[.8945,.3477],[.9414,.4141],[.9492,.4688],[.9688,.4766],[.9883,.5117],[.9922,.6172],[.9453,.7344],[.8867,.8008],[.8242,.8281],[.7852,.8281],[.7383,.7812],[.7344,.75],[.75,.7227],[.7422,.6797],[.7148,.6641],[.6992,.6367],[.6094,.5898],[.5391,.6016],[.4336,.5898],[.418,.6094],[.3633,.6328],[.2969,.7031],[.2891,.75],[.3047,.8281],[.2852,.8555],[.1992,.8711],[.1289,.8398],[.0859,.8047],[.0547,.7578],[.0234,.6992],[.0078,.6172],[.0312,.5469],[.0586,.5117],[.0508,.4453],[.0664,.3984],[.1523,.2969]], ["#ffbf58", "#b85b17"]),
+          foodLevel("Pear", "pear.png", [[.4531,.1719],[.4727,.1719],[.4727,.1055],[.5039,.0273],[.5352,.0156],[.5703,.0508],[.5625,.0742],[.6523,.0469],[.707,.0508],[.7539,.0703],[.8125,.1289],[.8398,.1914],[.8398,.2812],[.8281,.3281],[.8164,.332],[.7812,.2773],[.6641,.2266],[.6367,.2031],[.5898,.0977],[.543,.1016],[.5195,.1289],[.5234,.1719],[.5781,.1836],[.6289,.2344],[.6758,.3945],[.7891,.543],[.8359,.6641],[.8359,.7617],[.7969,.8555],[.7266,.9336],[.6367,.9805],[.4844,.9766],[.3945,.9883],[.3359,.9727],[.2305,.8984],[.1953,.8516],[.1641,.7734],[.1602,.6914],[.1836,.5977],[.293,.4492],[.3594,.2461],[.3984,.1992]], ["#e7ef46", "#78a918"]),
+          foodLevel("Pizza", "pizza.png", [[.8398,.1055],[.9414,.1641],[.9727,.1953],[.9727,.2344],[.8477,.3984],[.8203,.4844],[.7578,.5469],[.6992,.668],[.6641,.6836],[.6406,.7383],[.6055,.7656],[.5,.9648],[.4805,.9648],[.3633,.7344],[.2852,.6094],[.2578,.6016],[.2539,.5664],[.2031,.4805],[.1562,.4336],[.0938,.3203],[.0312,.2383],[.0273,.1992],[.082,.1406],[.2031,.0781],[.4609,.0195],[.625,.0273]], ["#ffcf62", "#d74923"]),
+          foodLevel("Pretzel", "pretzel.png", [[.3398,.8906],[.1875,.8125],[.1055,.7109],[.0547,.6133],[.0312,.5234],[.0312,.4023],[.0508,.3203],[.0977,.2305],[.1797,.1484],[.2617,.1133],[.3164,.1055],[.4062,.1211],[.4766,.1641],[.5039,.1953],[.5742,.1445],[.6562,.1133],[.7617,.1211],[.8398,.1602],[.8789,.1953],[.9219,.2617],[.9727,.418],[.9609,.5703],[.8711,.7578],[.8242,.7812],[.7305,.8594],[.6172,.9062],[.4375,.918]], ["#d9781f", "#7a3218"])
+        ];
+        let levelIndex = 0;
+        let currentShape = levels[0];
+        let originalArea = 0;
+        let roundScores = [];
+        let roundCutRequirements = [];
+        let currentResult = null;
+        let roundComplete = false;
+        let swipe = [];
+        let pieces = [];
+        let dragging = false;
+        let complete = false;
+        let separating = false;
+        let successfulCuts = 0;
+        let animationStart = 0;
+        let invalidUntil = 0;
+        let raf = 0;
+
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+        function createRoundCutRequirements() {
+          const requirements = [1, 2, 3, 4];
+          while (requirements.length < levels.length) {
+            requirements.push(1 + Math.floor(Math.random() * 4));
+          }
+          for (let index = requirements.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [requirements[index], requirements[swapIndex]] = [requirements[swapIndex], requirements[index]];
+          }
+          return requirements;
+        }
+
+        function pointFromEvent(event) {
+          const rect = canvas.getBoundingClientRect();
+          return {
+            x: (event.clientX - rect.left) * canvas.width / rect.width,
+            y: (event.clientY - rect.top) * canvas.height / rect.height
+          };
+        }
+
+        function polygonArea(points) {
+          let sum = 0;
+          for (let i = 0; i < points.length; i += 1) {
+            const a = points[i];
+            const b = points[(i + 1) % points.length];
+            sum += a.x * b.y - b.x * a.y;
+          }
+          return Math.abs(sum) / 2;
+        }
+
+        function centroid(points) {
+          let x = 0;
+          let y = 0;
+          for (const point of points) {
+            x += point.x;
+            y += point.y;
+          }
+          return { x: x / points.length, y: y / points.length };
+        }
+
+        function shapeBounds(points = currentShape.points) {
+          const xs = points.map(point => point.x);
+          const ys = points.map(point => point.y);
+          const left = Math.min(...xs);
+          const top = Math.min(...ys);
+          const right = Math.max(...xs);
+          const bottom = Math.max(...ys);
+          return { left, top, right, bottom, width: right - left, height: bottom - top };
+        }
+
+        function segmentIntersection(a, b, c, d) {
+          const r = { x: b.x - a.x, y: b.y - a.y };
+          const s = { x: d.x - c.x, y: d.y - c.y };
+          const cross = r.x * s.y - r.y * s.x;
+          if (Math.abs(cross) < 0.0001) return null;
+          const q = { x: c.x - a.x, y: c.y - a.y };
+          const t = (q.x * s.y - q.y * s.x) / cross;
+          const u = (q.x * r.y - q.y * r.x) / cross;
+          if (t < -0.0001 || t > 1.0001 || u < -0.0001 || u > 1.0001) return null;
+          return { x: a.x + t * r.x, y: a.y + t * r.y, t, u };
+        }
+
+        function forwardBoundary(start, end, polygon) {
+          const points = polygon;
+          const count = points.length;
+          if (start.edgeIndex === end.edgeIndex && end.edgeT > start.edgeT + .0001) {
+            return [{ x: end.x, y: end.y }];
+          }
+          const result = [{ ...points[(start.edgeIndex + 1) % count] }];
+          let edgeIndex = (start.edgeIndex + 1) % count;
+          let guard = 0;
+          while (edgeIndex !== end.edgeIndex && guard <= count) {
+            result.push({ ...points[(edgeIndex + 1) % count] });
+            edgeIndex = (edgeIndex + 1) % count;
+            guard += 1;
+          }
+          result.push({ x: end.x, y: end.y });
+          return result;
+        }
+
+        function findCrossings(points, polygon) {
+          const hits = [];
+          for (let i = 0; i < points.length - 1; i += 1) {
+            for (let edgeIndex = 0; edgeIndex < polygon.length; edgeIndex += 1) {
+              const edgeStart = polygon[edgeIndex];
+              const edgeEnd = polygon[(edgeIndex + 1) % polygon.length];
+              const hit = segmentIntersection(points[i], points[i + 1], edgeStart, edgeEnd);
+              if (!hit) continue;
+              const pathPosition = i + hit.t;
+              if (hits.some(existing => distance(existing, hit) < 1.2)) continue;
+              hits.push({ x: hit.x, y: hit.y, pathPosition, segment: i, edgeIndex, edgeT: hit.u });
+            }
+          }
+          return hits.sort((a, b) => a.pathPosition - b.pathPosition);
+        }
+
+        function cutShape(points, polygon) {
+          if (points.length < 2) return null;
+          const hits = findCrossings(points, polygon);
+          if (hits.length !== 2) return null;
+          const [entry, exit] = hits;
+          const insidePath = [{ x: entry.x, y: entry.y }];
+          for (let i = entry.segment + 1; i <= exit.segment; i += 1) insidePath.push(points[i]);
+          insidePath.push({ x: exit.x, y: exit.y });
+          const cleanedPath = insidePath.filter((point, index, array) => index === 0 || distance(point, array[index - 1]) > .8);
+          const first = [...cleanedPath, ...forwardBoundary(exit, entry, polygon)];
+          const reversed = [...cleanedPath].reverse();
+          const second = [...reversed, ...forwardBoundary(entry, exit, polygon)];
+          const areas = [polygonArea(first), polygonArea(second)];
+          const pieceArea = polygonArea(polygon);
+          if (areas.some(area => area < pieceArea * .01)) return null;
+          if (Math.abs(areas[0] + areas[1] - pieceArea) > pieceArea * .004) return null;
+          return { polygons: [first, second], areas, entry, exit };
+        }
+
+        function drawPath(points, color, width) {
+          if (points.length < 2) return;
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i += 1) {
+            const previous = points[i - 1];
+            const current = points[i];
+            const midX = (previous.x + current.x) / 2;
+            const midY = (previous.y + current.y) / 2;
+            ctx.quadraticCurveTo(previous.x, previous.y, midX, midY);
+          }
+          ctx.lineTo(points.at(-1).x, points.at(-1).y);
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.strokeStyle = color;
+          ctx.lineWidth = width;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function drawPolygon(points, offset, index, textureOffset = { x: 0, y: 0 }) {
+          ctx.save();
+          ctx.translate(offset.x, offset.y);
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
+          ctx.closePath();
+          if (currentShape.sprite?.image.complete) {
+            const sprite = currentShape.sprite;
+            ctx.save();
+            ctx.clip();
+            ctx.drawImage(
+              sprite.image,
+              sprite.x + textureOffset.x,
+              sprite.y + textureOffset.y,
+              sprite.w,
+              sprite.h
+            );
+            ctx.restore();
+          } else {
+            const bounds = shapeBounds();
+            const gradient = ctx.createLinearGradient(bounds.left, bounds.top, bounds.right, bounds.bottom);
+            gradient.addColorStop(0, currentShape.colors[0]);
+            gradient.addColorStop(1, currentShape.colors[1]);
+            ctx.fillStyle = gradient;
+            ctx.shadowColor = "rgba(0,0,0,.34)";
+            ctx.shadowBlur = 26;
+            ctx.shadowOffsetY = 14;
+            ctx.fill();
+            ctx.shadowColor = "transparent";
+          }
+          ctx.strokeStyle = "rgba(255,255,255,.26)";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        function drawGuide() {
+          const bounds = shapeBounds();
+          ctx.save();
+          ctx.setLineDash([9, 11]);
+          ctx.strokeStyle = "rgba(255,255,255,.13)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bounds.left - 18, bounds.top - 18, bounds.width + 36, bounds.height + 36);
+          ctx.restore();
+        }
+
+        function render(now = performance.now()) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const glow = ctx.createRadialGradient(320, 315, 80, 320, 315, 350);
+          glow.addColorStop(0, "rgba(255,77,103,.1)");
+          glow.addColorStop(1, "rgba(255,77,103,0)");
+          ctx.fillStyle = glow;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          drawGuide();
+
+          const progress = separating ? clamp((now - animationStart) / 430, 0, 1) : 1;
+          const eased = 1 - Math.pow(1 - progress, 3);
+          for (const piece of pieces) {
+            const offset = piece.animating
+              ? { x: piece.offset.x * eased, y: piece.offset.y * eased }
+              : { x: 0, y: 0 };
+            drawPolygon(piece.points, offset, piece.index, piece.textureOffset);
+          }
+          if (separating && progress < 1) {
+            raf = requestAnimationFrame(render);
+          } else if (separating) {
+            for (const piece of pieces) {
+              if (!piece.animating) continue;
+              piece.points = piece.points.map(point => ({ x: point.x + piece.offset.x, y: point.y + piece.offset.y }));
+              piece.textureOffset = {
+                x: piece.textureOffset.x + piece.offset.x,
+                y: piece.textureOffset.y + piece.offset.y
+              };
+              piece.offset = { x: 0, y: 0 };
+              piece.animating = false;
+            }
+            separating = false;
+            raf = requestAnimationFrame(render);
+          }
+
+          if (dragging && swipe.length > 1) {
+            drawPath(swipe, "rgba(255,255,255,.23)", 12);
+            drawPath(swipe, "#fff8e8", 4);
+          } else if (performance.now() < invalidUntil && swipe.length > 1) {
+            const alpha = clamp((invalidUntil - performance.now()) / 420, 0, 1);
+            drawPath(swipe, `rgba(255,122,143,${alpha})`, 5);
+            raf = requestAnimationFrame(render);
+          }
+        }
+
+        function labelForError(error) {
+          if (error <= .05) return "Perfect";
+          if (error <= .25) return "Incredible";
+          if (error <= 1) return "Great";
+          if (error <= 2.5) return "Good";
+          return "Keep Cutting";
+        }
+
+        function difficultyMultiplier(cuts) {
+          return ({ 1: 1, 2: 1.25, 3: 1.5, 4: 2 })[cuts];
+        }
+
+        function finishCut(result, pieceIndex) {
+          const parentTextureOffset = pieces[pieceIndex].textureOffset;
+          const dx = result.exit.x - result.entry.x;
+          const dy = result.exit.y - result.entry.y;
+          const length = Math.hypot(dx, dy) || 1;
+          const normal = { x: -dy / length, y: dx / length };
+          const midpoint = { x: (result.entry.x + result.exit.x) / 2, y: (result.entry.y + result.exit.y) / 2 };
+          const newPieces = result.polygons.map((points, index) => {
+            const center = centroid(points);
+            const sign = ((center.x - midpoint.x) * normal.x + (center.y - midpoint.y) * normal.y) >= 0 ? 1 : -1;
+            return {
+              points,
+              index,
+              offset: { x: normal.x * sign * 7, y: normal.y * sign * 7 },
+              textureOffset: { ...parentTextureOffset },
+              animating: true
+            };
+          });
+          pieces.splice(pieceIndex, 1, ...newPieces);
+          successfulCuts += 1;
+          complete = successfulCuts >= currentShape.targetPieces - 1;
+          separating = true;
+          animationStart = performance.now();
+          cutCountEl.textContent = `Cuts: ${successfulCuts} / ${currentShape.targetPieces - 1}`;
+          statusEl.textContent = complete ? "Final cut. Measuring every piece…" : "Clean cut. Pick one piece and keep going.";
+          statusEl.className = "status success";
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(render);
+
+          if (!complete) {
+            window.setTimeout(() => {
+              if (!complete) {
+                statusEl.textContent = `Cut ${successfulCuts} of ${currentShape.targetPieces - 1}. Choose any one piece.`;
+                statusEl.className = "status";
+              }
+            }, 460);
+            return;
+          }
+
+          const target = 100 / currentShape.targetPieces;
+          const values = pieces.map(piece => polygonArea(piece.points) / originalArea * 100).sort((a, b) => a - b);
+          const absoluteError = values.reduce((sum, value) => sum + Math.abs(value - target), 0) / values.length;
+          const accuracy = Math.max(0, 100 - absoluteError * 5);
+          const multiplier = difficultyMultiplier(currentShape.requiredCuts);
+          const points = accuracy * multiplier;
+          currentResult = {
+            name: currentShape.name,
+            cuts: currentShape.requiredCuts,
+            values,
+            error: absoluteError,
+            accuracy,
+            multiplier,
+            points
+          };
+          window.setTimeout(() => {
+            percentagesEl.replaceChildren(...values.map(value => {
+              const cell = document.createElement("div");
+              cell.className = "percentage";
+              cell.textContent = `${value.toFixed(2)}%`;
+              return cell;
+            }));
+            resultKickerEl.textContent = `${currentShape.name} score`;
+            ratingEl.textContent = labelForError(absoluteError);
+            scoreEl.textContent = `${points.toFixed(1)} pts`;
+            scoreLabelEl.textContent = `${accuracy.toFixed(1)}% accuracy · ${multiplier}× difficulty`;
+            percentagesEl.hidden = false;
+            roundScoresEl.hidden = true;
+            retryButton.hidden = false;
+            nextButton.textContent = levelIndex === levels.length - 1 ? "Finish round" : "Next shape";
+            resultEl.classList.add("visible");
+            statusEl.textContent = "Want a closer split? Retry is instant.";
+          }, 460);
+        }
+
+        function rejectCut() {
+          invalidUntil = performance.now() + 420;
+          statusEl.textContent = "That did not cross the shape exactly once. Try edge to edge.";
+          statusEl.className = "status invalid";
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(render);
+          window.setTimeout(() => {
+            if (!complete) {
+              statusEl.textContent = "Click outside the shape, then drag all the way through.";
+              statusEl.className = "status";
+            }
+          }, 900);
+        }
+
+        function updateProgress() {
+          roundProgressEl.replaceChildren(...levels.map((level, index) => {
+            const marker = document.createElement("span");
+            if (index < levelIndex || roundComplete) marker.className = "complete";
+            if (index === levelIndex && !roundComplete) marker.className = "current";
+            marker.title = `${index + 1}. ${level.name}`;
+            return marker;
+          }));
+        }
+
+        function resetShape() {
+          swipe = [];
+          pieces = [{
+            points: currentShape.points.map(point => ({ ...point })),
+            index: 0,
+            offset: { x: 0, y: 0 },
+            textureOffset: { x: 0, y: 0 },
+            animating: false
+          }];
+          dragging = false;
+          complete = false;
+          separating = false;
+          successfulCuts = 0;
+          invalidUntil = 0;
+          currentResult = null;
+          resultEl.classList.remove("visible");
+          cutCountEl.textContent = `Cuts: 0 / ${currentShape.targetPieces - 1}`;
+          statusEl.textContent = "Click outside the shape, then drag all the way through.";
+          statusEl.className = "status";
+          cancelAnimationFrame(raf);
+          render();
+        }
+
+        function loadLevel(index) {
+          levelIndex = index;
+          const requiredCuts = roundCutRequirements[levelIndex];
+          currentShape = {
+            ...levels[levelIndex],
+            requiredCuts,
+            targetPieces: requiredCuts + 1
+          };
+          originalArea = polygonArea(currentShape.points);
+          shapeNameEl.textContent = `Shape ${levelIndex + 1} · ${currentShape.name}`;
+          objectiveEl.textContent = `Cut into ${currentShape.targetPieces} equal pieces`;
+          canvas.setAttribute("aria-label", `Drag across the ${currentShape.name} shape to cut it into ${currentShape.targetPieces} equal pieces`);
+          updateProgress();
+          resetShape();
+        }
+
+        function finalRating(averageAccuracy) {
+          return labelForError((100 - averageAccuracy) / 5);
+        }
+
+        function showFinalScore() {
+          roundComplete = true;
+          updateProgress();
+          const averageAccuracy = roundScores.reduce((sum, result) => sum + result.accuracy, 0) / roundScores.length;
+          const totalPoints = roundScores.reduce((sum, result) => sum + result.points, 0);
+          resultKickerEl.textContent = "Final score";
+          ratingEl.textContent = `${totalPoints.toFixed(1)} pts`;
+          percentagesEl.hidden = true;
+          scoreLabelEl.textContent = "Round rating";
+          scoreEl.textContent = finalRating(averageAccuracy);
+          roundScoresEl.replaceChildren(...roundScores.map((result, index) => {
+            const row = document.createElement("li");
+            const name = document.createElement("span");
+            const value = document.createElement("strong");
+            name.textContent = `${index + 1}. ${result.name} · ${result.cuts} ${result.cuts === 1 ? "cut" : "cuts"}`;
+            value.textContent = `${result.points.toFixed(1)} pts · ${result.multiplier}×`;
+            row.append(name, value);
+            return row;
+          }));
+          roundScoresEl.hidden = false;
+          retryButton.hidden = true;
+          nextButton.textContent = "New round";
+          shapeNameEl.textContent = "Round complete · 5 shapes";
+          objectiveEl.textContent = "Five foods scored";
+          cutCountEl.textContent = "Round complete";
+          statusEl.textContent = "Five shapes down. Your final score is in.";
+          statusEl.className = "status success";
+          resultEl.classList.add("visible");
+        }
+
+        function advanceRound() {
+          if (roundComplete) {
+            startRound();
+            return;
+          }
+          if (!currentResult) return;
+          roundScores.push(currentResult);
+          if (levelIndex === levels.length - 1) showFinalScore();
+          else loadLevel(levelIndex + 1);
+        }
+
+        function startRound() {
+          roundScores = [];
+          roundComplete = false;
+          roundCutRequirements = createRoundCutRequirements();
+          loadLevel(0);
+        }
+
+        canvas.addEventListener("pointerdown", event => {
+          if (complete || separating) return;
+          event.preventDefault();
+          canvas.setPointerCapture(event.pointerId);
+          dragging = true;
+          swipe = [pointFromEvent(event)];
+          statusEl.textContent = "Keep dragging through the far edge…";
+          statusEl.className = "status";
+          render();
+        });
+
+        canvas.addEventListener("pointermove", event => {
+          if (!dragging || complete || separating) return;
+          event.preventDefault();
+          const point = pointFromEvent(event);
+          if (distance(point, swipe.at(-1)) >= 2.5) swipe.push(point);
+          render();
+        });
+
+        function endSwipe(event) {
+          if (!dragging || complete || separating) return;
+          event.preventDefault();
+          dragging = false;
+          const point = pointFromEvent(event);
+          if (distance(point, swipe.at(-1)) >= 1) swipe.push(point);
+          const candidates = [];
+          pieces.forEach((piece, index) => {
+            const result = cutShape(swipe, piece.points);
+            if (result) candidates.push({ result, index });
+          });
+          candidates.sort((a, b) => a.result.entry.pathPosition - b.result.entry.pathPosition);
+          if (candidates.length >= 1) finishCut(candidates[0].result, candidates[0].index);
+          else rejectCut();
+        }
+
+        canvas.addEventListener("pointerup", endSwipe);
+        canvas.addEventListener("pointercancel", () => {
+          dragging = false;
+          rejectCut();
+        });
+        retryButton.addEventListener("click", resetShape);
+        nextButton.addEventListener("click", advanceRound);
+        window.addEventListener("keydown", event => {
+          if (event.key.toLowerCase() === "r" && !roundComplete) resetShape();
+          if ((event.key.toLowerCase() === "n" || event.key === "Enter") && (currentResult || roundComplete)) advanceRound();
+        });
+
+        startRound();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,6 +1,11 @@
 (() => {
   "use strict";
 
+  const Engine = window.GothiEngine;
+  if (!Engine) throw new Error("GOTHI rules engine failed to load.");
+  const AI = window.GothiAI;
+  if (!AI) throw new Error("GOTHI AI module failed to load.");
+
   const canvas = document.querySelector("#board-grid");
   const frame = document.querySelector("#board-frame");
   const toggle = document.querySelector("#grid-toggle");
@@ -9,6 +14,7 @@
   const menu = document.querySelector("#main-menu");
   const workspace = document.querySelector("#board-workspace");
   const newGameButton = document.querySelector("#new-game-button");
+  const botModeButton = document.querySelector("#bot-mode-button");
   const tutorialButton = document.querySelector("#tutorial-button");
   const tutorialMenu = document.querySelector("#tutorial-menu");
   const tutorialSlides = [...document.querySelectorAll("[data-tutorial-slide]")];
@@ -21,11 +27,17 @@
   const yellowFarthingOutput = document.querySelector("#yellow-farthing-count");
   const purpleFarthingOutput = document.querySelector("#purple-farthing-count");
   const purpleScoreRow = document.querySelector("#purple-score-row");
+  const yellowTeamLabel = document.querySelector("#yellow-team-label");
+  const purpleTeamLabel = document.querySelector("#purple-team-label");
   const gameMessage = document.querySelector("#game-message");
   const computerDifficultyOutput = document.querySelector("#computer-difficulty");
   const computerDifficultyRow = document.querySelector("#computer-difficulty-row");
+  const computerDifficultyLabel = document.querySelector("#computer-difficulty-label");
   const gameModeOutput = document.querySelector("#game-mode-output");
   const confirmSetupButton = document.querySelector("#confirm-setup-button");
+  const botModeControls = document.querySelector("#bot-mode-controls");
+  const botAutoplayButton = document.querySelector("#bot-autoplay-button");
+  const botNextTurnButton = document.querySelector("#bot-next-turn-button");
   const pieceTooltip = document.querySelector("#piece-tooltip");
   const pieceTooltipName = document.querySelector("#piece-tooltip-name");
   const pieceTooltipControl = document.querySelector("#piece-tooltip-control");
@@ -49,23 +61,10 @@
   const ROW_STEP = HEX_HALF_HEIGHT * 2;
   const GRID_CENTER = { x: MAP_WIDTH / 2 - 20, y: 604.5 };
   const PIECE_HEIGHT = 85.54;
+  const BOT_TURN_DELAY = 4000;
   const cells = [];
   const pieceImages = new Map();
-  const PATTERN_COLUMNS = {
-    "-6": "PPP",
-    "-5": "PPPP",
-    "-4": "YYBYY",
-    "-3": "YYYYYY",
-    "-2": "RYYRYYR",
-    "-1": "GGBCCBGG",
-    "0": "GGGCCCGGG",
-    "1": "GGBCCBGG",
-    "2": "RYYRYYR",
-    "3": "YYYYYY",
-    "4": "YYBYY",
-    "5": "PPPP",
-    "6": "PPP",
-  };
+  const PATTERN_COLUMNS = Engine.PATTERN_COLUMNS;
   const PATTERN_COLORS = {
     G: "#68752f",
     C: "#2d2c2c",
@@ -74,31 +73,14 @@
     R: "#b58c70",
     P: "#58344f",
   };
-  const CONTROL_VALUES = {
-    thingman: 1,
-    outlaw: 1,
-    raven: 2,
-    gothi: 3,
-    storgothi: 3,
-  };
+  const CONTROL_VALUES = Engine.CONTROL_VALUES;
   const CONTROL_STYLES = {
     yellow: { stroke: "#ffd84a", tint: "rgba(255,216,74,.19)" },
     purple: { stroke: "#c57aff", tint: "rgba(197,122,255,.2)" },
   };
 
-  const northFormation = [
-    ["storgothi", 0, 0],
-    ["raven", -1, 0], ["gothi", 0, 1], ["raven", 1, 0],
-    ["gothi", -2, 0], ["gothi", -1, 1], ["gothi", 1, 1], ["gothi", 2, 0],
-    ["thingman", -4, 0], ["outlaw", -3, 0], ["thingman", 3, 0], ["outlaw", 4, 0],
-  ];
-  const southFormation = [
-    ["outlaw", -4, 4], ["thingman", -3, 5],
-    ["gothi", -2, 6], ["gothi", -1, 6], ["raven", -1, 7],
-    ["storgothi", 0, 8], ["gothi", 0, 7],
-    ["raven", 1, 7], ["gothi", 1, 6], ["gothi", 2, 6],
-    ["outlaw", 3, 5], ["thingman", 4, 4],
-  ];
+  const northFormation = Engine.NORTH_FORMATION;
+  const southFormation = Engine.SOUTH_FORMATION;
   const pieces = [
     ...northFormation.map(([type, q, row], index) => makePiece("purple", type, q, row, index)),
     ...southFormation.map(([type, q, row], index) => makePiece("yellow", type, q, row, index)),
@@ -119,6 +101,8 @@
   let movingPiece = null;
   let movementAnimationToken = 0;
   let computerTurnTimer = null;
+  const computerTeams = new Set(["purple"]);
+  let botAutoplay = false;
   let computerDifficulty = "easy";
   let gameMode = "basic";
   let setupPhase = null;
@@ -131,6 +115,11 @@
   let moveNumber = 0;
   let gameStartedAt = null;
   let gridVisible = true;
+
+  function difficultyName(value = computerDifficulty) {
+    if (value === "very-easy") return "Very Easy";
+    return value === "hard" ? "Hard" : "Easy";
+  }
 
   function displayName(type) {
     return type === "storgothi" ? "Storgothi" : type[0].toUpperCase() + type.slice(1);
@@ -158,90 +147,29 @@
     });
   });
 
-  for (let q = -6; q <= 6; q += 1) {
-    const count = 9 - Math.abs(q);
-    for (let row = 0; row < count; row += 1) {
-      const { x, y } = cellCenter(q, row);
-      const patternType = PATTERN_COLUMNS[q][row];
-      cells.push({
-        id: `q${q >= 0 ? "+" : ""}${q}-r${String(row).padStart(2, "0")}`,
-        q, row, x, y, patternType,
-        farthing: getPatternRegion(patternType, q, y),
-        terrain: getPatternTerrain(patternType),
-      });
-    }
-  }
-
-  function getPatternRegion(patternType, q, y) {
-    if (patternType === "P") return q < 0 ? "West Edge Territory" : "East Edge Territory";
-    if (patternType === "C") return "Heart Farthing";
-    if (patternType === "G") return y < GRID_CENTER.y ? "North Farthing" : "South Farthing";
-    if (patternType === "Y") {
-      const vertical = y < GRID_CENTER.y ? "North" : "South";
-      const horizontal = q < 0 ? "west" : "east";
-      return `${vertical}${horizontal} Farthing`;
-    }
-    return null;
-  }
-
-  function getPatternTerrain(patternType) {
-    if (patternType === "B") return "Water space";
-    if (patternType === "R") return "Neutral space";
-    return "Farthing space";
-  }
-
+  Engine.BOARD.forEach((engineCell) => {
+    const { x, y } = cellCenter(engineCell.q, engineCell.row);
+    cells.push({ ...engineCell, x, y });
+  });
   function getCellColor(cell) {
     return PATTERN_COLORS[cell.patternType];
   }
 
   function calculateFarthingControl() {
-    const control = new Map();
-    cells.forEach((cell) => {
-      if (cell.farthing && !control.has(cell.farthing)) {
-        control.set(cell.farthing, { yellow: 0, purple: 0, controller: null });
-      }
-    });
-
-    pieces.forEach((piece) => {
-      if (piece.coveredBy) return;
-      const cell = getCell(piece.q, piece.row);
-      if (!cell?.farthing) return;
-      const state = control.get(cell.farthing);
-      state[piece.team] += CONTROL_VALUES[piece.type] || 1;
-    });
-
-    control.forEach((state) => {
-      if (state.yellow > state.purple) state.controller = "yellow";
-      else if (state.purple > state.yellow) state.controller = "purple";
-    });
-    return control;
+    return Engine.calculateFarthingControl({ pieces });
   }
 
   function countControlledFarthings() {
-    const counts = { yellow: 0, purple: 0 };
     const control = calculateFarthingControl();
-    control.forEach((state, farthing) => {
-      if (farthing.endsWith("Edge Territory")) return;
-      if (state.controller) counts[state.controller] += 1;
-    });
-
-    const westController = control.get("West Edge Territory")?.controller;
-    const eastController = control.get("East Edge Territory")?.controller;
-    if (westController && westController === eastController) {
-      counts[westController] += 1;
-    }
-    return counts;
+    return Engine.countControlledFarthings({ pieces }, control);
   }
 
   function controlsOpposingHomestead(team, control = calculateFarthingControl()) {
-    const opposingHome = team === "yellow" ? "North Farthing" : "South Farthing";
-    return control.get(opposingHome)?.controller === team;
+    return Engine.controlsOpposingHomestead({ pieces }, team, control);
   }
 
   function getVictoryReason(team, counts, control = calculateFarthingControl()) {
-    if (controlsOpposingHomestead(team, control)) return "homestead";
-    if (counts[team] >= 5) return "farthings";
-    return null;
+    return Engine.getVictoryReason({ pieces }, team, counts, control);
   }
 
   function victoryDescription(team, counts) {
@@ -249,6 +177,27 @@
     return winnerReason === "homestead"
       ? `${teamName} controls the opposing Homestead`
       : `${teamName} controls ${counts[team]} Farthings`;
+  }
+
+  function configureComputerTeams(...teams) {
+    computerTeams.clear();
+    teams.forEach((team) => computerTeams.add(team));
+    yellowTeamLabel.textContent = computerTeams.has("yellow") ? "Yellow (Computer)" : "Yellow";
+    purpleTeamLabel.textContent = computerTeams.has("purple") ? "Purple (Computer)" : "Purple";
+  }
+
+  function shouldAutoQueueComputerTurn() {
+    return computerTeams.has(currentTurn) && (gameMode !== "bot" || botAutoplay);
+  }
+
+  function updateBotModeControls() {
+    const active = gameMode === "bot" && gameStarted && !reviewingFinalBoard;
+    botModeControls.hidden = !active;
+    if (!active) return;
+    botAutoplayButton.textContent = `Autoplay: ${botAutoplay ? "On" : "Off"}`;
+    botAutoplayButton.setAttribute("aria-pressed", String(botAutoplay));
+    botAutoplayButton.disabled = Boolean(winner);
+    botNextTurnButton.disabled = botAutoplay || computerThinking || pieceAnimating || Boolean(winner);
   }
 
   function updateGameStatus() {
@@ -266,11 +215,14 @@
       const team = movingPiece.team[0].toUpperCase() + movingPiece.team.slice(1);
       gameMessage.textContent = `${team} ${movingPiece.name} is moving…`;
     } else if (computerThinking) {
-      const difficulty = computerDifficulty === "hard" ? "Hard" : "Easy";
-      gameMessage.textContent = `Purple (${difficulty}) is considering its move…`;
+      const difficulty = difficultyName();
+      gameMessage.textContent = `${turnName()} (${difficulty}) is considering its move…`;
+    } else if (gameMode === "bot" && !botAutoplay) {
+      gameMessage.textContent = `Bot Mode paused. ${turnName()} is ready; click Next Turn.`;
     } else {
       gameMessage.textContent = `${turnName()} to move.`;
     }
+    updateBotModeControls();
     return counts;
   }
 
@@ -304,6 +256,7 @@
     hideVictoryPopup();
     reviewingFinalBoard = true;
     boardReviewActions.hidden = false;
+    updateBotModeControls();
     restartGameButton.hidden = true;
     clearSelection();
     const counts = countControlledFarthings();
@@ -489,126 +442,10 @@
     return pieces.find((piece) => !piece.coveredBy && piece.q === cell.q && piece.row === cell.row) || null;
   }
 
-  function getNeighbors(cell) {
-    const neighborDistance = Math.hypot(COLUMN_STEP, ROW_STEP / 2) * 1.04;
-    return cells.filter((candidate) =>
-      candidate !== cell && Math.hypot(candidate.x - cell.x, candidate.y - cell.y) <= neighborDistance
-    );
-  }
-
-  const MOVE_DIRECTIONS = [
-    [0, -ROW_STEP],
-    [COLUMN_STEP, -ROW_STEP / 2],
-    [COLUMN_STEP, ROW_STEP / 2],
-    [0, ROW_STEP],
-    [-COLUMN_STEP, ROW_STEP / 2],
-    [-COLUMN_STEP, -ROW_STEP / 2],
-  ];
-
-  function getCellAtPosition(x, y) {
-    return cells.find((cell) => Math.abs(cell.x - x) < 0.01 && Math.abs(cell.y - y) < 0.01) || null;
-  }
-
-  function canCapture(attacker, defender, moveKind = "step") {
-    if (!defender || defender.team === attacker.team || defender.coveredBy) return false;
-    return attacker.type !== "gothi" || moveKind === "step";
-  }
-
-  function addOpenOrCapture(moves, attacker, destination, moveKind = "step") {
-    if (!destination) return "blocked";
-    const defender = getPieceAtCell(destination);
-    if (!defender) {
-      moves.add(destination.id);
-      return "open";
-    }
-    if (canCapture(attacker, defender, moveKind)) {
-      moves.add(destination.id);
-      captureMoves.add(destination.id);
-      return "capture";
-    }
-    return "blocked";
-  }
-
-  function getThingmanMoves(piece) {
-    const origin = getCell(piece.q, piece.row);
-    const moves = new Set();
-    if (!origin) return moves;
-
-    getNeighbors(origin).forEach((firstStep) => {
-      if (firstStep.terrain === "Water space") return;
-      const firstResult = addOpenOrCapture(moves, piece, firstStep, "step");
-      if (firstResult !== "open") return;
-
-      getNeighbors(firstStep).forEach((secondStep) => {
-        if (secondStep === origin || secondStep.terrain === "Water space") return;
-        addOpenOrCapture(moves, piece, secondStep, "second-step");
-      });
-    });
-    return moves;
-  }
-
-  function getOutlawMoves(piece) {
-    const origin = getCell(piece.q, piece.row);
-    const moves = new Set();
-    if (!origin) return moves;
-
-    MOVE_DIRECTIONS.forEach(([dx, dy]) => {
-      let x = origin.x + dx;
-      let y = origin.y + dy;
-      let destination = getCellAtPosition(x, y);
-
-      while (destination) {
-        if (destination.terrain === "Water space") break;
-        const result = addOpenOrCapture(moves, piece, destination, "line");
-        if (result !== "open") break;
-        x += dx;
-        y += dy;
-        destination = getCellAtPosition(x, y);
-      }
-    });
-    return moves;
-  }
-
-  function getRavenMoves(piece) {
-    const origin = getCell(piece.q, piece.row);
-    const moves = new Set();
-    if (!origin) return moves;
-
-    MOVE_DIRECTIONS.forEach(([dx, dy]) => {
-      const stepDestination = getCellAtPosition(origin.x + dx, origin.y + dy);
-      addOpenOrCapture(moves, piece, stepDestination, "step");
-
-      const jumpDestination = getCellAtPosition(origin.x + dx * 2, origin.y + dy * 2);
-      addOpenOrCapture(moves, piece, jumpDestination, "jump");
-    });
-    return moves;
-  }
-
-  function getGothiMoves(piece) {
-    const origin = getCell(piece.q, piece.row);
-    const moves = new Set();
-    if (!origin) return moves;
-
-    MOVE_DIRECTIONS.forEach(([dx, dy]) => {
-      const firstStep = getCellAtPosition(origin.x + dx, origin.y + dy);
-      if (!firstStep || firstStep.terrain === "Water space") return;
-      const firstResult = addOpenOrCapture(moves, piece, firstStep, "step");
-      if (firstResult !== "open") return;
-
-      const secondStep = getCellAtPosition(origin.x + dx * 2, origin.y + dy * 2);
-      if (!secondStep || secondStep.terrain === "Water space" || getPieceAtCell(secondStep)) return;
-      moves.add(secondStep.id);
-    });
-    return moves;
-  }
-
   function getLegalMoves(piece) {
-    captureMoves = new Set();
-    if (piece.type === "thingman") return getThingmanMoves(piece);
-    if (piece.type === "outlaw" || piece.type === "storgothi") return getOutlawMoves(piece);
-    if (piece.type === "raven") return getRavenMoves(piece);
-    if (piece.type === "gothi") return getGothiMoves(piece);
-    return new Set();
+    const moves = Engine.getLegalMoves({ pieces }, piece.id);
+    captureMoves = new Set(moves.filter((move) => move.capture).map((move) => move.destinationId));
+    return new Set(moves.map((move) => move.destinationId));
   }
 
   function turnName() {
@@ -852,7 +689,7 @@
     );
     const responsePool = variedRanked.length ? variedRanked : ranked;
     const elite = responsePool.slice(0, Math.min(3, responsePool.length));
-    const chosen = elite[Math.floor(Math.random() * elite.length)] || ranked[0];
+    const chosen = AI.chooseWeightedTopThree(elite) || ranked[0];
     applyPurpleSetup(chosen.order, slots);
   }
 
@@ -890,6 +727,11 @@
     return `${cell.farthing || cell.terrain} (${cell.id})`;
   }
 
+  function gameRecordTeamName(team) {
+    const name = team[0].toUpperCase() + team.slice(1);
+    return computerTeams.has(team) ? `${name} (Computer)` : name;
+  }
+
   function renderMoveHistory() {
     moveLogOutput.replaceChildren();
     if (!moveHistory.length) {
@@ -905,7 +747,7 @@
       item.className = entry.team === "yellow" ? "yellow-move" : "purple-move";
       const title = document.createElement("span");
       title.className = "move-title";
-      const team = entry.team === "purple" ? "Purple (Computer)" : "Yellow";
+      const team = gameRecordTeamName(entry.team);
       title.textContent = entry.kind === "pass" ? `${team} passes` : `${team} ${entry.piece}`;
       const detail = document.createElement("span");
       detail.className = "move-detail";
@@ -914,6 +756,7 @@
       } else {
         const events = [`${entry.from.label} → ${entry.to.label}`];
         if (entry.capture) events.push(`Covered ${entry.capture.team} ${entry.capture.piece}`);
+        if (entry.stack) events.push(`Stacked on ${entry.stack.team} ${entry.stack.piece}`);
         if (entry.released.length) events.push(`Released ${entry.released.map((piece) => `${piece.team} ${piece.piece}`).join(", ")}`);
         events.push(`Farthings: Yellow ${entry.farthings.yellow}, Purple ${entry.farthings.purple}`);
         if (entry.winner) events.push(entry.winReason === "homestead" ? `${entry.winner} wins by taking the opposing Homestead` : `${entry.winner} wins`);
@@ -925,7 +768,7 @@
     moveLogOutput.scrollTop = moveLogOutput.scrollHeight;
   }
 
-  function recordMove(mover, origin, destination, capturedPiece, releasedPieces, counts) {
+  function recordMove(mover, origin, destination, capturedPiece, stackedPiece, releasedPieces, counts) {
     moveNumber += 1;
     moveHistory.push({
       number: moveNumber,
@@ -939,6 +782,11 @@
         id: capturedPiece.id,
         team: capturedPiece.team === "purple" ? "Purple" : "Yellow",
         piece: capturedPiece.name,
+      } : null,
+      stack: stackedPiece ? {
+        id: stackedPiece.id,
+        team: stackedPiece.team === "purple" ? "Purple" : "Yellow",
+        piece: stackedPiece.name,
       } : null,
       released: releasedPieces.map((piece) => ({
         id: piece.id,
@@ -964,7 +812,7 @@
   }
 
   function formatGameLogEntry(entry) {
-    const team = entry.team === "purple" ? "Purple (Computer)" : "Yellow";
+    const team = gameRecordTeamName(entry.team);
     if (entry.kind === "pass") {
       return [
         `${entry.number}. ${team} passes`,
@@ -978,6 +826,7 @@
       `   To: ${entry.to.label}`,
     ];
     if (entry.capture) lines.push(`   Covered: ${entry.capture.team} ${entry.capture.piece}`);
+    if (entry.stack) lines.push(`   Stacked on: ${entry.stack.team} ${entry.stack.piece}`);
     if (entry.released.length) {
       lines.push(`   Released: ${entry.released.map((piece) => `${piece.team} ${piece.piece}`).join(", ")}`);
     }
@@ -994,14 +843,18 @@
         : tutorialDemoLesson === "movement"
           ? "Stationary pieces"
           : "Easy"
-      : computerDifficulty === "hard" ? "Hard" : "Easy";
+      : gameMode === "bot"
+        ? `${difficultyName()} (both bots)`
+        : difficultyName();
     const mode = gameMode === "tutorial"
       ? "Gothi Tutorial"
       : gameMode === "tutorial-pieces"
         ? "Raven / Thingman / Outlaw Tutorial"
         : gameMode === "tutorial-final"
           ? "Full Lineup Tutorial"
-          : gameMode === "advanced" ? "Advanced" : "Basic";
+          : gameMode === "bot"
+            ? "Bot Mode"
+            : gameMode === "advanced" ? "Advanced" : "Basic";
     const result = winner
       ? `${winner[0].toUpperCase() + winner.slice(1)} wins${winnerReason === "homestead" ? " by taking the opposing Homestead" : ""}`
       : "Game unfinished";
@@ -1051,6 +904,8 @@
     pieceAnimating = false;
     movingPiece = null;
     resetPieces();
+    botAutoplay = false;
+    configureComputerTeams("purple");
     tutorialDemoActive = false;
     tutorialDemoLesson = null;
     tutorialMenu.hidden = true;
@@ -1061,7 +916,8 @@
     gameStartedAt = new Date();
     renderMoveHistory();
     computerDifficulty = document.querySelector('input[name="difficulty"]:checked')?.value || "easy";
-    computerDifficultyOutput.textContent = computerDifficulty === "hard" ? "Hard" : "Easy";
+    computerDifficultyOutput.textContent = difficultyName();
+    computerDifficultyLabel.textContent = "Computer";
     gameMode = document.querySelector('input[name="game-mode"]:checked')?.value || "basic";
     gameModeOutput.textContent = gameMode === "advanced" ? "Advanced" : "Basic";
     currentTurn = "yellow";
@@ -1093,12 +949,67 @@
     });
   }
 
+  function startBotGame() {
+    hideVictoryPopup();
+    movementAnimationToken += 1;
+    pieceAnimating = false;
+    movingPiece = null;
+    resetPieces();
+    tutorialDemoActive = false;
+    tutorialDemoLesson = null;
+    tutorialMenu.hidden = true;
+    purpleScoreRow.hidden = false;
+    computerDifficultyRow.hidden = false;
+    moveHistory.length = 0;
+    moveNumber = 0;
+    gameStartedAt = new Date();
+    renderMoveHistory();
+    computerDifficulty = document.querySelector('input[name="difficulty"]:checked')?.value || "easy";
+    computerDifficultyOutput.textContent = difficultyName();
+    computerDifficultyLabel.textContent = "Bots";
+    gameMode = "bot";
+    gameModeOutput.textContent = "Bot Mode";
+    currentTurn = "yellow";
+    winner = null;
+    winnerReason = null;
+    reviewingFinalBoard = false;
+    boardReviewActions.hidden = true;
+    restartGameButton.hidden = false;
+    computerThinking = false;
+    if (computerTurnTimer) clearTimeout(computerTurnTimer);
+    computerTurnTimer = null;
+    gameStarted = true;
+    hoverCell = null;
+    hoverPiece = null;
+    setupSelectedPiece = null;
+    setupPhase = null;
+    confirmSetupButton.hidden = true;
+    confirmSetupButton.disabled = false;
+    initialSetup = [];
+    captureInitialSetup();
+    clearSelection();
+    configureComputerTeams("yellow", "purple");
+    botAutoplay = true;
+    menu.hidden = true;
+    workspace.hidden = false;
+    nameOutput.textContent = "Bot Mode";
+    detailOutput.textContent = "Autoplay is on. Each bot waits four seconds before moving.";
+    updateGameStatus();
+    queueComputerTurn();
+    requestAnimationFrame(() => {
+      resizeCanvas();
+      canvas.focus();
+    });
+  }
+
   function startGothiTutorialGame() {
     hideVictoryPopup();
     movementAnimationToken += 1;
     pieceAnimating = false;
     movingPiece = null;
     resetGothiTutorialPieces();
+    botAutoplay = false;
+    configureComputerTeams();
     tutorialDemoActive = true;
     tutorialDemoLesson = "gothi";
     moveHistory.length = 0;
@@ -1147,6 +1058,8 @@
     pieceAnimating = false;
     movingPiece = null;
     resetMovementTutorialPieces();
+    botAutoplay = false;
+    configureComputerTeams();
     tutorialDemoActive = true;
     tutorialDemoLesson = "movement";
     moveHistory.length = 0;
@@ -1195,6 +1108,8 @@
     pieceAnimating = false;
     movingPiece = null;
     resetStorgothiTutorialPieces();
+    botAutoplay = false;
+    configureComputerTeams("purple");
     tutorialDemoActive = true;
     tutorialDemoLesson = "storgothi";
     moveHistory.length = 0;
@@ -1241,6 +1156,7 @@
     if (tutorialDemoLesson === "gothi") startGothiTutorialGame();
     else if (tutorialDemoLesson === "movement") startMovementTutorialGame();
     else if (tutorialDemoLesson === "storgothi") startStorgothiTutorialGame();
+    else if (gameMode === "bot") startBotGame();
     else startNewGame();
   }
 
@@ -1252,6 +1168,10 @@
     if (computerTurnTimer) clearTimeout(computerTurnTimer);
     computerTurnTimer = null;
     computerThinking = false;
+    botAutoplay = false;
+    configureComputerTeams("purple");
+    gameMode = "basic";
+    computerDifficultyLabel.textContent = "Computer";
     gameStarted = false;
     tutorialDemoActive = false;
     tutorialDemoLesson = null;
@@ -1267,276 +1187,88 @@
     clearSelection();
     workspace.hidden = true;
     menu.hidden = false;
+    updateBotModeControls();
     updateReadout(null);
     newGameButton.focus();
   }
 
-  function snapshotPieceState() {
-    return pieces.map((piece) => ({
-      piece,
-      q: piece.q,
-      row: piece.row,
-      x: piece.x,
-      y: piece.y,
-      moveCount: piece.moveCount,
-      coveredBy: piece.coveredBy,
-    }));
-  }
-
-  function restorePieceState(snapshot) {
-    snapshot.forEach((state) => {
-      state.piece.q = state.q;
-      state.piece.row = state.row;
-      state.piece.x = state.x;
-      state.piece.y = state.y;
-      state.piece.moveCount = state.moveCount;
-      state.piece.coveredBy = state.coveredBy;
-    });
-  }
-
-  function applySimulatedMove(piece, destination, isCapture) {
-    const defender = isCapture ? getPieceAtCell(destination) : null;
-    pieces.filter((candidate) => candidate.coveredBy === piece.id).forEach((candidate) => {
-      candidate.coveredBy = null;
-    });
-    piece.q = destination.q;
-    piece.row = destination.row;
-    piece.x = destination.x;
-    piece.y = destination.y;
-    piece.moveCount += 1;
-    if (defender) defender.coveredBy = piece.id;
-    return defender;
-  }
-
-  function developmentValue(piece) {
-    if (piece.coveredBy || piece.moveCount === 0) return 0;
-    const home = piece.team === "purple" ? "North Farthing" : "South Farthing";
-    const cell = getCell(piece.q, piece.row);
-    let value = piece.type === "gothi" ? 24 : 10;
-    if (piece.type === "gothi" && cell?.farthing !== home) value += 14;
-    value -= Math.max(0, piece.moveCount - 1) * 5;
-    return value;
-  }
-
-  function homesteadPivotWeight() {
-    const activePieces = pieces.filter((piece) => !piece.coveredBy).length;
-    return Math.max(0, Math.min(1, (18 - activePieces) / 8));
-  }
-
-  function homesteadApproachValue(team) {
-    const targetFarthing = team === "purple" ? "South Farthing" : "North Farthing";
-    const targetCells = cells.filter((cell) => cell.farthing === targetFarthing);
-    if (!targetCells.length) return 0;
-    return pieces
-      .filter((piece) => piece.team === team && !piece.coveredBy)
-      .reduce((total, piece) => {
-        const distance = Math.min(...targetCells.map((cell) =>
-          Math.hypot(piece.x - cell.x, piece.y - cell.y) / ROW_STEP
-        ));
-        return total + (CONTROL_VALUES[piece.type] || 1) * Math.max(0, 10 - distance);
-      }, 0);
-  }
-
-  function evaluateStrategicPosition() {
-    const counts = countControlledFarthings();
-    const control = calculateFarthingControl();
-    const heart = control.get("Heart Farthing");
-    let score = counts.purple * 160 - counts.yellow * 150;
-
-    if (counts.purple >= 5) score += 100000;
-    if (counts.yellow >= 5) score -= 100000;
-    if (controlsOpposingHomestead("purple", control)) score += 100000;
-    if (controlsOpposingHomestead("yellow", control)) score -= 100000;
-
-    if (heart?.controller === "purple") score += 80;
-    if (heart?.controller === "yellow") score -= 100;
-    if (heart) score += (heart.purple - heart.yellow) * 14;
-
-    control.forEach((state, territory) => {
-      if (!territory.endsWith("Edge Territory")) {
-        score += (state.purple - state.yellow) * 4;
-      }
-    });
-
-    const edgeMultiplier = heart?.controller === "yellow" ? 1.5 : 1;
-    ["West Edge Territory", "East Edge Territory"].forEach((territory) => {
-      const controller = control.get(territory)?.controller;
-      if (controller === "purple") score += 26 * edgeMultiplier;
-      if (controller === "yellow") score -= 30 * edgeMultiplier;
-    });
-
-    const openingWeight = Math.max(0, 1 - moveHistory.length / 10);
-    if (openingWeight > 0) {
-      pieces.filter((piece) => !piece.coveredBy).forEach((piece) => {
-        const value = developmentValue(piece) * openingWeight;
-        score += piece.team === "purple" ? value : -value;
-        if (piece.moveCount === 0 && piece.type === "gothi") {
-          score += piece.team === "purple" ? -14 * openingWeight : 14 * openingWeight;
-        }
-      });
+  function setBotAutoplay(enabled) {
+    if (gameMode !== "bot" || winner) return;
+    botAutoplay = Boolean(enabled);
+    if (!botAutoplay && computerTurnTimer) {
+      clearTimeout(computerTurnTimer);
+      computerTurnTimer = null;
+      computerThinking = false;
     }
-
-    const homesteadWeight = homesteadPivotWeight();
-    if (homesteadWeight > 0) {
-      const approachBalance = homesteadApproachValue("purple") - homesteadApproachValue("yellow");
-      const south = control.get("South Farthing");
-      const north = control.get("North Farthing");
-      const controlPressure =
-        ((south?.purple || 0) - (south?.yellow || 0)) -
-        ((north?.yellow || 0) - (north?.purple || 0));
-      score += approachBalance * 24 * homesteadWeight;
-      score += controlPressure * 28 * homesteadWeight;
-    }
-    return score;
+    updateGameStatus();
+    updateReadout(null);
+    draw();
+    if (botAutoplay && !pieceAnimating && !computerThinking) queueComputerTurn();
   }
 
-  function scoreComputerMove(piece, destination, isCapture) {
-    const snapshot = snapshotPieceState();
-    const defender = applySimulatedMove(piece, destination, isCapture);
-    const control = calculateFarthingControl();
-    const destinationState = destination.farthing ? control.get(destination.farthing) : null;
-    let score = evaluateStrategicPosition();
-    if (defender) score += (CONTROL_VALUES[defender.type] || 1) * 30;
-    if (destinationState?.controller === "purple") score += 20;
-    if (!destination.farthing) score -= 12;
-    score += (destination.y / MAP_HEIGHT) * 8;
-    restorePieceState(snapshot);
-    return score;
-  }
-
-  function getMoveCandidates(team, scoreMoves = false) {
-    const candidates = [];
-    pieces.filter((piece) => piece.team === team && !piece.coveredBy).forEach((piece) => {
-      const moves = getLegalMoves(piece);
-      const captures = new Set(captureMoves);
-      moves.forEach((cellId) => {
-        const destination = cells.find((cell) => cell.id === cellId);
-        if (!destination) return;
-        const isCapture = captures.has(cellId);
-        candidates.push({
-          piece,
-          destination,
-          isCapture,
-          score: scoreMoves ? scoreComputerMove(piece, destination, isCapture) : 0,
-        });
-      });
-    });
-    clearSelection();
-    return candidates;
-  }
-
-  function getComputerMoveCandidates() {
-    return getMoveCandidates("purple", true).sort((a, b) =>
-      b.score - a.score || a.piece.id.localeCompare(b.piece.id) || a.destination.id.localeCompare(b.destination.id)
-    );
-  }
-
-  function scoreHardComputerMove(candidate) {
-    const beforePurpleMove = snapshotPieceState();
-    applySimulatedMove(candidate.piece, candidate.destination, candidate.isCapture);
-    const immediateScore = evaluateStrategicPosition();
-    if (getVictoryReason("purple", countControlledFarthings())) {
-      restorePieceState(beforePurpleMove);
-      return 1000000 + candidate.score;
-    }
-
-    const afterPurpleMove = snapshotPieceState();
-    const yellowReplies = getMoveCandidates("yellow");
-    let worstReplyScore = immediateScore;
-    if (yellowReplies.length) {
-      worstReplyScore = Infinity;
-      yellowReplies.forEach((reply) => {
-        restorePieceState(afterPurpleMove);
-        applySimulatedMove(reply.piece, reply.destination, reply.isCapture);
-        worstReplyScore = Math.min(worstReplyScore, evaluateStrategicPosition());
-      });
-    }
-
-    restorePieceState(beforePurpleMove);
-    return immediateScore * 0.3 + worstReplyScore * 0.7 + candidate.score * 0.15;
-  }
-
-  function findImmediateComputerWin(candidates) {
-    for (const candidate of candidates) {
-      const snapshot = snapshotPieceState();
-      applySimulatedMove(candidate.piece, candidate.destination, candidate.isCapture);
-      const reason = getVictoryReason("purple", countControlledFarthings());
-      restorePieceState(snapshot);
-      if (reason) {
-        candidate.winningReason = reason;
-        return candidate;
-      }
-    }
-    return null;
-  }
-
-  function chooseHardComputerMove(candidates) {
-    const immediateWin = findImmediateComputerWin(candidates);
-    if (immediateWin) return immediateWin;
-    const shortlist = [...candidates];
-    shortlist.forEach((candidate) => {
-      candidate.hardScore = scoreHardComputerMove(candidate);
-    });
-    clearSelection();
-    return shortlist.sort((a, b) =>
-      b.hardScore - a.hardScore || b.score - a.score || a.piece.id.localeCompare(b.piece.id) || a.destination.id.localeCompare(b.destination.id)
-    )[0];
-  }
-  function chooseEasyComputerMove(candidates) {
-    if (!candidates.length) return null;
-    const immediateWin = findImmediateComputerWin(candidates);
-    if (immediateWin) return immediateWin;
-
-    // Easy still makes imperfect choices, but now favors the stronger portion
-    // of its scored moves instead of choosing uniformly from every legal move.
-
-    const favoredCount = Math.max(3, Math.ceil(candidates.length * 0.4));
-    const pool = Math.random() < 0.65 ? candidates.slice(0, favoredCount) : candidates;
-    return pool[Math.floor(Math.random() * pool.length)];
+  function advanceBotTurn() {
+    if (gameMode !== "bot" || botAutoplay || winner || computerThinking || pieceAnimating) return;
+    queueComputerTurn(0);
   }
 
   function performComputerTurn() {
     computerTurnTimer = null;
-    if (!gameStarted || winner || currentTurn !== "purple") {
+    const team = currentTurn;
+    if (!gameStarted || winner || !computerTeams.has(team)) {
       computerThinking = false;
       return;
     }
 
-    const candidates = getComputerMoveCandidates();
-    const move = computerDifficulty === "hard"
-      ? chooseHardComputerMove(candidates)
-      : chooseEasyComputerMove(candidates);
+    const state = Engine.createState({
+      pieces,
+      currentTurn: team,
+      winner,
+      winnerReason,
+      turnNumber: moveNumber,
+    });
+    const move = AI.chooseMove(state, {
+      team,
+      difficulty: computerDifficulty,
+    });
     if (!move) {
       computerThinking = false;
-      recordPass("purple");
-      currentTurn = "yellow";
-      nameOutput.textContent = "Purple passes";
-      detailOutput.textContent = "Yellow to move.";
+      recordPass(team);
+      currentTurn = AI.opponentOf(team);
+      const teamName = team[0].toUpperCase() + team.slice(1);
+      nameOutput.textContent = `${teamName} passes`;
+      detailOutput.textContent = `${turnName()} to move.`;
       updateGameStatus();
       draw();
+      if (shouldAutoQueueComputerTurn()) queueComputerTurn();
       return;
     }
 
+    const piece = pieces.find((candidate) => candidate.id === move.pieceId);
+    const destination = cells.find((cell) => cell.id === move.destinationId);
+    if (!piece || !destination) throw new Error("The AI selected a move that is not on the live board.");
     computerThinking = false;
-    selectedPiece = move.piece;
-    legalMoves = getLegalMoves(move.piece);
-    moveSelectedPiece(move.destination);
+    selectedPiece = piece;
+    legalMoves = getLegalMoves(piece);
+    moveSelectedPiece(destination);
     draw();
   }
 
-  function queueComputerTurn() {
-    if (!gameStarted || winner || setupPhase || currentTurn !== "purple") return;
+  function queueComputerTurn(delayOverride = null) {
+    if (!gameStarted || winner || setupPhase || !computerTeams.has(currentTurn)) return;
     computerThinking = true;
     clearSelection();
     updateGameStatus();
     updateReadout(null);
     draw();
     if (computerTurnTimer) clearTimeout(computerTurnTimer);
-    computerTurnTimer = setTimeout(performComputerTurn, 650);
+    const delay = Number.isFinite(delayOverride)
+      ? delayOverride
+      : gameMode === "bot" ? BOT_TURN_DELAY : 650;
+    computerTurnTimer = setTimeout(performComputerTurn, delay);
   }
 
   function selectPiece(piece) {
-    if (!gameStarted || winner || setupPhase || computerThinking || pieceAnimating || currentTurn !== "yellow" || !piece || piece.coveredBy || piece.team !== "yellow") return false;
+    if (!gameStarted || winner || gameMode === "bot" || setupPhase || computerThinking || pieceAnimating || currentTurn !== "yellow" || !piece || piece.coveredBy || piece.team !== "yellow") return false;
     selectedPiece = piece;
     legalMoves = getLegalMoves(piece);
     updateReadout(getCell(piece.q, piece.row), piece);
@@ -1569,8 +1301,25 @@
     if (!gameStarted || winner || setupPhase || pieceAnimating || !selectedPiece || !legalMoves.has(destination.id)) return false;
     const mover = selectedPiece;
     const origin = getCell(mover.q, mover.row);
-    const capturedPiece = captureMoves.has(destination.id) ? getPieceAtCell(destination) : null;
-    const releasedPieces = pieces.filter((piece) => piece.coveredBy === mover.id);
+    const engineResult = Engine.applyMove(Engine.createState({
+      pieces,
+      currentTurn,
+      winner,
+      winnerReason,
+      turnNumber: moveNumber,
+    }), {
+      pieceId: mover.id,
+      destinationId: destination.id,
+    });
+    const capturedPiece = engineResult.lastMove.capturedPieceId
+      ? pieces.find((piece) => piece.id === engineResult.lastMove.capturedPieceId)
+      : null;
+    const stackedPiece = engineResult.lastMove.stackedPieceId
+      ? pieces.find((piece) => piece.id === engineResult.lastMove.stackedPieceId)
+      : null;
+    const releasedPieces = engineResult.lastMove.releasedPieceIds
+      .map((pieceId) => pieces.find((piece) => piece.id === pieceId))
+      .filter(Boolean);
 
     releasedPieces.forEach((piece) => {
       piece.coveredBy = null;
@@ -1585,33 +1334,41 @@
 
     animatePieceTo(mover, destination, () => {
       if (!gameStarted) return;
-      mover.q = destination.q;
-      mover.row = destination.row;
-      mover.x = destination.x;
-      mover.y = destination.y;
-      mover.moveCount += 1;
-      if (capturedPiece) capturedPiece.coveredBy = mover.id;
+      engineResult.pieces.forEach((enginePiece) => {
+        const livePiece = pieces.find((piece) => piece.id === enginePiece.id);
+        if (!livePiece) return;
+        livePiece.q = enginePiece.q;
+        livePiece.row = enginePiece.row;
+        livePiece.moveCount = enginePiece.moveCount;
+        livePiece.coveredBy = enginePiece.coveredBy;
+        const liveCell = getCell(enginePiece.q, enginePiece.row);
+        livePiece.x = liveCell.x;
+        livePiece.y = liveCell.y;
+      });
 
       pieceAnimating = false;
       movingPiece = null;
-      const counts = countControlledFarthings();
-      const control = calculateFarthingControl();
-      winnerReason = getVictoryReason(mover.team, counts, control);
-      winner = winnerReason ? mover.team : null;
-      recordMove(mover, origin, destination, capturedPiece, releasedPieces, counts);
+      const counts = engineResult.lastMove.farthings;
+      winnerReason = engineResult.winnerReason;
+      winner = engineResult.winner;
+      recordMove(mover, origin, destination, capturedPiece, stackedPiece, releasedPieces, counts);
       if (winner) {
         const team = winner[0].toUpperCase() + winner.slice(1);
         nameOutput.textContent = `${team} wins!`;
         detailOutput.textContent = `${victoryDescription(winner, counts)}.`;
       } else {
         const keepsYellowTurn = tutorialDemoLesson === "gothi" || tutorialDemoLesson === "movement";
-        currentTurn = keepsYellowTurn ? "yellow" : currentTurn === "yellow" ? "purple" : "yellow";
-        nameOutput.textContent = capturedPiece ? `${mover.name} pinned ${capturedPiece.name}` : `${mover.name} moved`;
+        currentTurn = keepsYellowTurn ? "yellow" : engineResult.currentTurn;
+        nameOutput.textContent = capturedPiece
+          ? `${mover.name} pinned ${capturedPiece.name}`
+          : stackedPiece
+            ? `${mover.name} stacked on ${stackedPiece.name}`
+            : `${mover.name} moved`;
         detailOutput.textContent = `${turnName()} to move.`;
       }
       updateGameStatus();
       if (winner) showVictoryPopup(counts);
-      if (!winner && currentTurn === "purple") queueComputerTurn();
+      if (!winner && shouldAutoQueueComputerTurn()) queueComputerTurn();
       draw();
     });
     return true;
@@ -1722,14 +1479,19 @@
       return;
     }
     if (computerThinking) {
-      nameOutput.textContent = "Purple is thinking";
-      detailOutput.textContent = "The computer is choosing its move.";
+      nameOutput.textContent = `${turnName()} is thinking`;
+      detailOutput.textContent = gameMode === "bot"
+        ? "The next bot move begins after the four-second observation delay."
+        : "The computer is choosing its move.";
       return;
     }
     if (piece) {
       const team = piece.team[0].toUpperCase() + piece.team.slice(1);
+      const stackSize = piece.coveredBy ? 0 : Engine.getStackSize({ pieces }, piece.id);
       nameOutput.textContent = `${piece.name} · ${team} player`;
-      if (piece.coveredBy) {
+      if (stackSize >= 4) {
+        detailOutput.textContent = `${stackSize}-piece stack. The top ${piece.name} cannot be captured until it moves away.`;
+      } else if (piece.coveredBy) {
         detailOutput.textContent = `Covered in this stack. Control ${CONTROL_VALUES[piece.type] || 1} is inactive until released.`;
       } else if (piece.team !== currentTurn) {
         detailOutput.textContent = `${turnName()} to move. Only ${turnName()} pieces can be selected.`;
@@ -1753,8 +1515,15 @@
       return;
     }
     if (!cell) {
-      nameOutput.textContent = `${turnName()} to move`;
-      detailOutput.textContent = `Select a ${turnName()} piece.`;
+      if (gameMode === "bot") {
+        nameOutput.textContent = botAutoplay ? "Bot Mode autoplay" : "Bot Mode paused";
+        detailOutput.textContent = botAutoplay
+          ? `${turnName()} will move after the observation delay.`
+          : `Click Next Turn to let ${turnName()} move.`;
+      } else {
+        nameOutput.textContent = `${turnName()} to move`;
+        detailOutput.textContent = `Select a ${turnName()} piece.`;
+      }
       return;
     }
     nameOutput.textContent = `${cell.farthing || cell.terrain} · ${cell.id}`;
@@ -1770,7 +1539,7 @@
     else if (!selectedPiece) updateReadout(hoverCell, hoverPiece);
     const hoverPieceIsActive = hoverPiece && !hoverPiece.coveredBy;
     const setupPiece = setupPhase === "yellow" && hoverPieceIsActive && hoverPiece.team === "yellow";
-    const currentPiece = !setupPhase && !computerThinking && !pieceAnimating && currentTurn === "yellow" && hoverPieceIsActive && hoverPiece.team === "yellow";
+    const currentPiece = gameMode !== "bot" && !setupPhase && !computerThinking && !pieceAnimating && currentTurn === "yellow" && hoverPieceIsActive && hoverPiece.team === "yellow";
     canvas.style.cursor = setupPiece || currentPiece || (hoverCell && legalMoves.has(hoverCell.id)) ? "pointer" : "default";
     draw();
   });
@@ -1784,6 +1553,11 @@
   });
   canvas.addEventListener("click", (event) => {
     if (winner || computerThinking || pieceAnimating) return;
+    if (gameMode === "bot") {
+      updateReadout(null);
+      draw();
+      return;
+    }
     const point = eventPoint(event);
     const clickedCell = findCell(point);
     const clickedPiece = findPiece(point);
@@ -1799,7 +1573,7 @@
     }
 
     // A legal destination takes priority over the piece occupying it so clicking
-    // an enemy on a red dot completes the capture instead of selecting that enemy.
+    // an occupied move marker completes a capture or friendly stack.
     if (clickedCell && selectedPiece && legalMoves.has(clickedCell.id)) {
       moveSelectedPiece(clickedCell);
     } else if (clickedPiece?.team === currentTurn) {
@@ -1822,6 +1596,11 @@
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Enter", " "].includes(event.key)) return;
     event.preventDefault();
     if (winner || computerThinking || pieceAnimating) return;
+    if (gameMode === "bot") {
+      updateReadout(null);
+      draw();
+      return;
+    }
     if (setupPhase) return;
 
     if (event.key === "Enter" || event.key === " ") {
@@ -1842,6 +1621,9 @@
     draw();
   });
   newGameButton.addEventListener("click", startNewGame);
+  botModeButton.addEventListener("click", startBotGame);
+  botAutoplayButton.addEventListener("click", () => setBotAutoplay(!botAutoplay));
+  botNextTurnButton.addEventListener("click", advanceBotTurn);
   tutorialButton.addEventListener("click", openTutorial);
   tutorialBackButton.addEventListener("click", () => showTutorialSlide(tutorialSlideIndex - 1));
   tutorialNextButton.addEventListener("click", () => {
