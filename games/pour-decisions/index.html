@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#21152b">
+    <title>Pour Decisions — Pour Prototype</title>
+    <meta name="description" content="Tilt the pitcher and stop on the line in this tactile pouring prototype.">
+    <link rel="stylesheet" href="../../arcade-home-link.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="arcade-home-link" href="../../">Esteemed Arcade</a>
+
+    <main class="game-shell">
+      <header class="game-header">
+        <div>
+          <p class="eyebrow">Tavern training · prototype 01</p>
+          <h1>Pour <em>Decisions</em></h1>
+          <p class="tagline">Small glasses. Moving targets. Exact mixtures.</p>
+        </div>
+        <div class="best-card" aria-label="Personal best">
+          <span>Best pour</span>
+          <strong id="best-score">—</strong>
+          <small>saved on this device</small>
+        </div>
+      </header>
+
+      <section class="game-card" aria-label="Pour Decisions game">
+        <div class="hud">
+          <div class="ticket">
+            <span class="hud-label">Level 1</span>
+            <strong>Color Run</strong>
+            <small>Three cups on the conveyor</small>
+          </div>
+          <div class="meter">
+            <span class="hud-label">Cups passed</span>
+            <strong><span id="passed-value">0</span> <small>/ 3</small></strong>
+          </div>
+          <div class="meter">
+            <span class="hud-label">Spilled</span>
+            <strong><span id="spill-value">0.0</span> <small>ml</small></strong>
+          </div>
+          <div class="meter">
+            <span class="hud-label">Selected brew</span>
+            <strong id="brew-value">Red</strong>
+          </div>
+        </div>
+
+        <div class="canvas-frame">
+          <canvas id="game" width="900" height="620" aria-label="A conveyor carries three small glasses across the table. Switch primary-color pitchers to fill each moving order with the correct color mixture."></canvas>
+          <div class="pitcher-rack" aria-label="Choose a beverage pitcher">
+            <span>Pick a brew</span>
+            <button class="pitcher-button active" data-brew="red" type="button" aria-label="Select red pitcher">
+              <i class="mini-pitcher" aria-hidden="true"></i><b>Red</b><small>150 ml</small>
+            </button>
+            <button class="pitcher-button" data-brew="blue" type="button" aria-label="Select blue Starwater pitcher">
+              <i class="mini-pitcher" aria-hidden="true"></i><b>Blue</b><small>150 ml</small>
+            </button>
+            <button class="pitcher-button" data-brew="yellow" type="button" aria-label="Select yellow pitcher">
+              <i class="mini-pitcher" aria-hidden="true"></i><b>Yellow</b><small>150 ml</small>
+            </button>
+          </div>
+          <div class="result-panel" id="result-panel" hidden>
+            <p class="result-kicker" id="result-kicker">Order served</p>
+            <div class="stars" id="result-stars" aria-label="0 stars">☆☆☆</div>
+            <h2 id="result-title">So close!</h2>
+            <p id="result-copy"></p>
+            <button id="retry-button" type="button">Pour again</button>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <div class="mode-switch" role="group" aria-label="Control mode">
+            <button class="mode-button active" data-mode="easy" type="button">One thumb</button>
+            <button class="mode-button" data-mode="precision" type="button">Two thumb</button>
+          </div>
+          <p id="instructions"><b>Pick a color, drag</b> to track the cup, then hold to pour.</p>
+          <div class="level-progress" id="level-progress">3 cups left</div>
+        </div>
+      </section>
+
+      <section class="notes" aria-labelledby="feel-title">
+        <h2 id="feel-title">Find the feel</h2>
+        <p>Glass outlines show the requested drink. Secondary colors list their recipe: purple needs equal red and blue, while green needs equal blue and yellow. The liquid changes shade live as its ratio changes.</p>
+        <p class="keyboard-note">Keyboard: <kbd>1</kbd>–<kbd>3</kbd> switch red, blue, and yellow · <kbd>A</kbd>/<kbd>D</kbd> move · hold <kbd>Space</kbd> to pour.</p>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>

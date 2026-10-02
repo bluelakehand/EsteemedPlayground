@@ -38,6 +38,10 @@
         <fieldset class="difficulty-choice">
           <legend>Computer difficulty</legend>
           <label>
+            <input type="radio" name="difficulty" value="very-easy">
+            <span><strong>Very Easy</strong></span>
+          </label>
+          <label>
             <input type="radio" name="difficulty" value="easy" checked>
             <span><strong>Easy</strong></span>
           </label>
@@ -47,6 +51,8 @@
           </label>
         </fieldset>
         <button class="primary-action" id="new-game-button" type="button">Start New Game</button>
+        <button class="secondary-action bot-mode-launch" id="bot-mode-button" type="button">Bot Mode</button>
+        <small class="bot-mode-note">Watch Yellow and Purple play the Basic setup using the selected difficulty.</small>
       </section>
       <section class="tutorial-menu" id="tutorial-menu" aria-label="GOTHI tutorial" hidden>
         <div class="tutorial-progress">
@@ -166,16 +172,21 @@
             <p class="section-kicker">Control of Iceland</p>
             <h3 id="status-title">Farthings</h3>
             <div class="score-row yellow-score">
-              <span>Yellow</span>
+              <span id="yellow-team-label">Yellow</span>
               <strong id="yellow-farthing-count">0</strong>
             </div>
             <div class="score-row purple-score" id="purple-score-row">
-              <span>Purple (Computer)</span>
+              <span id="purple-team-label">Purple (Computer)</span>
               <strong id="purple-farthing-count">0</strong>
             </div>
             <p class="difficulty-readout">Mode: <strong id="game-mode-output">Basic</strong></p>
-            <p class="difficulty-readout" id="computer-difficulty-row">Computer: <strong id="computer-difficulty">Easy</strong></p>
+            <p class="difficulty-readout" id="computer-difficulty-row"><span id="computer-difficulty-label">Computer</span>: <strong id="computer-difficulty">Easy</strong></p>
             <button class="primary-action setup-confirm" id="confirm-setup-button" type="button" hidden>Confirm Setup</button>
+            <div class="bot-mode-controls" id="bot-mode-controls" aria-label="Bot Mode controls" hidden>
+              <button class="secondary-action" id="bot-autoplay-button" type="button" aria-pressed="true">Autoplay: On</button>
+              <button class="primary-action" id="bot-next-turn-button" type="button" disabled>Next Turn</button>
+              <small>Autoplay waits four seconds between moves.</small>
+            </div>
             <p class="victory-target">Control 5 Farthings or the opposing Homestead to win.</p>
             <p class="game-message" id="game-message" aria-live="assertive">Yellow to move.</p>
             <div class="board-review-actions" id="board-review-actions" hidden>
@@ -222,6 +233,8 @@
         </div>
       </div>
     </div>
+    <script src="engine.js"></script>
+    <script src="ai.js"></script>
     <script src="game.js"></script>
   </body>
 </html>
