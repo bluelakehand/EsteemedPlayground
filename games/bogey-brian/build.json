@@ -1,0 +1,67 @@
+{
+  "format": 1,
+  "version": "web-47a6cfd656ef94795dfb",
+  "source": {
+    "source_revision": "local-working-copy",
+    "godot": "4.7.2",
+    "rapier": "0.36.0",
+    "mode": "release"
+  },
+  "archive": {
+    "path": "games/bogey-brian/builds/bogey-brian-web-47a6cfd656ef94795dfb.zip",
+    "bytes": 75106734,
+    "sha256": "f2c46567669ba56d55c46c7ac7509fc2a7a0a4b1af86d8cbf535ada677e1a430"
+  },
+  "files": [
+    {
+      "name": "build-info.json",
+      "bytes": 109,
+      "sha256": "df4e985efd3357cb881269686750ef48fc9ff6d645acc9b3919b106196656923"
+    },
+    {
+      "name": "godot_rapier.wasm",
+      "bytes": 3276711,
+      "sha256": "cd7afba56160a939fd0dd27ceaddef9fe49e9e1945d946bfa754de8523c90562"
+    },
+    {
+      "name": "index.audio.position.worklet.js",
+      "bytes": 2973,
+      "sha256": "be33985bc7160d6bf9646f259cd86b259cd67b02ccb297ee5c44f8ac84327bc8"
+    },
+    {
+      "name": "index.audio.worklet.js",
+      "bytes": 7298,
+      "sha256": "5b476a9c9ce642c0ee4256436d1bc31d9c38f868aca0f9a8e2a57c18d2dec2a3"
+    },
+    {
+      "name": "index.html",
+      "bytes": 5337,
+      "sha256": "f8f0b64f1203d9252000b24601cae7d749d6af12d20b7a80324d0920c8146fb1"
+    },
+    {
+      "name": "index.js",
+      "bytes": 2859484,
+      "sha256": "631bbecee5e5136b5f29ed7dedb31a5d022d65da4b639b6e52a48d0c5e3d3154"
+    },
+    {
+      "name": "index.pck",
+      "bytes": 86162616,
+      "sha256": "44d7ac79cdf4491b5474c997f599688b08aa159f5f7024af31ec6267a118f920"
+    },
+    {
+      "name": "index.png",
+      "bytes": 21443,
+      "sha256": "3cb4495c0b98dfbe4b663cbf2b6836473572339beb66d902367893162a70be0e"
+    },
+    {
+      "name": "index.side.wasm",
+      "bytes": 44078870,
+      "sha256": "e0c3b75ff009c54b83a02ae819e04dd1f533f457c54e516f440a564d8f308a07"
+    },
+    {
+      "name": "index.wasm",
+      "bytes": 1508095,
+      "sha256": "d37e06f7126849a81fa099f1cf89f0d8ccbb87502b8c857492490dff66fad95a"
+    }
+  ]
+}

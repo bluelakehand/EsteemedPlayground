@@ -4,3 +4,6 @@ node_modules/
 npm-debug.log*
 playwright-report/
 test-results/
+games/bogey-brian/play/
+games/bogey-brian/releases/
+**/__pycache__/
