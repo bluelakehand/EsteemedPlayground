@@ -1,0 +1,15 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; background: #08080b; color: #fff0bd; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.game-navigation { min-height: 52px; display: flex; align-items: center; gap: 14px; padding: 6px 12px 10px; background: #12110f; flex-shrink: 0; }
+.arcade-home-link.arcade-home-link-brian { position: static; flex-shrink: 0; font-size: 14px; margin: 0; }
+.game-title { margin-left: auto; font-size: 14px; font-weight: bold; }
+button { color: #fff0bd; background: #29251d; border: 1px solid #d69b34; border-radius: 4px; padding: 7px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+button:focus-visible, a:focus-visible { outline: 3px solid #4ecb6a; outline-offset: 2px; }
+#game-area { position: relative; flex: 1; min-height: 0; width: 100%; background: #000; }
+iframe { display: block; width: 100%; height: 100%; border: 0; }
+#game-area:fullscreen { width: 100vw; height: 100vh; }
+#load-error { position: absolute; inset: auto 16px 16px; padding: 16px; background: #302015; border: 1px solid #d69b34; }
+#load-error a { color: #fff0bd; }
+@media (max-width: 480px) { .game-title { display: none; } #fullscreen { margin-left: auto; } .game-navigation { gap: 8px; padding-inline: 8px; } }

@@ -10,6 +10,10 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: arcade-s3-deploy
+  cancel-in-progress: false
+
 env:
   AWS_REGION: us-east-2
   S3_BUCKET: esteemed-playground-bucket
@@ -24,19 +28,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check game deployment helpers
+        run: python -m unittest discover -s tests -p test_bogey_brian.py -v
+
+      - name: Verify pinned Bogey Brian build from checkout
+        run: python scripts/stage-bogey-brian.py
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy files to S3
+      - name: Publish immutable game assets and switch stable loader
+        run: python scripts/deploy-bogey-brian.py --bucket "${S3_BUCKET}"
+
+      - name: Deploy arcade pages to S3
         run: |
           aws s3 sync . "s3://${S3_BUCKET}" \
             --delete \
+            --cache-control "no-cache,max-age=0,must-revalidate" \
             --exclude ".git/*" \
             --exclude ".github/*" \
+            --exclude ".claude/*" \
             --exclude "node_modules/*" \
             --exclude "package-lock.json" \
             --exclude "package.json" \
-            --exclude "scripts/*"
+            --exclude "scripts/*" \
+            --exclude "tests/*" \
+            --exclude "test-results/*" \
+            --exclude "playwright-report/*" \
+            --exclude "_builds/*" \
+            --exclude "games/bogey-brian/builds/*" \
+            --exclude "games/bogey-brian/releases/*" \
+            --exclude "games/bogey-brian/play/*"
+          # Force the changed entry pages' revalidation metadata even when sync skips them.
+          aws s3 cp index.html "s3://${S3_BUCKET}/index.html" --content-type "text/html; charset=utf-8" --cache-control "no-cache,max-age=0,must-revalidate" --only-show-errors
+          aws s3 cp games/bogey-brian/index.html "s3://${S3_BUCKET}/games/bogey-brian/index.html" --content-type "text/html; charset=utf-8" --cache-control "no-cache,max-age=0,must-revalidate" --only-show-errors
