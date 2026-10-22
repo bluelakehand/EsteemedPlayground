@@ -1,6 +1,8 @@
 # Bogey Brian: repository build and hosting
 
-The game ZIP is included in this repository at `games/bogey-brian/builds/bogey-brian-web-47a6cfd656ef94795dfb.zip` (**75,106,734 bytes**, about 71.6 MiB). It fits GitHub's 100 MiB ordinary-file limit. Include it in the owner's normal commit/push along with the page, scripts, workflow and manifest. No manual S3 archive upload, GitHub Release publishing, Git LFS or additional build-read IAM permission is required.
+Current local delivery: Sketchy Strokes (90 Normal holes total), owner-selected Beyond the Forest music, and Trails/customization with maximum density 10. Source label: `ab72fea-c11-trails-working-tree`. The local ZIP and pinned manifest are ready for the owner's commit, push and pull request; no push or cloud deployment was performed.
+
+The game ZIP is included in this repository at `games/bogey-brian/builds/bogey-brian-web-94d1759ce6a5bd34036e.zip` (**84,226,226 bytes**, about 80.3 MiB). It fits GitHub's 100 MiB ordinary-file limit. Include it in the owner's normal commit/push along with the page, scripts, workflow and manifest. No manual S3 archive upload, GitHub Release publishing, Git LFS or additional build-read IAM permission is required.
 
 The GitHub website file uploader has a separate 25 MiB limit, so use the normal Git push workflow for this archive. Each new build increases repository history size. Old ZIPs can be removed from the current checkout as builds accumulate; Git history retains them.
 
