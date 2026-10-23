@@ -86,13 +86,27 @@ def run():
         scale=min(box['width']/1600,box['height']/900)
         page.mouse.click(box['x']+(box['width']-1600*scale)/2+x*scale,box['y']+(box['height']-900*scale)/2+y*scale)
         page.wait_for_timeout(400)
+    def saved_profile(frame, predicate):
+        # Wait for the asynchronous filesystem commit before reopening the browser.
+        deadline=time.monotonic()+30
+        while time.monotonic()<deadline:
+            profiles=[]
+            for row in frame.evaluate(PERSISTENCE):
+                if str(row['key']).endswith(('profile.a.json','profile.b.json')):
+                    wrapper=json.loads(row['text'])
+                    profiles.append((wrapper['generation'],json.loads(wrapper['data'])))
+            if profiles:
+                profile=max(profiles,key=lambda value:value[0])[1]
+                if predicate(profile): return profile
+            time.sleep(0.2)
+        raise AssertionError('Expected player profile was not committed to IndexedDB')
     try:
         with sync_playwright() as pw:
             launch={'executable_path':os.environ.get('BROWSER_PATH','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'),'headless':True,
                 'args':['--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader'], 'viewport':{'width':1280,'height':800}}
             if not Path(launch['executable_path']).is_file(): launch.pop('executable_path')
-            profile=str(OUT/'isolated-browser-profile')
-            context=pw.chromium.launch_persistent_context(profile,**launch)
+            browser_profile=str(OUT/'isolated-browser-profile')
+            context=pw.chromium.launch_persistent_context(browser_profile,**launch)
             context.add_init_script(tap_script())
             page=context.pages[0]
             page.on('pageerror',lambda error: errors.append(str(error)))
@@ -118,8 +132,12 @@ def run():
             page.screenshot(path=str(OUT/'settings.png'))
             click(page,800,795)
             click(page,800,430)
+            # Fresh and migrated profiles offer the optional tutorial on first Play.
+            # This point is empty on the course grid when it was already dismissed.
+            click(page,1035,610)
             click(page,320,305)
             click(page,805,820)
+            click(page,1125,590)
             page.wait_for_timeout(9000)
             print('RUNTIME ERRORS',errors,flush=True)
             page.screenshot(path=str(OUT/'playing.png'))
@@ -142,12 +160,35 @@ def run():
                     click(page,800,430)
                     click(page,322.5+(index%3)*475,305+(index//3)*200)
                     click(page,805,820)
+                    # Starting a different course explicitly replaces the saved round.
+                    click(page,1125,590)
                     page.wait_for_timeout(7500)
                     capture=OUT/(course+'-playing.png')
                     page.screenshot(path=str(capture))
                     corner=Image.open(capture).convert('RGB').crop((10,frame_top+10,140,frame_top+55))
                     check(course+' starts from the optimized release with a stroke HUD',sum(max(pixel)<15 for pixel in corner.getdata())>corner.width*corner.height*0.5)
                 check('Wasm and PCK loads work with production gzip encoding',sum(path.endswith('.wasm') for path in Handler.compressed)>=3 and any(path.endswith('.pck') for path in Handler.compressed))
+                for difficulty,x in [('hard',797),('impossible',1132)]:
+                    page.reload(); frame=ready(page)
+                    click(page,800,430)
+                    click(page,320,305)
+                    click(page,x,225)
+                    click(page,805,820)
+                    click(page,1125,590)
+                    profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('definition',{}).get('difficulty')==difficulty)
+                    ids=profile['interrupted_round']['definition']['hole_ids']
+                    check(difficulty+' starts with nine matching authored holes',len(ids)==9 and all(hole.endswith('_'+difficulty) for hole in ids))
+                    page.screenshot(path=str(OUT/(difficulty+'-playing.png')))
+                # Settings exposes the replayable original three-lesson tutorial.
+                page.reload(); frame=ready(page)
+                click(page,800,590)
+                click(page,1420,145)
+                click(page,1125,590)
+                profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('mode')=='tutorial')
+                check('Tutorial starts all three original lessons',profile['interrupted_round']['definition']['hole_ids']==['c1_h1_tut','c1_h2_tut','c1_h3_tut'])
+                check('Current profile stores statistics and tutorial preference',profile['schema_version']==7 and isinstance(profile['statistics'],dict) and profile['tutorial_seen'])
+                checkpoint=profile['interrupted_round']
+                page.screenshot(path=str(OUT/'tutorial-playing.png'))
             page.locator('#fullscreen').click()
             page.wait_for_timeout(500)
             check('Wrapper fullscreen enters from a trusted click',page.evaluate('!!document.fullscreenElement'))
@@ -159,13 +200,21 @@ def run():
             check('No runtime HTTP failures',all(row['status']<400 for row in responses))
             check('No JavaScript exceptions',not errors)
             context.close()
-            context=pw.chromium.launch_persistent_context(profile,**launch)
+            context=pw.chromium.launch_persistent_context(browser_profile,**launch)
             page=context.pages[0]
             page.goto(base+'/games/bogey-brian/index.html')
             frame=ready(page)
             reopened=frame.evaluate(PERSISTENCE)
             cfg_after=next((row['text'] for row in reopened if str(row['key']).endswith('audio_settings.cfg')),None)
             check('Saved settings survive closing and reopening the browser',cfg_after==cfg)
+            if COMPRESSED:
+                profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('completion_id')==checkpoint['completion_id'])
+                check('Saved round survives closing and reopening the browser',profile['interrupted_round']==checkpoint)
+                click(page,1285,450)
+                page.wait_for_timeout(2500)
+                page.screenshot(path=str(OUT/'tutorial-resumed.png'))
+                profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('completion_id')==checkpoint['completion_id'])
+                check('Continue preserves the saved round identity',profile['interrupted_round']==checkpoint)
             # Change only the immutable asset location, as a normal update does.
             # Keep the player URL and origin fixed, then verify the same saved data.
             manifest=json.loads((ROOT/'games/bogey-brian/build.json').read_text())
@@ -191,6 +240,9 @@ def run():
                 updated_cfg=next((row['text'] for row in updated if str(row['key']).endswith('audio_settings.cfg')),None)
                 check('Stable loader switches to a different asset version',next_version in frame.evaluate('document.baseURI'))
                 check('Saved settings survive changing the asset version',updated_cfg==cfg)
+                if COMPRESSED:
+                    profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('completion_id')==checkpoint['completion_id'])
+                    check('Saved round survives changing the asset version',profile['interrupted_round']==checkpoint)
             finally:
                 original.write_bytes(backup)
             page.locator('.arcade-home-link').click()

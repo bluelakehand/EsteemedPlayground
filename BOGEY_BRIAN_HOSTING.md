@@ -1,10 +1,18 @@
 # Bogey Brian: repository build and hosting
 
-Current local delivery: Sketchy Strokes (90 Normal holes total), owner-selected Beyond the Forest music, and Trails/customization with maximum density 10. Source label: `ab72fea-c11-trails-working-tree`. The local ZIP and pinned manifest are ready for the owner's commit, push and pull request; no push or cloud deployment was performed.
+Current local delivery (2026-10-23): all 162 original Hard/Impossible holes, lifetime statistics, the three-lesson tutorial, and interrupted-round recovery. The catalog contains 252 competitive holes plus three tutorial holes. Sketchy Strokes stays Normal-only, with the owner-selected Beyond the Forest music; Trails/customization retains maximum density 10. Source label: `ab72fea-hard-impossible-statistics-tutorial-recovery-working-tree`. The local ZIP and pinned manifest are ready for the owner's commit, push and pull request; no push or cloud deployment was performed.
 
-The game ZIP is included in this repository at `games/bogey-brian/builds/bogey-brian-web-94d1759ce6a5bd34036e.zip` (**84,226,226 bytes**, about 80.3 MiB). It fits GitHub's 100 MiB ordinary-file limit. Include it in the owner's normal commit/push along with the page, scripts, workflow and manifest. No manual S3 archive upload, GitHub Release publishing, Git LFS or additional build-read IAM permission is required.
+The game ZIP is included in this repository at `games/bogey-brian/builds/bogey-brian-web-70b88f8dab3fa7cfeb6f.zip` (**91,631,732 bytes**, about 87.4 MiB). SHA-256: `fd97dde9db7c62a6366f607dc7dcb8dcae5611d6d1fb41a1b1f5267f7bc644f6`. It fits GitHub's 100 MiB ordinary-file limit. Include the new ZIP, matching manifest, browser-check changes and these notes in the owner's normal commit/push, including removal of the superseded ZIP. No manual S3 archive upload, GitHub Release publishing, Git LFS or additional build-read IAM permission is required.
+
+Profiles migrate to schema seven while preserving previous records, equipment, trails and statistics. Continue round restarts the current hole and keeps completed scores, entry PP and the saved equipment/Random plan. An abrupt interruption can lose up to five seconds of Speedrun timer progress. Tutorial activity does not earn rewards or lifetime statistics. Keep the stable player URL and Godot user-data identity unchanged.
 
 The GitHub website file uploader has a separate 25 MiB limit, so use the normal Git push workflow for this archive. Each new build increases repository history size. Old ZIPs can be removed from the current checkout as builds accumulate; Git history retains them.
+
+## Verification - 2026-10-23
+
+All ten staged runtime files match the pinned manifest. All 13 hosting-helper tests pass; the compression and upload-plan dry-run passes without contacting AWS. Real Edge against the staged gzip release passes all 36 checks: nine original Normal course starts, keyboard shot/audio, Hard/Impossible selection with the correct nine-hole plans, the original three-lesson tutorial, schema-seven statistics/preferences, fullscreen/layout, and settings plus saved-round continuity across full browser restart and a simulated immutable-version change. Tutorial Continue was exercised and its capture reviewed. These are hosting/navigation checks; they do not claim a full course completion. Source and Windows/Web game qualification separately passed 509 packaged checks per platform before delivery.
+
+The browser test uses isolated profiles. The pinned stable loader is restored, and only the current ZIP/staged release remains locally. No public-host deployment or live-site verification was performed. Local evidence: `test-results/bogey-brian-gzip/results.json` (ignored).
 
 ## Deployment
 
