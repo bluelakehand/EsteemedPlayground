@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 import threading
 import time
+import tempfile
 from PIL import Image, ImageChops
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -103,9 +104,9 @@ def run():
     try:
         with sync_playwright() as pw:
             launch={'executable_path':os.environ.get('BROWSER_PATH','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'),'headless':True,
-                'args':['--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader'], 'viewport':{'width':1280,'height':800}}
+                'args':['--mute-audio','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader'], 'viewport':{'width':1280,'height':800}}
             if not Path(launch['executable_path']).is_file(): launch.pop('executable_path')
-            browser_profile=str(OUT/'isolated-browser-profile')
+            browser_profile=tempfile.mkdtemp(prefix='isolated-browser-profile-',dir=OUT)
             context=pw.chromium.launch_persistent_context(browser_profile,**launch)
             context.add_init_script(tap_script())
             page=context.pages[0]
@@ -186,7 +187,7 @@ def run():
                 click(page,1125,590)
                 profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('mode')=='tutorial')
                 check('Tutorial starts all three original lessons',profile['interrupted_round']['definition']['hole_ids']==['c1_h1_tut','c1_h2_tut','c1_h3_tut'])
-                check('Current profile stores statistics and tutorial preference',profile['schema_version']==7 and isinstance(profile['statistics'],dict) and profile['tutorial_seen'])
+                check('Current profile stores statistics and tutorial preference',profile['schema_version']==8 and isinstance(profile['statistics'],dict) and profile['tutorial_seen'])
                 checkpoint=profile['interrupted_round']
                 page.screenshot(path=str(OUT/'tutorial-playing.png'))
             page.locator('#fullscreen').click()
@@ -199,6 +200,12 @@ def run():
             check('Mobile-width navigation does not overlap the frame',page.locator('.arcade-home-link').bounding_box()['y']+page.locator('.arcade-home-link').bounding_box()['height'] <= page.locator('#game').bounding_box()['y'])
             check('No runtime HTTP failures',all(row['status']<400 for row in responses))
             check('No JavaScript exceptions',not errors)
+            if COMPRESSED:
+                # Schema eight saves the actual settled lie after the initial
+                # round record. Compare the last durable save at shutdown.
+                profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('completion_id')==checkpoint['completion_id'])
+                checkpoint=profile['interrupted_round']
+                (OUT/'checkpoint-before-close.json').write_text(json.dumps(checkpoint,indent=2))
             context.close()
             context=pw.chromium.launch_persistent_context(browser_profile,**launch)
             page=context.pages[0]
@@ -214,7 +221,11 @@ def run():
                 page.wait_for_timeout(2500)
                 page.screenshot(path=str(OUT/'tutorial-resumed.png'))
                 profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('completion_id')==checkpoint['completion_id'])
-                check('Continue preserves the saved round identity',profile['interrupted_round']==checkpoint)
+                resumed=profile['interrupted_round']
+                # Continue can advance elapsed ticks while the course loads;
+                # round identity, scores and current-hole economy must persist.
+                check('Continue preserves the saved round identity',all(resumed[key]==checkpoint[key] for key in ['completion_id','mode','definition','hole_index','scores','hat','trail']) and all(resumed['hole'][key]==checkpoint['hole'][key] for key in ['strokes','points','collected']))
+                checkpoint=resumed
             # Change only the immutable asset location, as a normal update does.
             # Keep the player URL and origin fixed, then verify the same saved data.
             manifest=json.loads((ROOT/'games/bogey-brian/build.json').read_text())

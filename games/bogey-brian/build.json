@@ -1,27 +1,27 @@
 {
   "format": 1,
-  "version": "web-70b88f8dab3fa7cfeb6f",
+  "version": "web-2080c4fdcef4a42816e0",
   "source": {
-    "source_revision": "ab72fea-hard-impossible-statistics-tutorial-recovery-working-tree",
+    "source_revision": "ab72fea-square-putting-and-all-owner-fixes-working-tree",
     "godot": "4.7.2",
     "rapier": "0.36.0",
     "mode": "release"
   },
   "archive": {
-    "path": "games/bogey-brian/builds/bogey-brian-web-70b88f8dab3fa7cfeb6f.zip",
-    "bytes": 91631732,
-    "sha256": "fd97dde9db7c62a6366f607dc7dcb8dcae5611d6d1fb41a1b1f5267f7bc644f6"
+    "path": "games/bogey-brian/builds/bogey-brian-web-2080c4fdcef4a42816e0.zip",
+    "bytes": 92086835,
+    "sha256": "df656296cf4868d4cb08bf165b1c33b3040af8c90dfaa41c56c3a7e2fd1d7e70"
   },
   "files": [
     {
       "name": "build-info.json",
-      "bytes": 156,
-      "sha256": "0243e1fe4f920bbce7e228f6b97714baf0bb0f5580714457b85b1c24654e90c1"
+      "bytes": 146,
+      "sha256": "cf9162706c2793842485c11c58ea32eb290ed2ef5af9dee30a431654c00ee78a"
     },
     {
       "name": "godot_rapier.wasm",
-      "bytes": 3276711,
-      "sha256": "cd7afba56160a939fd0dd27ceaddef9fe49e9e1945d946bfa754de8523c90562"
+      "bytes": 3277810,
+      "sha256": "e16c40086eb7510536185558975e0c1787ed5b4617d36483d6f8245b784bb8d1"
     },
     {
       "name": "index.audio.position.worklet.js",
@@ -36,7 +36,7 @@
     {
       "name": "index.html",
       "bytes": 5338,
-      "sha256": "a4f2752ac034b6d2a5c395253690acf3bd96095a7d994dbd07b2848e1900e8b3"
+      "sha256": "f17528143214d561d75b82a7db33fe52942c30db58bdc5b81f87f8b822f39fc0"
     },
     {
       "name": "index.js",
@@ -45,8 +45,8 @@
     },
     {
       "name": "index.pck",
-      "bytes": 141677428,
-      "sha256": "c8f9655768ab68608302eac89639e55bebde594b7f6387bb33e6d24f23e631e7"
+      "bytes": 144067548,
+      "sha256": "62c9358ca6132205db283e9c0f35d3631ea152f87bacf88c23a6651e955eaf77"
     },
     {
       "name": "index.png",
