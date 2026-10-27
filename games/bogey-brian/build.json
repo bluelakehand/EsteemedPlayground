@@ -1,22 +1,22 @@
 {
   "format": 1,
-  "version": "web-2080c4fdcef4a42816e0",
+  "version": "web-ff80bf084fe98aa2d930",
   "source": {
-    "source_revision": "ab72fea-square-putting-and-all-owner-fixes-working-tree",
+    "source_revision": "ab72fea-oct27-random-camera-trails-ui-working-tree",
     "godot": "4.7.2",
     "rapier": "0.36.0",
     "mode": "release"
   },
   "archive": {
-    "path": "games/bogey-brian/builds/bogey-brian-web-2080c4fdcef4a42816e0.zip",
-    "bytes": 92086835,
-    "sha256": "df656296cf4868d4cb08bf165b1c33b3040af8c90dfaa41c56c3a7e2fd1d7e70"
+    "path": "games/bogey-brian/builds/bogey-brian-web-ff80bf084fe98aa2d930.zip",
+    "bytes": 92093597,
+    "sha256": "0e5399c1108764b46daba35a9bf966fbc9f687af96bdccff220cbc237efe2a88"
   },
   "files": [
     {
       "name": "build-info.json",
-      "bytes": 146,
-      "sha256": "cf9162706c2793842485c11c58ea32eb290ed2ef5af9dee30a431654c00ee78a"
+      "bytes": 141,
+      "sha256": "9755db87848006c1a193de3649f7e1965b334ea1c770c4f9c15ea0a2f86a6e7a"
     },
     {
       "name": "godot_rapier.wasm",
@@ -36,7 +36,7 @@
     {
       "name": "index.html",
       "bytes": 5338,
-      "sha256": "f17528143214d561d75b82a7db33fe52942c30db58bdc5b81f87f8b822f39fc0"
+      "sha256": "f7be13d87b15cc8c17ce6209782e7eb90e2e65ee949887014528025d4192566d"
     },
     {
       "name": "index.js",
@@ -45,8 +45,8 @@
     },
     {
       "name": "index.pck",
-      "bytes": 144067548,
-      "sha256": "62c9358ca6132205db283e9c0f35d3631ea152f87bacf88c23a6651e955eaf77"
+      "bytes": 144080240,
+      "sha256": "f350bf06db14220a8f41fef97e8783420d3a9a626cb6994dddf3e27920aabf56"
     },
     {
       "name": "index.png",
