@@ -155,15 +155,16 @@ def run():
             strokes_after=Image.open(OUT/'shot.png').convert('RGB').crop((10,frame_top+10,140,frame_top+55))
             check('Keyboard shot changes the stroke counter',sum(max(pixel)>30 for pixel in ImageChops.difference(strokes_before,strokes_after).getdata())>20)
             if COMPRESSED:
-                courses=['c1','c2','c3','c4','c5','c7','c8','c9','c10']
+                courses=['c1','c2','c3','c4','c5','c7','c8','c9','c10','c11']
                 for index,course in enumerate(courses[1:],start=1):
                     page.reload(); frame=ready(page)
                     click(page,800,430)
-                    click(page,322.5+(index%3)*475,305+(index//3)*200)
+                    click(page,199+(index%5)*296,275+(index//5)*148)
                     click(page,805,820)
                     # Starting a different course explicitly replaces the saved round.
                     click(page,1125,590)
                     page.wait_for_timeout(7500)
+                    profile=saved_profile(frame,lambda p:p.get('interrupted_round',{}).get('definition',{}).get('course_id')==course)
                     capture=OUT/(course+'-playing.png')
                     page.screenshot(path=str(capture))
                     corner=Image.open(capture).convert('RGB').crop((10,frame_top+10,140,frame_top+55))
