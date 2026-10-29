@@ -1,22 +1,22 @@
 {
   "format": 1,
-  "version": "web-ff80bf084fe98aa2d930",
+  "version": "web-ef319e7c2e150446f9b9",
   "source": {
-    "source_revision": "ab72fea-oct27-random-camera-trails-ui-working-tree",
+    "source_revision": "ab72fea-oct29-web-performance-working-tree",
     "godot": "4.7.2",
     "rapier": "0.36.0",
     "mode": "release"
   },
   "archive": {
-    "path": "games/bogey-brian/builds/bogey-brian-web-ff80bf084fe98aa2d930.zip",
-    "bytes": 92093597,
-    "sha256": "0e5399c1108764b46daba35a9bf966fbc9f687af96bdccff220cbc237efe2a88"
+    "path": "games/bogey-brian/builds/bogey-brian-web-ef319e7c2e150446f9b9.zip",
+    "bytes": 92186858,
+    "sha256": "bad0140395d7fc8d9bfa26daf8f002435efd1ebe8375d399049df2595a7d24ba"
   },
   "files": [
     {
       "name": "build-info.json",
-      "bytes": 141,
-      "sha256": "9755db87848006c1a193de3649f7e1965b334ea1c770c4f9c15ea0a2f86a6e7a"
+      "bytes": 133,
+      "sha256": "d7798c0807200e9febbc60f9544db2dac0ce1d9d70558013e745f6de802a131c"
     },
     {
       "name": "godot_rapier.wasm",
@@ -36,7 +36,7 @@
     {
       "name": "index.html",
       "bytes": 5338,
-      "sha256": "f7be13d87b15cc8c17ce6209782e7eb90e2e65ee949887014528025d4192566d"
+      "sha256": "7066a7f24a8b9fb5988ffadf1fc7b3243b1c8a35724f42a038d8a271f6c34c6b"
     },
     {
       "name": "index.js",
@@ -45,8 +45,8 @@
     },
     {
       "name": "index.pck",
-      "bytes": 144080240,
-      "sha256": "f350bf06db14220a8f41fef97e8783420d3a9a626cb6994dddf3e27920aabf56"
+      "bytes": 144126836,
+      "sha256": "892e42002fab809f12b7e7938d16e931e510e506826ad61dfe3df151bb6e3e68"
     },
     {
       "name": "index.png",
