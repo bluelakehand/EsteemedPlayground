@@ -1,27 +1,27 @@
 {
   "format": 1,
-  "version": "web-d4fc3a30ffd9fe4c301e",
+  "version": "web-0784846e791f2436bfc9",
   "source": {
-    "source_revision": "ab72fea-nov03-ui-ascii-working-tree",
+    "source_revision": "ab72fea-nov04-compound-lifecycle-seams-working-tree",
     "godot": "4.7.2",
     "rapier": "0.36.0",
     "mode": "release"
   },
   "archive": {
-    "path": "games/bogey-brian/builds/bogey-brian-web-d4fc3a30ffd9fe4c301e.zip",
-    "bytes": 94890180,
-    "sha256": "f6b863ef9eaca1bf505c6b1f8db3e31dce45389186d0765ea28b5e665ea38d7a"
+    "path": "games/bogey-brian/builds/bogey-brian-web-0784846e791f2436bfc9.zip",
+    "bytes": 94900063,
+    "sha256": "5921dd8b1ab516fcc360682c887765fdf513d611a47e5c5b55c391ec915b92a9"
   },
   "files": [
     {
       "name": "build-info.json",
-      "bytes": 126,
-      "sha256": "a7e1308aaab88ad2365e3a9678c09b3cee6c3e6a7ae3e5a2335e1ecd66eb7987"
+      "bytes": 142,
+      "sha256": "180206afc912efa13f8a79770fc541e0578ec5c7b69cbfd7a35d27b2355b43a7"
     },
     {
       "name": "godot_rapier.wasm",
-      "bytes": 3277810,
-      "sha256": "e16c40086eb7510536185558975e0c1787ed5b4617d36483d6f8245b784bb8d1"
+      "bytes": 3277860,
+      "sha256": "d611067369302827501a012255355e7c396e5fe2ec3900a6a2e3367e26fe9d31"
     },
     {
       "name": "index.audio.position.worklet.js",
@@ -36,7 +36,7 @@
     {
       "name": "index.html",
       "bytes": 5338,
-      "sha256": "d89625f25c740dd0f86d03a5db1bd1f4b4198db459d30d98c1bb76e03d0ae32c"
+      "sha256": "5169f73bf90d88846eafe070b265fe96f278cf7ae310337e94eee3edb6a194d8"
     },
     {
       "name": "index.js",
@@ -45,8 +45,8 @@
     },
     {
       "name": "index.pck",
-      "bytes": 147059412,
-      "sha256": "c2f8c27f23288dd0a55bb62177e9f1986f59f8d2108b55cbbe86fc433e3b1526"
+      "bytes": 147062908,
+      "sha256": "feef97f3f3fcc06f2795377d6c969f144610be1c8caac2f1acb21132aba6fdb4"
     },
     {
       "name": "index.png",
